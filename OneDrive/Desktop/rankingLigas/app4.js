@@ -3655,13 +3655,18 @@ const render = (
 
 };
 
-Promise.all([d3.csv("data2.csv"), d3.csv("data2.csv")]).then(([data1, data_cruda]) => {
+Promise.all([d3.csv("data2.csv")]).then(([data1]) => {
+
+  let data_cruda = data1.map(d => ({ ...d }))
+
+  console.log(structuredClone(data_cruda))
 
   data_cruda.forEach(d => {
       d.jugado = d.goles_local !== '99' && d.goles_visitante !== '99'
-      d.goles_local =     d.jugado ? Number(d.goles_local)     : null
+      d.goles_local = d.jugado ? Number(d.goles_local) : null
       d.goles_visitante = d.jugado ? Number(d.goles_visitante) : null
-    })
+  })
+
   /* let torneos = [...new Set(data1.map((d) => d.torneo))]
   data1 = data1.filter(d => d.torneo == 'Torneo Clausura 1997') */
 
