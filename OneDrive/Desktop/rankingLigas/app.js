@@ -147,7 +147,7 @@ formatDate1 = d3.utcFormat('%-d %b')
 formatDateLarge = d3.utcFormat('%b %d')
 let formatEfec = d3.format('.0f')
 
-const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff) => {
+const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades) => {
   let partidos_restantes_chile = data.filter(d => d.name == 'Chile' && d.goles_fecha == 99)
   let winRate = 0
   partidos_restantes_chile.forEach(d => {
@@ -206,9 +206,11 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
     grupos = 0
   }
 
+  console.log(grupos)
+
   let localia = false
   let clasificacion_por_grupo = 2
-  let repechaje = true
+  let repechaje = false
   let equipos_por_grupos = top_n/grupos
   let width_playoffs = 300
   let space_width_playoff = width_playoffs*0.5
@@ -591,6 +593,27 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       height: y(top_n - 1) + heightBars / 2
     })
 
+    /* grupos1.forEach((e, index) => {
+      svg
+      .selectAll('.rect')
+      .data(yearSlice.slice(0, top_n))
+      .enter()
+      .append('rect')
+      .attrs({
+        class: 'bars_names',
+        x: 0,
+        y: (d, i) => y(d.rank+(index*equipos_por_grupos)) - heightBars / 2,
+        width: width - (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff),
+        height: heightBars
+      })
+      .styles({
+        fill: (d, i) => i <= equipos_por_grupos-1 ? (i <= clasificacion_por_grupo-1 || i >= equipos_por_grupos && i <= equipos_por_grupos+clasificacion_por_grupo-1 ? i % 2 == 1 ? '#90EE90' : '#5da15d' : i % 2 == 1 ? '#e5e5e5' : '#919191') : (i <= clasificacion_por_grupo-1 || i >= equipos_por_grupos && i <= equipos_por_grupos+clasificacion_por_grupo-1 ? i % 2 == 1 ? '#90EE90' : '#5da15d' : i % 2 == 1 ? '#e5e5e5' : '#919191'),
+        opacity: (d, i) => i <= equipos_por_grupos-1 ? 0.8 : 0.8
+      })
+    }) */
+
+  if (grupos > 1) {
+
     grupos1.forEach((e, index) => {
       svg
       .selectAll('.rect')
@@ -610,8 +633,6 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       })
     })
 
-  if (grupos > 1) {
-
     /* svg
       .selectAll('.rect')
       .data(yearSlice.slice(0, top_n))
@@ -629,7 +650,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
         opacity: (d, i) => i <= equipos_por_grupos-1 ? 0.8 : 0.8
       }) */
   } else {
-    /* svg
+    svg
     .selectAll('.rect')
     .data(yearSlice.slice(0, top_n))
     .enter()
@@ -642,9 +663,15 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       height: heightBars
     })
     .styles({
-      fill: (d, i) => i == clasificacion_por_grupo && repechaje ? '#e68a19' : i <= equipos_por_grupos-1 ? (i <= clasificacion_por_grupo-1 || i >= equipos_por_grupos && i <= equipos_por_grupos+clasificacion_por_grupo-1 ? i % 2 == 1 ? '#90EE90' : '#5da15d' : i % 2 == 1 ? '#e5e5e5' : '#919191') : (i <= clasificacion_por_grupo-1 || i >= equipos_por_grupos && i <= equipos_por_grupos+clasificacion_por_grupo-1 ? i % 2 == 1 ? '#90EE90' : '#5da15d' : i % 2 == 1 ? '#e5e5e5' : '#919191'),
+            fill: (d, i) =>
+        i == 0
+          ? '#5da15d' /* : i == 17 ? last_place_color */
+          : i % 2 == 1
+          ? "#e5e5e5"
+          : "#919191",
+
       opacity: (d, i) => i <= equipos_por_grupos-1 ? 0.6 : 0.6
-    }) */
+    })
   }
 
   let positions_playoffs = {
@@ -823,6 +850,9 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
         yPlayoffs.domain([primera_ronda_playoff/8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[i][0]][0]][0]) + ((top_n*heightBars)/(primera_ronda_playoff/4)) - heightBars/2,
     ],
 ])) */
+
+    if (grupos > 1) {
+
   let rondas = [1, 2, 4, 8]
   let arr = ['local', 'visitante']
   let arr_w = [5, 3, 1.75, 1]
@@ -1192,9 +1222,9 @@ svg
 
   })
 
-   lastSlice.forEach(d => {
+   /* lastSlice.forEach(d => {
       d.rankInGroup <= 1 && d.fecha == '' ? d.fecha = 'Fecha 1/8' : ''
-    })
+    }) */
 
     if (fechas_playoff.length == 0) {
     svg
@@ -1235,6 +1265,8 @@ svg
     .text(d => d.name.split('-')[0])
 
   }
+
+}
   
     /* svg
       .selectAll('.path')
@@ -3304,6 +3336,28 @@ svg
       fill: (d, i) => (i == 0 ? 'url(#areaGradient0)' : i % 2 == 1 ? 'url(#areaGradient0)' : 'url(#areaGradient0)')
     })
 
+/*     grupos1.forEach((e, index) => {
+      svg
+      .selectAll('.text')
+      .data(d3.range(1, equipos_por_grupos+1))
+      .enter()
+      .append('text')
+      .attrs({
+        x: margin_left / 2,
+        y: (d, i) => y(i+(index*equipos_por_grupos))
+      })
+      .styles({
+        fill: black_color,
+        'font-size': heightBars * 0.5,
+        'alignment-baseline': 'central',
+        'text-anchor': 'middle',
+        'font-weight': 600
+      })
+      .text((d) => d)
+    })
+ */
+  if (grupos>1) {
+
     grupos1.forEach((e, index) => {
       svg
       .selectAll('.text')
@@ -3323,8 +3377,6 @@ svg
       })
       .text((d) => d)
     })
-
-  if (grupos>1) {
 
     /* svg
       .selectAll('.text')
@@ -3362,7 +3414,7 @@ svg
       })
       .text((d) => d) */
   } else {
-    /* svg
+    svg
       .selectAll('.text')
       .data(d3.range(1, top_n + 1))
       .enter()
@@ -3378,7 +3430,7 @@ svg
         'text-anchor': 'middle',
         'font-weight': 600
       })
-      .text((d) => d) */
+      .text((d) => d)
   }
 
 
@@ -3388,6 +3440,8 @@ svg
     width: margin_left * 0.8,
     href: `./country-flags/flag-of-${data1[0].pais}.png`
   })
+
+  if (localia) {
 
   svg
     .append('text')
@@ -3541,7 +3595,7 @@ svg
               ) /
                 ((d3.sum(lastSlice, (d) => d.partidos_jugados) + d3.sum(lastSlice, (d) => d.partidos_jugados1)) / 2)
             ) +
-            ') ' +
+            ')\xa0\xa0' +
             ' '
         )
     )
@@ -3719,6 +3773,161 @@ svg
             ' '
         )
     )
+
+  } else {
+
+    svg
+    .append('text')
+    .attrs({
+      class: 'top',
+      x: width * 0.1,
+      y: margin.top * 0.33
+    })
+    .styles({
+      fill: defaults.name.style.fill,
+      'font-size': defaults.name.style.font_size,
+      'font-weight': defaults.name.style.font_weight,
+      'text-anchor': defaults.name.style.text_anchor,
+      'alignment-baseline': defaults.name.style.alignment_baseline
+    })
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'pj_top'
+        })
+        .styles({
+          fill: 'lightgrey',
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(d3.format('.0f')((d3.sum(lastSlice, (d) => d.partidos_jugados) + d3.sum(lastSlice, (d) => d.partidos_jugados1)) / 2) + ' ')
+    )
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'pg_top'
+        })
+        .styles({
+          fill: victoria_color,
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(d3.sum(lastSlice, (d) => d.partidos_ganados) + d3.sum(lastSlice, (d) => d.partidos_ganados1) + ' ')
+    )
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'pg_por_top'
+        })
+        .styles({
+          fill: victoria_color,
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(
+          '(' +
+            d3.format('.0f')(
+              ((d3.sum(lastSlice, (d) => d.partidos_ganados) + d3.sum(lastSlice, (d) => d.partidos_ganados1)) /
+                d3.format('.0f')((d3.sum(lastSlice, (d) => d.partidos_jugados) + d3.sum(lastSlice, (d) => d.partidos_jugados1)) / 2)) *
+                100
+            ) +
+            '%) '
+        )
+    )
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'pe_top'
+        })
+        .styles({
+          fill: empate_color,
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(d3.format('.0f')((d3.sum(lastSlice, (d) => d.partidos_empatados) + d3.sum(lastSlice, (d) => d.partidos_empatados1)) / 2) + ' ')
+    )
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'pe_por_top'
+        })
+        .styles({
+          fill: empate_color,
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(
+          '(' +
+            d3.format('.0f')(
+              (d3.format('.0f')((d3.sum(lastSlice, (d) => d.partidos_empatados) + d3.sum(lastSlice, (d) => d.partidos_empatados1)) / 2) /
+                d3.format('.0f')((d3.sum(lastSlice, (d) => d.partidos_jugados) + d3.sum(lastSlice, (d) => d.partidos_jugados1)) / 2)) *
+                100
+            ) +
+            '%)\xa0\xa0\xa0'
+        )
+    )
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'gf_top'
+        })
+        .styles({
+          fill: 'lightgrey',
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(d3.sum(lastSlice, (d) => d.goles) + ' ')
+    )
+
+    .call((text) =>
+      text
+        .append('tspan')
+        .attrs({
+          class: 'avg_g_top'
+        })
+        .styles({
+          fill: 'lightgrey',
+          'font-size': margin.top * 0.3,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline
+        })
+        .text(
+          '(' +
+            d3
+              .format('.1f')(
+                (d3.sum(lastSlice, (d) => d.goles) + d3.sum(lastSlice, (d) => d.goles1)) /
+                  d3.format('.0f')((d3.sum(lastSlice, (d) => d.partidos_jugados) + d3.sum(lastSlice, (d) => d.partidos_jugados1)) / 2)
+              )
+              .replace('.', ',') +
+            ') '
+        )
+    )
+  }
 
   var rankingSVG = svg.selectAll('.g').data(yearSlice).enter().append('g').attr('class', 'rankingSVG')
 
@@ -4286,6 +4495,24 @@ svg
 
     .call((text) =>
       text
+        .append("tspan")
+        .attrs({
+          class: "campeon",
+          dy: -heightBars*0.09,
+        })
+        .styles({
+          fill: black_color,
+          "font-size": heightBars * 0.275,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d, i, total) => ' ' + probabilidades[d.name].probabilidad + '%'
+        )
+    )
+
+    .call((text) =>
+      text
         .append('tspan')
         .attrs({
           class: 'campeon',
@@ -4379,6 +4606,23 @@ svg
             : ` (${d3
                 .format('.1f')(d.goles / d.partidos_jugados)
                 .replace('.', ',')})`
+        )
+    )
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "campeon",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": heightBars * 0.275,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d, i, total) => ' ' + probabilidades[d.name].probabilidad + '%'
         )
     )
 
@@ -6229,9 +6473,19 @@ svg
   })
 }
 
-Promise.all([d3.csv('data4.csv')]).then(([data1]) => {
+Promise.all([d3.csv('/torneos/data2.csv')]).then(([data1]) => {
   /* let torneos = [...new Set(data1.map((d) => d.torneo))]
   data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
+
+  let data_cruda = data1.map(d => ({ ...d }))
+
+  console.log(structuredClone(data_cruda))
+
+  data_cruda.forEach(d => {
+      d.jugado = d.goles_local !== '99' && d.goles_visitante !== '99'
+      d.goles_local = d.jugado ? Number(d.goles_local) : null
+      d.goles_visitante = d.jugado ? Number(d.goles_visitante) : null
+  })
 
   let nombre_torneo = ress_ratio == '16:9' ? 'Liga Profesional de Fútbol 2023' : ress_ratio == '1:1' ? 'Liga Profesional de Fútbol 2023' : 'LPF 2023'
   nombre_torneo = data1[0].torneo.replace('Torneo ', '')
@@ -6937,7 +7191,148 @@ Promise.all([d3.csv('data4.csv')]).then(([data1]) => {
 
   final_list1 = final_list1.filter((d) => d.name != 'hola')
 
-  render(final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff)
+   // **************************************
+
+  function calcularPosiciones(partidos) {
+  const tabla = {};
+
+  // Inicializar todos los equipos en cero
+  const equipos = obtenerEquipos(partidos);
+  equipos.forEach(equipo => {
+    tabla[equipo] = { pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, diff: 0 };
+  });
+
+  // Procesar solo partidos jugados
+  partidos
+    .filter(p => p.jugado)
+    .forEach(p => {
+      const local     = tabla[p.local];
+      const visitante = tabla[p.visitante];
+
+      local.pj++;
+      visitante.pj++;
+
+      local.gf     += p.goles_local;
+      local.gc     += p.goles_visitante;
+      visitante.gf += p.goles_visitante;
+      visitante.gc += p.goles_local;
+
+      if (p.goles_local > p.goles_visitante) {
+        // Ganó el local
+        local.pts += 3;
+        local.pg++;
+        visitante.pp++;
+
+      } else if (p.goles_local < p.goles_visitante) {
+        // Ganó el visitante
+        visitante.pts += 3;
+        visitante.pg++;
+        local.pp++;
+
+      } else {
+        // Empate
+        local.pts += 1;
+        local.pe++;
+        visitante.pts += 1;
+        visitante.pe++;
+      }
+    });
+    Object.values(tabla).forEach(e => e.diff = e.gf - e.gc);
+  return tabla;
+}
+
+function ordenarTabla(tabla) {
+  return Object.keys(tabla).sort((a, b) => {
+    const sa = tabla[a];
+    const sb = tabla[b];
+
+    // 1. Puntos
+    if (sb.pts !== sa.pts) return sb.pts - sa.pts;
+
+    // 2. Diferencia de gol
+    if (sb.diff !== sa.diff) return sb.diff - sa.diff;
+
+    // 3. Goles a favor
+    if (sb.gf !== sa.gf) return sb.gf - sa.gf;
+
+    // 5. Sorteo (aleatorio, pero fijo por escenario — ver nota abajo)
+    return 0; // en simulación lo tratamos como 50/50 (ver más abajo)
+  });
+}
+
+function obtenerEquipos(partidos) {
+  const set = new Set();
+  partidos.forEach(p => {
+    set.add(p.local);
+    set.add(p.visitante);
+  });
+  return Array.from(set);
+}
+
+function simularResultado() {
+  const rand = Math.random();
+
+  let gana_local = 0.40;
+  let empate = 0.25;
+  let gana_visitante = 1-(gana_local+empate);
+
+  if (rand < gana_local) return { goles_local: 1, goles_visitante: 0 }; // local
+  if (rand < gana_local+empate) return { goles_local: 0, goles_visitante: 0 }; // empate
+  return              { goles_local: 0, goles_visitante: 1 }; // visitante
+}
+
+  function calcularProbabilidades(
+  partidos,
+  cantidadClassif = 2,
+  simulaciones = 50_000
+) {
+  const equipos = obtenerEquipos(partidos);
+  const pendientes = partidos.filter(p => !p.jugado);
+
+  // Contador de veces que clasificó cada equipo
+  const clasificaciones = {};
+  equipos.forEach(e => clasificaciones[e] = 0);
+
+  for (let sim = 0; sim < simulaciones; sim++) {
+
+    // Copiar partidos y completar los pendientes con resultado aleatorio
+    const partidosSimulados = partidos.map(p => {
+      if (p.jugado) return p;
+
+      const resultado = simularResultado();
+      return {
+        ...p,
+        ...resultado,
+        jugado: true,
+      };
+    });
+
+    // Calcular posiciones con este escenario y registrar quiénes clasifican
+    const tabla  = calcularPosiciones(partidosSimulados);
+    const orden  = ordenarTabla(tabla);
+    const clasif = orden.slice(0, cantidadClassif);
+
+    clasif.forEach(equipo => clasificaciones[equipo]++);
+  }
+
+  // Convertir conteos a porcentajes
+  const resultado = {};
+  equipos.forEach(equipo => {
+    resultado[equipo] = {
+      clasificaciones: clasificaciones[equipo],
+      probabilidad: Number(
+        ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)
+      ),
+    };
+  });
+
+  return resultado;
+}
+
+  let probabilidades = (calcularProbabilidades(data_cruda, 1, 50000));
+  console.table(probabilidades)
+
+  render(final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades)
 })
 
 function simularGrupoArgentina(iteraciones = 100000) {
