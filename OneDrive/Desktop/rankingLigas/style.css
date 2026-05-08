@@ -1,0 +1,8 @@
+* {
+  margin: 0;
+  padding: 0;
+  background-color: grey;
+  font-family: 'Montserrat', sans-serif;
+  font-feature-settings:'tnum';
+  /* font-family: 'Handwriting', sans-serif; */
+}

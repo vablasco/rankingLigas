@@ -1,0 +1,379 @@
+pais,torneo,fecha,dia,local,visitante,goles_local,goles_visitante
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Sarmiento,Instituto,1,2
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Argentinos Juniors,Rosario Central,3,2
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Newell's Old Boys,Platense,2,0
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Huracán,Defensa y Justicia,3,1
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Godoy Cruz,Barracas Central,0,1
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Independiente,Talleres,1,3
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,River Plate,Central Córdoba,3,0
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Riestra,San Lorenzo,1,0
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Tigre,Estudiantes,0,1
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Belgrano,Racing,4,4
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Lanús,Independiente Rivadavia,0,2
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Atlético Tucumán,Boca Juniors,1,0
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Gimnasia,Vélez Sarsfield,3,1
+Argentina,Campeonato 2024,Fecha 1,May 10 2024,Unión,Banfield,1,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Independiente Rivadavia,Godoy Cruz,0,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,River Plate,Belgrano,3,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Defensa y Justicia,Gimnasia,1,1
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Instituto,Unión,1,1
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Barracas Central,Sarmiento,1,1
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Platense,Independiente,0,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Banfield,Huracán,1,1
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Talleres,Atlético Tucumán,2,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Central Córdoba,Boca Juniors,2,4
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Estudiantes,Riestra,2,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,San Lorenzo,Lanús,1,1
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Racing,Argentinos Juniors,3,0
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Rosario Central,Tigre,1,1
+Argentina,Campeonato 2024,Fecha 2,May 18 2024,Vélez Sarsfield,Newell's Old Boys,1,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Riestra,Rosario Central,0,2
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Tigre,Racing,0,4
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Belgrano,Central Córdoba,2,1
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Lanús,Estudiantes,2,1
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Argentinos Juniors,River Plate,1,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Newell's Old Boys,Defensa y Justicia,1,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Boca Juniors,Talleres,0,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Huracán,Instituto,1,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Sarmiento,Independiente Rivadavia,0,1
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Gimnasia,Banfield,3,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Independiente,Vélez Sarsfield,1,1
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Unión,Barracas Central,2,0
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Atlético Tucumán,Platense,1,1
+Argentina,Campeonato 2024,Fecha 3,May 24 2024,Godoy Cruz,San Lorenzo,1,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Racing,Riestra,1,0
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Belgrano,Argentinos Juniors,1,0
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Vélez Sarsfield,Atlético Tucumán,1,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Platense,Boca Juniors,1,0
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Central Córdoba,Talleres,2,4
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Rosario Central,Lanús,1,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Instituto,Gimnasia,2,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,River Plate,Tigre,3,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,San Lorenzo,Sarmiento,0,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Defensa y Justicia,Independiente,0,0
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Estudiantes,Godoy Cruz,1,1
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Barracas Central,Huracán,0,2
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Banfield,Newell's Old Boys,2,0
+Argentina,Campeonato 2024,Fecha 4,Jun 01 2024,Independiente Rivadavia,Unión,0,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Godoy Cruz,Rosario Central,1,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Argentinos Juniors,Central Córdoba,2,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Gimnasia,Barracas Central,2,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Independiente,Banfield,2,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Riestra,River Plate,2,0
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Sarmiento,Estudiantes,2,0
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Tigre,Belgrano,1,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Lanús,Racing,2,0
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Newell's Old Boys,Instituto,0,2
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Boca Juniors,Vélez Sarsfield,1,0
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Talleres,Platense,2,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Unión,San Lorenzo,2,1
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Huracán,Independiente Rivadavia,1,0
+Argentina,Campeonato 2024,Fecha 5,Jun 12 2024,Atlético Tucumán,Defensa y Justicia,1,1
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Argentinos Juniors,Tigre,0,2
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Independiente Rivadavia,Gimnasia,1,0
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Instituto,Independiente,3,1
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Barracas Central,Newell's Old Boys,0,1
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Belgrano,Riestra,2,1
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Rosario Central,Sarmiento,4,2
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,San Lorenzo,Huracán,1,1
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Racing,Godoy Cruz,3,0
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Banfield,Atlético Tucumán,1,1
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,River Plate,Lanús,2,2
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Central Córdoba,Platense,0,2
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Estudiantes,Unión,0,0
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Defensa y Justicia,Boca Juniors,2,2
+Argentina,Campeonato 2024,Fecha 6,Jul 18 2024,Vélez Sarsfield,Talleres,3,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Riestra,Argentinos Juniors,2,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Gimnasia,San Lorenzo,0,1
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Newell's Old Boys,Independiente Rivadavia,0,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Independiente,Barracas Central,0,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Talleres,Defensa y Justicia,1,1
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Sarmiento,Racing,1,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Godoy Cruz,River Plate,2,1
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Huracán,Estudiantes,0,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Lanús,Belgrano,3,2
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Platense,Vélez Sarsfield,0,2
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Atlético Tucumán,Instituto,1,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Tigre,Central Córdoba,1,1
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Unión,Rosario Central,1,0
+Argentina,Campeonato 2024,Fecha 7,Jul 23 2024,Boca Juniors,Banfield,3,0
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Independiente Rivadavia,Independiente,1,0
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,San Lorenzo,Newell's Old Boys,1,1
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Rosario Central,Huracán,0,1
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Banfield,Talleres,1,1
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Estudiantes,Gimnasia,4,1
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Racing,Unión,2,1
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,River Plate,Sarmiento,1,0
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Instituto,Boca Juniors,0,0
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Barracas Central,Atlético Tucumán,0,2
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Defensa y Justicia,Platense,1,3
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Central Córdoba,Vélez Sarsfield,0,2
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Tigre,Riestra,2,1
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Argentinos Juniors,Lanús,2,0
+Argentina,Campeonato 2024,Fecha 8,Jul 27 2024,Belgrano,Godoy Cruz,1,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Newell's Old Boys,Estudiantes,1,4
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Godoy Cruz,Argentinos Juniors,1,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Vélez Sarsfield,Defensa y Justicia,3,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Talleres,Instituto,1,1
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Independiente,San Lorenzo,0,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Huracán,Racing,0,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Sarmiento,Belgrano,0,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Unión,River Plate,0,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Boca Juniors,Barracas Central,1,1
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Atlético Tucumán,Independiente Rivadavia,2,1
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Lanús,Tigre,3,2
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Riestra,Central Córdoba,1,0
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Gimnasia,Rosario Central,0,1
+Argentina,Campeonato 2024,Fecha 9,Aug 02 2024,Platense,Banfield,0,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Argentinos Juniors,Sarmiento,0,0
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Riestra,Lanús,3,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Barracas Central,Talleres,1,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Belgrano,Unión,1,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Racing,Gimnasia,0,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,San Lorenzo,Atlético Tucumán,0,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Rosario Central,Newell's Old Boys,1,0
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Independiente Rivadavia,Boca Juniors,1,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,River Plate,Huracán,1,1
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Central Córdoba,Defensa y Justicia,2,0
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Instituto,Platense,2,0
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Banfield,Vélez Sarsfield,2,2
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Estudiantes,Independiente,0,2
+Argentina,Campeonato 2024,Fecha 10,Aug 08 2024,Tigre,Godoy Cruz,0,2
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Platense,Barracas Central,0,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Newell's Old Boys,Racing,0,1
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Lanús,Central Córdoba,1,1
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Independiente,Rosario Central,1,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Gimnasia,River Plate,1,1
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Talleres,Independiente Rivadavia,2,1
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Vélez Sarsfield,Instituto,1,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Boca Juniors,San Lorenzo,3,2
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Atlético Tucumán,Estudiantes,2,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Sarmiento,Tigre,0,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Huracán,Belgrano,1,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Godoy Cruz,Riestra,4,1
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Unión,Argentinos Juniors,3,0
+Argentina,Campeonato 2024,Fecha 11,Aug 16 2024,Defensa y Justicia,Banfield,1,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Independiente Rivadavia,Platense,0,2
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Riestra,Sarmiento,2,1
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Argentinos Juniors,Huracán,0,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Instituto,Defensa y Justicia,4,1
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Tigre,Unión,5,1
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Lanús,Godoy Cruz,1,1
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,San Lorenzo,Talleres,2,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Racing,Independiente,0,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,River Plate,Newell's Old Boys,0,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Barracas Central,Vélez Sarsfield,0,5
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Central Córdoba,Banfield,0,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Belgrano,Gimnasia,0,1
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Rosario Central,Atlético Tucumán,1,0
+Argentina,Campeonato 2024,Fecha 12,Aug 23 2024,Estudiantes,Boca Juniors,1,1
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Sarmiento,Lanús,0,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Unión,Riestra,0,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Defensa y Justicia,Barracas Central,1,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Newell's Old Boys,Belgrano,0,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Talleres,Estudiantes,1,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Vélez Sarsfield,Independiente Rivadavia,4,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Boca Juniors,Rosario Central,2,1
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Huracán,Tigre,0,2
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Platense,San Lorenzo,1,2
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Independiente,River Plate,0,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Atlético Tucumán,Racing,1,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Banfield,Instituto,1,2
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Gimnasia,Argentinos Juniors,1,0
+Argentina,Campeonato 2024,Fecha 13,Aug 30 2024,Godoy Cruz,Central Córdoba,1,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Riestra,Huracán,1,0
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Central Córdoba,Instituto,2,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Lanús,Unión,1,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,River Plate,Atlético Tucumán,4,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,San Lorenzo,Vélez Sarsfield,0,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Racing,Boca Juniors,2,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Belgrano,Independiente,1,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Tigre,Gimnasia,1,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Estudiantes,Platense,1,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Godoy Cruz,Sarmiento,1,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Rosario Central,Talleres,2,2
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Argentinos Juniors,Newell's Old Boys,3,0
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Barracas Central,Banfield,0,1
+Argentina,Campeonato 2024,Fecha 14,Sep 13 2024,Independiente Rivadavia,Defensa y Justicia,1,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Gimnasia,Riestra,0,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Unión,Godoy Cruz,3,1
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Boca Juniors,River Plate,0,1
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Instituto,Barracas Central,0,1
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Newell's Old Boys,Tigre,1,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Defensa y Justicia,San Lorenzo,0,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Huracán,Lanús,3,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Independiente,Argentinos Juniors,0,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Talleres,Racing,2,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Atlético Tucumán,Belgrano,2,4
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Platense,Rosario Central,1,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Sarmiento,Central Córdoba,1,3
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Banfield,Independiente Rivadavia,2,0
+Argentina,Campeonato 2024,Fecha 15,Sep 20 2024,Vélez Sarsfield,Estudiantes,2,0
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Riestra,Newell's Old Boys,3,3
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Independiente Rivadavia,Instituto,1,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,San Lorenzo,Banfield,2,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Estudiantes,Defensa y Justicia,1,0
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Godoy Cruz,Huracán,1,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Belgrano,Boca Juniors,2,0
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Central Córdoba,Barracas Central,2,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,River Plate,Talleres,0,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Sarmiento,Unión,1,0
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Argentinos Juniors,Atlético Tucumán,0,0
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Racing,Platense,1,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Lanús,Gimnasia,0,0
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Tigre,Independiente,1,1
+Argentina,Campeonato 2024,Fecha 16,Sep 27 2024,Rosario Central,Vélez Sarsfield,3,0
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Unión,Central Córdoba,0,2
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Huracán,Sarmiento,3,1
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Vélez Sarsfield,Racing,1,0
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Gimnasia,Godoy Cruz,0,1
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Newell's Old Boys,Lanús,2,1
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Instituto,San Lorenzo,2,0
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Independiente,Riestra,3,1
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Talleres,Belgrano,0,0
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Platense,River Plate,0,0
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Boca Juniors,Argentinos Juniors,1,0
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Barracas Central,Independiente Rivadavia,1,1
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Banfield,Estudiantes,1,2
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Defensa y Justicia,Rosario Central,2,1
+Argentina,Campeonato 2024,Fecha 17,Oct 04 2024,Atlético Tucumán,Tigre,1,2
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Riestra,Atlético Tucumán,2,0
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Sarmiento,Gimnasia,1,1
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Central Córdoba,Independiente Rivadavia,2,0
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Lanús,Independiente,0,2
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,River Plate,Vélez Sarsfield,1,1
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Belgrano,Platense,0,1
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Racing,Defensa y Justicia,4,3
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Tigre,Boca Juniors,3,0
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Unión,Huracán,0,1
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Argentinos Juniors,Talleres,3,0
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Estudiantes,Instituto,3,2
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Rosario Central,Banfield,1,1
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,Godoy Cruz,Newell's Old Boys,2,0
+Argentina,Campeonato 2024,Fecha 18,Oct 18 2024,San Lorenzo,Barracas Central,1,0
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Barracas Central,Estudiantes,1,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Defensa y Justicia,River Plate,0,0
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Instituto,Rosario Central,0,0
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Newell's Old Boys,Sarmiento,1,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Independiente,Godoy Cruz,1,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Vélez Sarsfield,Belgrano,1,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Independiente Rivadavia,San Lorenzo,1,0
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Platense,Argentinos Juniors,2,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Banfield,Racing,2,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Boca Juniors,Riestra,1,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Talleres,Tigre,1,1
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Atlético Tucumán,Lanús,1,0
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Gimnasia,Unión,2,3
+Argentina,Campeonato 2024,Fecha 19,Oct 25 2024,Huracán,Central Córdoba,0,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Estudiantes,Independiente Rivadavia,1,1
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Sarmiento,Independiente,0,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Godoy Cruz,Atlético Tucumán,1,1
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Rosario Central,Barracas Central,0,1
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Central Córdoba,San Lorenzo,0,1
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Huracán,Gimnasia,0,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Unión,Newell's Old Boys,2,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Argentinos Juniors,Vélez Sarsfield,1,1
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Riestra,Talleres,0,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,River Plate,Banfield,3,1
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Belgrano,Defensa y Justicia,1,2
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Tigre,Platense,0,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Racing,Instituto,2,0
+Argentina,Campeonato 2024,Fecha 20,Oct 31 2024,Lanús,Boca Juniors,1,0
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Atlético Tucumán,Sarmiento,1,0
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Independiente Rivadavia,Rosario Central,1,1
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Gimnasia,Central Córdoba,0,0
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,San Lorenzo,Estudiantes,1,1
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Independiente,Unión,3,0
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Newell's Old Boys,Huracán,2,4
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Barracas Central,Racing,0,2
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Banfield,Belgrano,1,1
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Boca Juniors,Godoy Cruz,4,1
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Instituto,River Plate,2,3
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Talleres,Lanús,1,2
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Defensa y Justicia,Argentinos Juniors,2,1
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Platense,Riestra,0,0
+Argentina,Campeonato 2024,Fecha 21,Nov 04 2024,Vélez Sarsfield,Tigre,1,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Unión,Atlético Tucumán,1,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Gimnasia,Newell's Old Boys,1,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Rosario Central,San Lorenzo,0,1
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Huracán,Independiente,1,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Central Córdoba,Estudiantes,1,1
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,River Plate,Barracas Central,3,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Godoy Cruz,Talleres,0,1
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Racing,Independiente Rivadavia,2,1
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Sarmiento,Boca Juniors,0,2
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Riestra,Vélez Sarsfield,1,1
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Lanús,Platense,0,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Tigre,Defensa y Justicia,0,4
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Argentinos Juniors,Banfield,1,0
+Argentina,Campeonato 2024,Fecha 22,Nov 09 2024,Belgrano,Instituto,3,1
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,San Lorenzo,Racing,1,2
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Banfield,Tigre,0,1
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Defensa y Justicia,Riestra,1,1
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Platense,Godoy Cruz,1,0
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Atlético Tucumán,Huracán,4,2
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Instituto,Argentinos Juniors,1,0
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Newell's Old Boys,Central Córdoba,2,3
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Estudiantes,Rosario Central,1,1
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Vélez Sarsfield,Lanús,0,0
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Boca Juniors,Unión,1,0
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Barracas Central,Belgrano,1,1
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Independiente,Gimnasia,1,0
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Talleres,Sarmiento,2,0
+Argentina,Campeonato 2024,Fecha 23,Nov 17 2024,Independiente Rivadavia,River Plate,2,1
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Tigre,Instituto,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Huracán,Boca Juniors,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Riestra,Banfield,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Gimnasia,Atlético Tucumán,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Godoy Cruz,Vélez Sarsfield,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Lanús,Defensa y Justicia,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Central Córdoba,Rosario Central,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Argentinos Juniors,Barracas Central,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Belgrano,Independiente Rivadavia,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Newell's Old Boys,Independiente,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Sarmiento,Platense,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Unión,Talleres,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,Racing,Estudiantes,99,99
+Argentina,Campeonato 2024,Fecha 24,Nov 23 2024,River Plate,San Lorenzo,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,San Lorenzo,Belgrano,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Estudiantes,River Plate,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Banfield,Lanús,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Rosario Central,Racing,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Defensa y Justicia,Godoy Cruz,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Instituto,Riestra,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Independiente,Central Córdoba,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Vélez Sarsfield,Sarmiento,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Boca Juniors,Gimnasia,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Barracas Central,Tigre,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Platense,Unión,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Talleres,Huracán,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Independiente Rivadavia,Argentinos Juniors,99,99
+Argentina,Campeonato 2024,Fecha 25,Nov 29 2024,Atlético Tucumán,Newell's Old Boys,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Riestra,Barracas Central,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Sarmiento,Defensa y Justicia,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Lanús,Instituto,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Unión,Vélez Sarsfield,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Central Córdoba,Racing,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Gimnasia,Talleres,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Godoy Cruz,Banfield,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,River Plate,Rosario Central,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Newell's Old Boys,Boca Juniors,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Tigre,Independiente Rivadavia,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Argentinos Juniors,San Lorenzo,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Belgrano,Estudiantes,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Huracán,Platense,99,99
+Argentina,Campeonato 2024,Fecha 26,Dec 06 2024,Independiente,Atlético Tucumán,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Atlético Tucumán,Central Córdoba,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Banfield,Sarmiento,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Barracas Central,Lanús,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Boca Juniors,Independiente,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Defensa y Justicia,Unión,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Estudiantes,Argentinos Juniors,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Independiente Rivadavia,Riestra,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Instituto,Godoy Cruz,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Platense,Gimnasia,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Racing,River Plate,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Rosario Central,Belgrano,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,San Lorenzo,Tigre,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Talleres,Newell's Old Boys,99,99
+Argentina,Campeonato 2024,Fecha 27,Dec 15 2024,Vélez Sarsfield,Huracán,99,99
