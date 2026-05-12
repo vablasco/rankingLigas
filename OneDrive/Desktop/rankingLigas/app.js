@@ -576,6 +576,85 @@ const render = (
     return newArray;
   }
 
+  let sort_teams1 = (array) => {
+  array = removeDuplicates(array);
+
+  // Calcular stats de enfrentamientos directos entre un subconjunto de nombres
+  function statsDirectos(nombres) {
+    const stats = {};
+    nombres.forEach(n => { stats[n] = { pts_directo: 0, diff_directo: 0,/* jg_directo: 0, pg_directo: 0, pe_directo: 0, pp_directo: 0, */ gf_directo: 0, /* gc_directo: 0, diff_directo: 0  */}; });
+
+    // Reconstruir enfrentamientos desde el propio array
+    // Cada elemento tiene: name (equipo), vs (rival), value (pts del partido: 0,1,3), goles, diferencia_de_goles
+    nombres.forEach(nombre => {
+      let rivales = nombres.filter(d => d !== nombre)
+
+      for (let i = 1; i <= array[0].semana; i++) {
+        rivales.forEach(rival => {
+          let filter_fecha = data.filter(d => d.semana == i && d.name == nombre && d.vs.includes(rival) && d.goles_fecha !== 99)
+          stats[nombre].pts_directo += filter_fecha[0]?.pts_fecha ?? 0;
+          stats[nombre].gf_directo += filter_fecha[0]?.goles_fecha ?? 0;
+          /* stats[nombre].gc_directo += filter_fecha[0]?.goles_en_contra_fecha ?? 0; */
+          /* stats[nombre].pg_directo += filter_fecha[0]?.goles_fecha ?? 0 > filter_fecha[0]?.goles_en_contra_fecha ?? 0 ? 1 : 0;
+          stats[nombre].pe_directo += filter_fecha[0]?.goles_fecha ?? 0 == filter_fecha[0]?.goles_en_contra_fecha ?? 0 ? 1 : 0;
+          stats[nombre].pp_directo += filter_fecha[0]?.goles_fecha ?? 0 < filter_fecha[0]?.goles_en_contra_fecha ?? 0 ? 1 : 0; */
+          stats[nombre].diff_directo += (filter_fecha[0]?.goles_fecha ?? 0) - (filter_fecha[0]?.goles_en_contra_fecha ?? 0);
+        })
+      }
+
+    });
+
+    return stats;
+  }
+
+  array.sort((a, b) => {
+    const ga = a.name.split("-")[1];
+    const gb = b.name.split("-")[1];
+
+    // 1º Por grupo (alfabético A, B, C...)
+    if (gb < ga) return 1;
+    if (gb > ga) return -1;
+
+    // 2º Puntos generales
+    if (b.value !== a.value) return b.value - a.value;
+    
+    // Empatados en puntos dentro del mismo grupo
+    const empatados = array
+    .filter(e => e.name.split("-")[1] === ga && e.value === a.value)
+    .map(e => e.name);
+
+    // 3º Puntos directos entre empatados
+    if (statsDirectos(empatados)[b.name].pts_directo !== statsDirectos(empatados)[a.name].pts_directo) return statsDirectos(empatados)[b.name].pts_directo - statsDirectos(empatados)[a.name].pts_directo;
+
+    // 4º Diferencia de goles directa entre empatados
+    if (statsDirectos(empatados)[b.name].diff_directo !== statsDirectos(empatados)[a.name].diff_directo) return statsDirectos(empatados)[b.name].diff_directo - statsDirectos(empatados)[a.name].diff_directo;
+
+    // 5º Goles a favor directos entre empatados
+    if (statsDirectos(empatados)[b.name].gf_directo !== statsDirectos(empatados)[a.name].gf_directo) return statsDirectos(empatados)[b.name].gf_directo - statsDirectos(empatados)[a.name].gf_directo;
+
+    // 6º Diferencia de goles general
+    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+
+    // 7º Goles a favor general
+    if (b.goles !== a.goles) return b.goles - a.goles;
+
+    // 8º Puntos de visitante
+    if (b.value_away !== a.value_away) return b.value_away - a.value_away;
+
+    // 9º Alfabético por nombre completo
+    const textA = a.name.toUpperCase();
+    const textB = b.name.toUpperCase();
+    return textA < textB ? -1 : textA > textB ? 1 : 0;
+  });
+
+  array.forEach((d, i) => (d.rank = i));
+  array.forEach((d, i) => (d.rankInGroup = i % 4));
+  array.forEach((d, i) => (d.position = d.rankInGroup + 1 + d.name.split("-")[1]));
+  array.forEach((d, i) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
+
+  return array;
+};
+
   let sort_teams = (array) => {
     array = removeDuplicates(array);
 
@@ -649,7 +728,7 @@ const render = (
   let yearSlice = sort_teams(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
-  console.log(yearSlice);
+  console.log(sort_teams1(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
 
   let x = d3.scaleLinear().domain([0, ticks_slice]).range([0, weeks_i]);
 
@@ -663,7 +742,7 @@ const render = (
 
   let names = new Set(data.map((d) => d.name));
 
-  let lastSlice = sort_teams(
+  let lastSlice = sort_teams1(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
 
@@ -2212,7 +2291,7 @@ const render = (
     var points = [];
 
     dates.slice(0).forEach((o) => {
-      let yearSlice1 = sort_teams(
+      let yearSlice1 = sort_teams1(
         data.filter((d) => d.semana == o && !isNaN(d.value)),
       );
 
@@ -2302,7 +2381,7 @@ const render = (
     let wks = 0;
 
     dates.slice(0).forEach((o, i) => {
-      let yearSlice1 = sort_teams(
+      let yearSlice1 = sort_teams1(
         data.filter((d) => d.semana == o && !isNaN(d.value)),
       );
 
@@ -6998,6 +7077,8 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
       stats[e] = { pts: 0, diff: 0, gf: 0 };
     });
 
+    /* console.log(partidos) */
+
     partidos.forEach(p => {
       if (!p.jugado) return;
       if (!equiposEnDisputa.includes(p.local) || !equiposEnDisputa.includes(p.visitante)) return;
@@ -7027,9 +7108,10 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   function comparar(a, b, empatados) {
     const sa = tabla[a];
     const sb = tabla[b];
-
+    
     // 1º Enfrentamientos directos entre los empatados
     const directos = statsDirectos(empatados);
+    /* console.log(directos) */
     const da = directos[a];
     const db = directos[b];
 
@@ -7063,12 +7145,45 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     return comparar(a, b, empatados);
   });
 
+  /* console.log(ordenados.map((equipo, i) => {
+    const empatados = ordenados.filter(e => tabla[e].pts === tabla[equipo].pts);
+    const directos = empatados.length > 1 ? statsDirectos(empatados) : null;
+    const d = directos ? directos[equipo] : null;
+
+    return {
+      pos: i + 1,
+      equipo,
+      ...tabla[equipo],
+      ...(d ? {
+        pts_directo: d.pts,
+        // pj_directo: no se trackea en statsDirectos, lo agregamos abajo
+        gf_directo: d.gf,
+        gc_directo: d.gc,        // ver nota abajo
+        diff_directo: d.diff,
+      } : {})
+    };
+  })) */
+
   // --- 5. Resultado final ---
-  return ordenados/* .map((equipo, i) => ({
-    pos: i + 1,
-    equipo,
-    ...tabla[equipo]
-  })) */;
+  // --- 5. Resultado final ---
+  return ordenados/* .map((equipo, i) => {
+    const empatados = ordenados.filter(e => tabla[e].pts === tabla[equipo].pts);
+    const directos = empatados.length > 1 ? statsDirectos(empatados) : null;
+    const d = directos ? directos[equipo] : null;
+
+    return {
+      pos: i + 1,
+      equipo,
+      ...tabla[equipo],
+      ...(d ? {
+        pts_directo: d.pts,
+        // pj_directo: no se trackea en statsDirectos, lo agregamos abajo
+        gf_directo: d.gf,
+        gc_directo: d.gc,        // ver nota abajo
+        diff_directo: d.diff,
+      } : {})
+    };
+  }); */
 }
 
   /* function ordenarTabla1(tabla) {
@@ -7272,7 +7387,7 @@ console.log(generarResultado('bundesliga'))
       obtenerGrupos(data1).forEach(d => {
         let grupo = partidosSimulados.filter(e => e.local.split('-')[1] == d)
 
-        const tabla = calcularPosiciones(grupo);
+        /* const tabla = calcularPosiciones(grupo); */
         const orden = calcularYOrdenarTabla(grupo);
         /* const orden = ordenarTabla(tabla); */
         const clasif = orden.slice(0, cantidadClassif);
@@ -7282,12 +7397,12 @@ console.log(generarResultado('bundesliga'))
         clasif.forEach((equipo) => clasificaciones[equipo]++);
 
         
-        if (d == 'H' && clasif.includes("River-H")) {
+        if (d == 'H' && clasif.includes("River Plate-H")) {
           casos.push(grupo);
         }
       })
     }
-    console.log(clasificaciones['River-H']);
+    console.log(clasificaciones['River Plate-H']);
 
     /* casos.forEach(d => {
       console.log(calcularPosiciones(d), d)
@@ -7353,8 +7468,9 @@ console.log(generarResultado('bundesliga'))
       let gcD = 0;
       d.forEach(p => {
         let rankGrupo = calcularYOrdenarTabla(p);
-        let indiceEquipo = rankGrupo.indexOf('River-H');
-        let equipo = calcularPosiciones(p)['River-H'];
+        let indiceEquipo = rankGrupo.indexOf('River Plate-H');
+        let equipo = calcularPosiciones(p)['River Plate-H'];
+        /* console.log(p) */
         /* console.log(rankGrupo)
         console.log(indiceEquipo) */
         if (indiceEquipo >= posD && equipo.pts <= ptsD && equipo.diff <= diffD && equipo.gf <= gfD && equipo.gc >= gcD) {
@@ -7496,6 +7612,11 @@ console.log(generarResultado('bundesliga'))
   let clubes = new Set([
     ...new Set(torneo.map((d) => d.local)),
     ...new Set(torneo.map((d) => d.visitante)),
+  ]);
+
+  let grupos = new Set([
+    ...new Set(torneo.map((d) => d.local.split('-')[1])),
+    ...new Set(torneo.map((d) => d.visitante.split('-')[1])),
   ]);
 
   let fechas_torneo = new Set(
@@ -7968,6 +8089,12 @@ console.log(generarResultado('bundesliga'))
           }
         }
 
+        /* semanas.forEach(o => {
+          grupos.forEach(p => {
+            console.log(final_list1.filter(e => e.name.split('-')[1]==p && e.value == pts && e.semana == o))
+          })
+        }) */
+
         final_list1.push({
           name: d.name,
           vs: d.vs,
@@ -8220,6 +8347,8 @@ console.log(generarResultado('bundesliga'))
 
   final_list1 = final_list1.filter((d) => d.name != "hola");
 
+  console.log(final_list1)
+
   render(
     final_list1,
     nombre_torneo,
@@ -8230,3 +8359,37 @@ console.log(generarResultado('bundesliga'))
     probabilidades,
   );
 });
+
+/* final_list1.push({
+          name: ,
+          vs: ,
+          grupo ,
+          l_or_v: d.l_or_v,
+          dia: ,
+          fecha: ,
+          pts: ,
+          partidos_jugados: ,
+          partidos_ganados: ,
+          partidos_empatados: ,
+          partidos_perdidos: ,
+          goles_a_favor: goles,
+          goles_en_contra: ,
+          diferencia_de_goles: ,
+          pts_directo: ,
+          partidos_jugados_directo: ,
+          partidos_ganados_directo: ,
+          partidos_empatados_directo: ,
+          partidos_perdidos_directo: ,
+          goles_a_favor_directo: ,
+          goles_en_contra_directo: ,
+          diferencia_de_goles_directo: ,
+          racha_victorias: ,
+          racha_derrotas: ,
+          racha_empates: ,
+          racha_sin_victorias: ,
+          racha_sin_derrotas: ,
+          racha_sin_empates: ,
+          goleadas_a_favor: ,
+          goleadas_en_contra: ,
+          valla_invicta: ,
+        }); */
