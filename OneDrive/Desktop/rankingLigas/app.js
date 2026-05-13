@@ -108,6 +108,7 @@ let fechas_not_played = 1;
 let fps = 60;
 
 let localia = false;
+let stats_on_top = true;
 
 if (document.URL.includes("render-d3-video")) {
   window.currentTime = 0;
@@ -576,13 +577,47 @@ const render = (
     return newArray;
   }
 
+  console.log(semanas)
+  function statsDirectos(nombres) {
+    const stats = {};
+    nombres.forEach(n => { stats[n] = { pts_directo: 0, pj_directo: 0, pg_directo: 0, pe_directo: 0, pp_directo: 0, diff_directo: 0, gf_directo: 0, gc_directo: 0 }; });
+
+    // Reconstruir enfrentamientos desde el propio array
+    // Cada elemento tiene: name (equipo), vs (rival), value (pts del partido: 0,1,3), goles, diferencia_de_goles
+    nombres.forEach(nombre => {
+      let rivales = nombres.filter(d => d !== nombre)
+
+      for (let i = 1; i <= semanas.size -1; i++) {
+        rivales.forEach(rival => {
+          let filter_fecha = data.filter(d => d.semana == i && d.name == nombre && d.vs.includes(rival) && d.goles_fecha !== 99)
+          stats[nombre].pts_directo += filter_fecha[0]?.pts_fecha ?? 0;
+          stats[nombre].pj_directo += filter_fecha.length ?? 0;
+          stats[nombre].pg_directo += filter_fecha[0]?.goles_fecha > filter_fecha[0]?.goles_en_contra_fecha ? 1 : 0 ?? 0;
+          stats[nombre].pe_directo += filter_fecha[0]?.goles_fecha == filter_fecha[0]?.goles_en_contra_fecha && filter_fecha.length > 0 ? 1 : 0 ?? 0;
+          stats[nombre].pp_directo += filter_fecha[0]?.goles_fecha < filter_fecha[0]?.goles_en_contra_fecha ? 1 : 0 ?? 0;
+          stats[nombre].gf_directo += filter_fecha[0]?.goles_fecha ?? 0;
+          stats[nombre].gc_directo += filter_fecha[0]?.goles_en_contra_fecha ?? 0;
+          stats[nombre].diff_directo += (filter_fecha[0]?.goles_fecha ?? 0) - (filter_fecha[0]?.goles_en_contra_fecha ?? 0);
+          console.log(filter_fecha)
+        })
+      }
+
+    });
+
+    console.log(stats)
+
+    return stats;
+  }
+
+
+
   let sort_teams1 = (array) => {
   array = removeDuplicates(array);
 
   // Calcular stats de enfrentamientos directos entre un subconjunto de nombres
   function statsDirectos(nombres) {
     const stats = {};
-    nombres.forEach(n => { stats[n] = { pts_directo: 0, diff_directo: 0,/* jg_directo: 0, pg_directo: 0, pe_directo: 0, pp_directo: 0, */ gf_directo: 0, /* gc_directo: 0, diff_directo: 0  */}; });
+    nombres.forEach(n => { stats[n] = { pts_directo: 0, diff_directo: 0, gf_directo: 0 }; });
 
     // Reconstruir enfrentamientos desde el propio array
     // Cada elemento tiene: name (equipo), vs (rival), value (pts del partido: 0,1,3), goles, diferencia_de_goles
@@ -594,10 +629,6 @@ const render = (
           let filter_fecha = data.filter(d => d.semana == i && d.name == nombre && d.vs.includes(rival) && d.goles_fecha !== 99)
           stats[nombre].pts_directo += filter_fecha[0]?.pts_fecha ?? 0;
           stats[nombre].gf_directo += filter_fecha[0]?.goles_fecha ?? 0;
-          /* stats[nombre].gc_directo += filter_fecha[0]?.goles_en_contra_fecha ?? 0; */
-          /* stats[nombre].pg_directo += filter_fecha[0]?.goles_fecha ?? 0 > filter_fecha[0]?.goles_en_contra_fecha ?? 0 ? 1 : 0;
-          stats[nombre].pe_directo += filter_fecha[0]?.goles_fecha ?? 0 == filter_fecha[0]?.goles_en_contra_fecha ?? 0 ? 1 : 0;
-          stats[nombre].pp_directo += filter_fecha[0]?.goles_fecha ?? 0 < filter_fecha[0]?.goles_en_contra_fecha ?? 0 ? 1 : 0; */
           stats[nombre].diff_directo += (filter_fecha[0]?.goles_fecha ?? 0) - (filter_fecha[0]?.goles_en_contra_fecha ?? 0);
         })
       }
@@ -6370,6 +6401,242 @@ const render = (
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text((d) => (d.partidos_jugados1 == 0 ? "" : "]")),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? "\xa0\xa0\xa0[" : "")),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pts1",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pj1",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pj_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pg1",
+          })
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pg_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pe1",
+          })
+          .styles({
+            fill: empate_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pe_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pp1",
+          })
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
+          }
+          ),
+      )
+
+          .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gf1",
+          })
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.gf_directo: ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gf1_guion",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? "-": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gc1",
+          })
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.gc_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "dif1",
+          })
+          .styles({
+            fill: (d) => {
+              let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+              let valor = statsDirectos(empates)[d.name]
+              return valor.diff_directo > 0
+                ? victoria_color
+                : valor.diff_directo < 0
+                  ? derrota_color
+                  : empate_color
+          },
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "bracket2",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            return empates.length > 1 ? "]" : ""
+          }
+          ),
       );
   }
 
@@ -6538,18 +6805,22 @@ const render = (
     );
   });
 
-  let array_p = [
-    "racha",
-    "racha_empates",
-    "racha_derrotas",
-    "racha_sin_victorias",
-    "racha_sin_empates",
-    "racha_sin_derrotas",
-    "goleadas",
-    "goleadas_en_contra",
-    "valla_invicta",
-    "fechas_en_top",
-  ];
+  let array_p = []
+
+  if (stats_on_top) {
+    array_p = [
+      "racha",
+      "racha_empates",
+      "racha_derrotas",
+      "racha_sin_victorias",
+      "racha_sin_empates",
+      "racha_sin_derrotas",
+      "goleadas",
+      "goleadas_en_contra",
+      "valla_invicta",
+      "fechas_en_top",
+    ];
+  }
 
   let positions = {
     1: [[0, 0]],
@@ -7473,7 +7744,7 @@ console.log(generarResultado('bundesliga'))
         /* console.log(p) */
         /* console.log(rankGrupo)
         console.log(indiceEquipo) */
-        if (indiceEquipo >= posD && equipo.pts <= ptsD && equipo.diff <= diffD && equipo.gf <= gfD && equipo.gc >= gcD) {
+        if (indiceEquipo <= posD && equipo.pts <= ptsD && equipo.diff <= diffD && equipo.gf <= gfD && equipo.gc >= gcD) {
           posD = indiceEquipo;
           ptsD = equipo.pts;
           diffD = equipo.diff;
