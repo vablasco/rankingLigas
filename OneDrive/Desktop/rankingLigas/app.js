@@ -109,6 +109,15 @@ let fps = 60;
 
 let localia = false;
 let stats_on_top = true;
+let competencia = 'argentina'
+
+  const clasificados_por_competencia = {
+    libertadores: 2,
+    argentina: 2,
+    mundial: 2,
+};
+
+  let clasificacion_por_grupo = clasificados_por_competencia[competencia];
 
 if (document.URL.includes("render-d3-video")) {
   window.currentTime = 0;
@@ -331,15 +340,20 @@ const render = (
     grupos = 0;
   }
 
+  let grupos_1 = [...new Set(data.map((d) => d.name.split("-")[1]))].sort()
+  let names_1 = [...new Set(data.map((d) => d.name))]
+
   console.log(grupos);
+
+  /* let competencia = 'libertadores'
 
   const clasificados_por_competencia = {
     libertadores: 2,
-    copadelaliga: 8,
+    ligaArgentina: 8,
     mundial: 2,
 };
 
-  let clasificacion_por_grupo = clasificados_por_competencia['libertadores'];
+  let clasificacion_por_grupo = clasificados_por_competencia[competencia]; */
   let repechaje = false;
   let equipos_por_grupos = top_n / grupos;
   let width_playoffs = 300;
@@ -347,6 +361,7 @@ const render = (
   let space_height_playoff = heightBars * 0.5;
   let primera_ronda_playoff = (grupos * clasificacion_por_grupo) / 2;
   let rondas_playoff = playoffs[primera_ronda_playoff];
+  let distancia_entre_grupos = 0.5;
 
   const halo1 = function (text, strokeWidth, color) {
     text
@@ -412,20 +427,24 @@ const render = (
       margin_right;
   }
 
+  /* if (grupos > 1) {
+    height = height + (grupos*(heightBars/2))
+  } */
+
   console.log(dates.length + 1, weeks);
 
   console.log(`[${width}, ${height}]`);
 
   const svg = d3.select("body").append("svg").attrs({
     width: width,
-    height: height,
+    height: grupos > 1 ? height + (grupos*(heightBars/2)) : height,
   });
 
   svg.append("rect").attrs({
     x: 0,
     y: 0,
     width: width,
-    height: height,
+    height: grupos > 1 ? height + (grupos*(heightBars/2)) : height,
     fill: background_color,
   });
 
@@ -598,13 +617,10 @@ const render = (
           stats[nombre].gf_directo += filter_fecha[0]?.goles_fecha ?? 0;
           stats[nombre].gc_directo += filter_fecha[0]?.goles_en_contra_fecha ?? 0;
           stats[nombre].diff_directo += (filter_fecha[0]?.goles_fecha ?? 0) - (filter_fecha[0]?.goles_en_contra_fecha ?? 0);
-          console.log(filter_fecha)
         })
       }
 
     });
-
-    console.log(stats)
 
     return stats;
   }
@@ -756,7 +772,7 @@ const render = (
 
   console.log(a);
 
-  let yearSlice = sort_teams(
+  let yearSlice = sort_teams1(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
   console.log(sort_teams1(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
@@ -767,7 +783,7 @@ const render = (
     .scaleLinear()
     .domain([top_n, 0])
     .range([
-      height - margin.bottom + heightBars / 2,
+      (height - margin.bottom + heightBars / 2),
       margin.top + heightBars / 2,
     ]);
 
@@ -801,7 +817,7 @@ const render = (
     });
 
   if (grupos > 1) {
-    grupos1.forEach((e, index) => {
+    /* grupos1.forEach((e, index) => {
       svg
         .selectAll(".rect")
         .data(yearSlice.slice(0, top_n))
@@ -841,7 +857,7 @@ const render = (
                   : "#919191",
           opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 0.8 : 0.8),
         });
-    });
+    }); */
   } else {
     svg
       .selectAll(".rect")
@@ -857,14 +873,14 @@ const render = (
       })
       .styles({
         fill: (d, i) =>
-          i == 0
-            ? "#5da15d" /* : i == 17 ? last_place_color */
+          i < clasificacion_por_grupo
+            ? i % 2 == 1 ? "#94e694" : '#76c476'
             : i % 2 == 1
-              ? "#e5e5e5"
-              : "#919191",
+              ? "#dddddd"
+              : "#c2c2c2",
 
-        opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 0.6 : 0.6),
-      });
+        opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
+      })
   }
 
   let positions_playoffs = {
@@ -2252,24 +2268,27 @@ const render = (
               .replace("Post.", d),
     );
 
-  svg
-    .selectAll(".rect")
-    .data(dates)
-    .enter()
-    .append("rect")
-    .attrs({
-      class: "lines_years",
-      x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
-      y: y(0) - heightBars / 2,
-      width: heightBars * 0.05,
-      height: height,
-      transform: `translate(${margin_left * 2}, 0)`,
-      "clip-path": `url(#ellipse-clip-margin-left)`,
-    })
-    .styles({
-      fill: black_color,
-      opacity: 0.4,
-    });
+    if (grupos < 1) {
+
+      svg
+        .selectAll(".rect")
+        .data(dates)
+        .enter()
+        .append("rect")
+        .attrs({
+          class: "lines_years",
+          x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
+          y: y(0) - heightBars / 2,
+          width: heightBars * 0.05,
+          height: height,
+          transform: `translate(${margin_left * 2}, 0)`,
+          "clip-path": `url(#ellipse-clip-margin-left)`,
+        })
+        .styles({
+          fill: black_color,
+          opacity: 0.4,
+        });
+    }
 
   svg
     .append("clipPath")
@@ -2316,7 +2335,987 @@ const render = (
   feMerge.append("feMergeNode").attr("in", "offsetBlur");
   feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-  names.forEach((nombre) => {
+  /* grupos_1 = [] */
+  console.log(grupos_1)
+  /* let holla = []
+
+  holla.forEach(d => {
+    console.log(holla)
+  }) */
+  console.log(names_1)
+
+  
+  console.log(names_1)
+
+
+  if (grupos > 1) {
+  
+  grupos_1.forEach((grupo, indice_grupo) => {
+    console.log(grupo)
+
+    svg
+      .selectAll(".rect")
+      .data(grupos_1)
+      .enter()
+      .append("rect")
+      .attrs({
+        class: "bars_names_grupos",
+        x: 0,
+        y: (d, i) => y(indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - heightBars / 2,
+         width: 
+          x(
+            dates.length -
+              1 -
+              (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+          ) +
+          (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+          margin_left * 2 +
+          defaults.logo.size / 2 +
+          defaults.name.position.x + heightBars*10,
+        height: heightBars/2,
+      })
+      .styles({
+        fill: "#ebebeb",
+        opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
+      });
+
+    svg
+      .append("text")
+      .attrs({
+        class: "name",
+        x: weeks_o,
+        y: (d, i) => y(indice_grupo*(equipos_por_grupos+distancia_entre_grupos) + 0.75) - ((y(1)-y(0))),
+      })
+      .styles({
+        fill: defaults.name.style.fill,
+        "font-size": defaults.name.style.font_size,
+        "font-weight": defaults.name.style.font_weight,
+        "text-anchor": defaults.name.style.text_anchor,
+        "alignment-baseline": defaults.name.style.alignment_baseline,
+      })
+      .text('Grupo ' + grupo)
+
+      console.log(yearSlice.slice(indice_grupo*equipos_por_grupos, (indice_grupo*equipos_por_grupos)+equipos_por_grupos))
+
+    svg
+      .selectAll(".rect")
+      .data(yearSlice.slice(indice_grupo*equipos_por_grupos, (indice_grupo*equipos_por_grupos)+equipos_por_grupos))
+      .enter()
+      .append("rect")
+      .attrs({
+        class: "bars_names",
+        x: 0,
+        y: (d, i) => y(i+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - heightBars / 2,
+        width: 
+          x(
+            dates.length -
+              1 -
+              (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+          ) +
+          (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+          margin_left * 2 +
+          defaults.logo.size / 2 +
+          defaults.name.position.x + heightBars*10,
+        height: heightBars,
+      })
+      .styles({
+        fill: (d, i) =>
+          i < clasificacion_por_grupo
+            ? i % 2 == 1 ? "#94e694" : '#76c476'
+            : i % 2 == 1
+              ? "#dddddd"
+              : "#c2c2c2",
+
+        opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
+      })
+
+      svg
+    .selectAll(".rect")
+    .data(dates)
+    .enter()
+    .append("rect")
+    .attrs({
+      class: "lines_years",
+      x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
+      y: y(distancia_entre_grupos+indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - heightBars / 2,
+      width: heightBars * 0.05,
+      height: heightBars*equipos_por_grupos,
+      transform: `translate(${margin_left * 2}, 0)`,
+    })
+    .styles({
+      fill: black_color,
+      opacity: 0.4,
+    });
+
+      svg
+    .append("rect")
+    .attrs({
+      class: "bars_names",
+      x: margin_left - 1,
+      y: y(indice_grupo*(equipos_por_grupos+distancia_entre_grupos)),
+      width: margin_left / 4,
+      height: heightBars*equipos_por_grupos,
+    })
+    .styles({
+      fill: (d, i) => "url(#areaGradient0)",
+    });
+
+  names_1.filter(d => d.split('-')[1]==grupo).forEach((nombre) => {
+    console.log(nombre)
+    let wks = 0;
+
+    var points = [];
+
+    dates.slice(0).forEach((o) => {
+      let yearSlice1 = sort_teams1(
+        data.filter((d) => d.semana == o && d.name.split('-')[1]==grupo && !isNaN(d.value)),
+      );
+
+      let rank1 = yearSlice1.find((d) => d.name == nombre).rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos);
+
+      wks > fechas_not_played ? (wks = wks - not_played_yet_x) : "";
+      o == dates[dates.length - 1] && fechas_not_played < dates.length - 1
+        ? (wks = wks + not_played_yet_x)
+        : "";
+
+      points.push([x(wks), y(rank1)]);
+
+      wks++;
+    });
+
+    svg
+      .append("path")
+      .style("filter", "url(#dropshadow)")
+      .attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+      })
+      .styles({
+        fill: "none",
+        stroke:
+          teamColorss[nombre.split("-")[0]] == undefined
+            ? "grey"
+            : teamColorss[nombre.split("-")[0]][0],
+        "stroke-width": ((heightBars * 0.35) / 7) * 5,
+        "stroke-linejoin": "round",
+      })
+      .attr("d", d3.line().curve(d3.curveCardinal.tension(1))(points));
+
+    svg
+      .append("path")
+      .attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+      })
+      .styles({
+        fill: "none",
+        stroke:
+          teamColorss[nombre.split("-")[0]] == undefined
+            ? "grey"
+            : teamColorss[nombre.split("-")[0]][1],
+        "stroke-width": ((heightBars * 0.35) / 7) * 3,
+        "stroke-linejoin": "round",
+      })
+      .attr("d", d3.line().curve(d3.curveCardinal.tension(1))(points));
+
+    svg
+      .append("path")
+      .attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+      })
+      .styles({
+        fill: "none",
+        stroke:
+          teamColorss[nombre.split("-")[0]] == undefined
+            ? "grey"
+            : teamColorss[nombre.split("-")[0]][2],
+        "stroke-width": ((heightBars * 0.35) / 7) * 1.75,
+        "stroke-linejoin": "round",
+      })
+      .attr("d", d3.line().curve(d3.curveCardinal.tension(1))(points));
+
+    svg
+      .append("path")
+      .attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+      })
+      .styles({
+        fill: "none",
+        stroke:
+          teamColorss[nombre.split("-")[0]] == undefined
+            ? "grey"
+            : teamColorss[nombre.split("-")[0]][3],
+        "stroke-width": (heightBars * 0.35) / 7,
+        "stroke-linejoin": "round",
+      })
+      .attr("d", d3.line().curve(d3.curveCardinal.tension(1))(points));
+  })
+
+})
+
+  grupos_1.forEach((grupo, indice_grupo) => {
+
+  names_1.filter(d => d.split('-')[1]==grupo).forEach((nombre) => {
+    let wks = 0;
+
+    dates.slice(0).forEach((o, i) => {
+      let yearSlice1 = sort_teams1(
+        data.filter((d) => d.semana == o && d.name.split('-')[1]==grupo && !isNaN(d.value)),
+      );
+
+      let campeon1 = 0;
+
+      yearSlice1.forEach((d) => {
+        d.puntos_del_primero = yearSlice1[0].value + yearSlice1[0].value1;
+        d.puntos_de_diferencia_con_el_primero =
+          d.puntos_del_primero - (d.value + d.value1);
+        d.partidos_totales = dates.length - 1;
+        d.partidos_en_juego = d.partidos_jugados + d.partidos_jugados1;
+        d.puntos_en_juego =
+          (d.partidos_totales - d.partidos_en_juego) * puntos_por_partido;
+        d.puntos_de_margen_de_error =
+          d.puntos_en_juego - d.puntos_de_diferencia_con_el_primero;
+        d.campeonato_perdido_matematicamente =
+          d.puntos_de_margen_de_error < 0 ? 1 : 2;
+      });
+
+      yearSlice1.slice(1).forEach((d) => {
+        campeon1 += d.campeonato_perdido_matematicamente;
+      });
+
+      campeon1 = campeon1 / (clubes.size - 1);
+
+      campeon1 === 1 ? campeon2++ : (campeon2 = 0);
+
+      yearSlice1.forEach((d, i) => {
+        i == 0 && campeon1 == 1 && campeon2 == 1
+          ? (d.campeonato_ganado_matematicamente = 1)
+          : (d.campeonato_ganado_matematicamente = 0);
+      });
+
+      yearSlice1.forEach((d, i) => {
+        i == 0 && campeon1 == 1
+          ? (d.campeonato_ganado_matematicamente1 = 1)
+          : (d.campeonato_ganado_matematicamente1 = 0);
+      });
+
+      let rank1 = yearSlice1.find((d) => d.name == nombre).rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos);
+
+      wks > fechas_not_played ? (wks = wks - not_played_yet_x) : "";
+      o == dates[dates.length - 1] && fechas_not_played < dates.length - 1
+        ? (wks = wks + not_played_yet_x)
+        : "";
+
+      if (yearSlice1.find((d) => d.name == nombre).vs != "none") {
+        let pts1 = yearSlice1.find((d) => d.name == nombre);
+
+        let names_filter = data.filter(
+          (d) => d.name == pts1.name && d.fecha4 == pts1.fecha4,
+        );
+
+        names_filter.forEach((team, i) => {
+          let hor =
+            names_filter.length == 2
+              ? i == 0
+                ? heightBars * 0.0
+                : i == 1
+                  ? -heightBars * 0.3
+                  : 0
+              : names_filter.length == 3
+                ? i == 0
+                  ? heightBars * 0.38
+                  : i == 2
+                    ? -heightBars * 0.38
+                    : 0
+                : 0;
+
+          let hor_not_played_yet =
+            team.goles_fecha == not_played_yet
+              ? names_filter.length == 2
+                ? i == 0
+                  ? heightBars * 0.18
+                  : i == 1
+                    ? -heightBars * 0.2
+                    : 0
+                : names_filter.length == 3
+                  ? i == 0
+                    ? heightBars * 0.0
+                    : i == 2
+                      ? -heightBars * 0.0
+                      : 0
+                  : 0
+              : 0;
+
+          svg
+            .append("text")
+            .attrs({
+              transform: `translate(${margin_left * 2}, 0)`,
+              x:
+                x(wks) +
+                i * heightBars * 1.3 -
+                (names_filter.length - 1) * (heightBars * 0.65) +
+                hor,
+              y: y(rank1) - heightBars * 0.325,
+            })
+            .styles({
+              fill:
+                team.goles_fecha > team.goles_en_contra_fecha
+                  ? victoria_color
+                  : team.goles_fecha < team.goles_en_contra_fecha
+                    ? derrota_color
+                    : empate_color,
+              "font-weight": 600,
+              "font-size": defaults.value.style.font_size,
+              "text-anchor": "middle",
+              "alignment-baseline": "central",
+            })
+
+            .call((text) =>
+              text
+                .append("tspan")
+                .attrs({
+                  transform: `translate(${margin_left * 2}, 0)`,
+                  x:
+                    x(wks) -
+                    heightBars * 0.06 +
+                    i * heightBars * 1.3 -
+                    (names_filter.length - 1) * (heightBars * 0.65) +
+                    hor,
+                  y:
+                    y(rank1) -
+                    heightBars * 0.325 +
+                    (team.l_or_v == "V" ? heightBars * 0.65 : 0),
+                })
+                .styles({
+                  fill:
+                    team.goles_fecha > team.goles_en_contra_fecha
+                      ? victoria_color
+                      : team.goles_fecha < team.goles_en_contra_fecha
+                        ? derrota_color
+                        : empate_color,
+                  "font-weight": 600,
+                  "font-size": defaults.value.style.font_size,
+                  "text-anchor": "end",
+                  "alignment-baseline": "central",
+                })
+                .text(
+                  `${
+                    team.l_or_v == "V"
+                      ? team.goles_en_contra_fecha == not_played_yet
+                        ? ""
+                        : team.goles_en_contra_fecha
+                      : team.goles_fecha == not_played_yet
+                        ? ""
+                        : team.goles_fecha
+                  }`,
+                )
+                .text(
+                  `${team.goles_en_contra_fecha == not_played_yet ? "" : team.goles_fecha}`,
+                ),
+            )
+
+            .call((text) =>
+              text
+                .append("tspan")
+                .attrs({
+                  transform: `translate(${margin_left * 2}, 0)`,
+                  x:
+                    x(wks) +
+                    i * heightBars * 1.3 -
+                    (names_filter.length - 1) * (heightBars * 0.65) +
+                    hor +
+                    hor_not_played_yet,
+                  y:
+                    y(rank1) -
+                    heightBars * 0.325 +
+                    (team.l_or_v == "V" ? heightBars * 0.65 : 0),
+                })
+                .styles({
+                  fill:
+                    team.goles_fecha > team.goles_en_contra_fecha
+                      ? victoria_color
+                      : team.goles_fecha < team.goles_en_contra_fecha
+                        ? derrota_color
+                        : team.goles_fecha == not_played_yet
+                          ? grey_color
+                          : empate_color,
+                  "font-weight": 600,
+                  "font-size": defaults.value.style.font_size,
+                  "text-anchor": "middle",
+                  "alignment-baseline": "central",
+                })
+                .text(`-`),
+            )
+
+            .call((text) =>
+              text
+                .append("tspan")
+                .attrs({
+                  transform: `translate(${margin_left * 2}, 0)`,
+                  x:
+                    x(wks) +
+                    heightBars * 0.06 +
+                    i * heightBars * 1.3 -
+                    (names_filter.length - 1) * (heightBars * 0.65) +
+                    hor,
+                  y:
+                    y(rank1) -
+                    heightBars * 0.325 +
+                    (team.l_or_v == "V" ? heightBars * 0.65 : 0),
+                })
+                .styles({
+                  fill:
+                    team.goles_fecha > team.goles_en_contra_fecha
+                      ? victoria_color
+                      : team.goles_fecha < team.goles_en_contra_fecha
+                        ? derrota_color
+                        : empate_color,
+                  "font-weight": 600,
+                  "font-size": defaults.value.style.font_size,
+                  "text-anchor": "start",
+                  "alignment-baseline": "central",
+                })
+                .text(
+                  `${team.goles_fecha == not_played_yet ? "" : team.goles_en_contra_fecha}`,
+                ),
+            )
+            .call(halo1, defaults.value.style.font_size, "#f1f1f1");
+
+          svg
+            .append("image")
+            .style("filter", "url(#dropshadow)")
+            .attrs({
+              transform: `translate(${margin_left * 2}, 0)`,
+              class: "line",
+              x:
+                x(wks) +
+                heightBars * 0.2 +
+                (team.goles_fecha == not_played_yet ? -heightBars * 0.2 : 0) +
+                i * heightBars * 1.3 -
+                (names_filter.length - 1) * (heightBars * 0.65) +
+                hor +
+                hor_not_played_yet,
+              y:
+                y(rank1) -
+                heightBars * 0.325 -
+                defaults.mini_logo.size1 / 2 +
+                (team.l_or_v == "V" ? heightBars * 0.65 : 0),
+              height: defaults.mini_logo.size1,
+              href:
+                pts1.vs != "none"
+                  ? `./escudos/${team.vs.split("-")[0]}.png`
+                  : "",
+            });
+
+          svg
+            .append("text")
+            .attrs({
+              transform: `translate(${margin_left * 2}, 0)`,
+              x:
+                x(wks) -
+                heightBars * 0.0 +
+                i * heightBars * 0.8 -
+                (names_filter.length - 1) * (heightBars * 0.4),
+              y: y(rank1),
+            })
+            .styles({
+              fill:
+                team.campeonato_perdido_matematicamente == 1 ||
+                names_filter[names_filter.length - 1]
+                  .campeonato_perdido_matematicamente == 1
+                  ? derrota_color
+                  : team.campeonato_ganado_matematicamente1 == 1 ||
+                      names_filter[names_filter.length - 1]
+                        .campeonato_ganado_matematicamente1 == 1
+                    ? victoria_color
+                    : black_color,
+              "font-weight": 600,
+              "font-size": heightBars * 0.225,
+              "text-anchor": "middle",
+              "alignment-baseline": "central",
+            })
+            .text(`${team.goles_fecha == not_played_yet ? "" : team.value}`)
+            .call(halo1, heightBars * 0.225, "#f1f1f1");
+
+          svg.append("image").attrs({
+            transform: `translate(${margin_left * 2}, 0)`,
+            class: "line",
+            x:
+              x(wks) -
+              heightBars * 0.025 +
+              (team.racha1 > 2
+                ? heightBars * 0.175
+                : team.racha_derrotas1 > 2
+                  ? heightBars * 0.175
+                  : team.racha_empates1 > 2
+                    ? heightBars * 0.175
+                    : team.racha_sin_victorias1 > 2
+                      ? heightBars * 0.145
+                      : team.racha_sin_derrotas1 > 2
+                        ? heightBars * 0.145
+                        : team.racha_sin_empates1 > 2
+                          ? heightBars * 0.145
+                          : 0) -
+              (defaults.mini_logo.size +
+                defaults.subValue.style.font_size * 0.35) /
+                2 +
+              i * heightBars * 0.55 -
+              (names_filter.length - 1) * (heightBars * 0.325),
+            y:
+              y(rank1) +
+              (team.l_or_v == "V" ? -heightBars * 0.31 : +heightBars * 0.31) -
+              (defaults.mini_logo.size +
+                defaults.subValue.style.font_size * 0.35) /
+                2,
+            height:
+              (team.racha1 > 2
+                ? heightBars * 0.45
+                : team.racha_derrotas1 > 2
+                  ? heightBars * 0.45
+                  : team.racha_empates1 > 2
+                    ? heightBars * 0.45
+                    : team.racha_sin_victorias1 > 2
+                      ? heightBars * 0.5
+                      : team.racha_sin_derrotas1 > 2
+                        ? heightBars * 0.5
+                        : team.racha_sin_empates1 > 2
+                          ? heightBars * 0.5
+                          : 0) +
+              defaults.subValue.style.font_size * 0.35,
+            href:
+              team.goles_fecha !== not_played_yet
+                ? team.racha1 > 2
+                  ? `./icons/green_flame2.png`
+                  : team.racha_derrotas1 > 2
+                    ? `./icons/red_flame2.png`
+                    : team.racha_empates1 > 2
+                      ? `./icons/yellow_flame2.png`
+                      : team.racha_sin_victorias1 > 2
+                        ? `./icons/racha_sin_victorias2.png`
+                        : team.racha_sin_derrotas1 > 2
+                          ? `./icons/racha_sin_derrotas2.png`
+                          : team.racha_sin_empates1 > 2
+                            ? `./icons/racha_sin_empates2.png`
+                            : ""
+                : "",
+          });
+
+          svg
+            .append("text")
+            .attrs({
+              transform: `translate(${margin_left * 2}, 0)`,
+              class: "line",
+              x:
+                x(wks) -
+                (team.racha1 > 2
+                  ? heightBars * 0.01
+                  : team.racha_derrotas1 > 2
+                    ? heightBars * 0.01
+                    : team.racha_empates1 > 2
+                      ? heightBars * 0.01
+                      : team.racha_sin_victorias1 > 2
+                        ? heightBars * 0.01
+                        : team.racha_sin_derrotas1 > 2
+                          ? heightBars * 0.01
+                          : team.racha_sin_empates1 > 2
+                            ? heightBars * 0.01
+                            : 0) +
+                i * heightBars * 0.55 -
+                (names_filter.length - 1) * (heightBars * 0.325),
+              y:
+                y(rank1) +
+                (team.l_or_v == "V" ? -heightBars * 0.31 : +heightBars * 0.31),
+            })
+            .styles({
+              "font-weight": 600,
+              "font-size": defaults.subValue.style.font_size,
+              fill:
+                team.racha1 > 2
+                  ? black_color
+                  : team.racha_derrotas1 > 2
+                    ? black_color
+                    : team.racha_empates1 > 2
+                      ? black_color
+                      : black_color,
+              "text-anchor": "end",
+              "alignment-baseline": "central",
+            })
+            .text(
+              team.goles_fecha !== not_played_yet
+                ? team.racha1 > 2
+                  ? team.racha1
+                  : team.racha_derrotas1 > 2
+                    ? team.racha_derrotas1
+                    : team.racha_empates1 > 2
+                      ? team.racha_empates1
+                      : team.racha_sin_victorias1 > 2
+                        ? team.racha_sin_victorias1
+                        : team.racha_sin_derrotas1 > 2
+                          ? team.racha_sin_derrotas1
+                          : team.racha_sin_empates1 > 2
+                            ? team.racha_sin_empates1
+                            : ""
+                : "",
+            )
+            .call(halo1, defaults.subValue.style.font_size, "#f1f1f1");
+
+          svg.append("image").attrs({
+            transform: `translate(${margin_left * 2}, 0)`,
+            class: "line",
+            x:
+              x(wks) +
+              defaults.value.style.font_size -
+              (defaults.mini_logo.size * 0.45) / 2 +
+              i * heightBars * 0.8 -
+              (names_filter.length - 1) * (heightBars * 0.4),
+            y: y(rank1) - (defaults.mini_logo.size * 0.45) / 2,
+            height: defaults.mini_logo.size * 0.45,
+            href: team.pts_deducted > 0 ? `./icons/redasterisk1.png` : "",
+          });
+
+          svg
+            .append("text")
+            .attrs({
+              transform: `translate(${margin_left * 2}, 0)`,
+              x:
+                x(wks) +
+                heightBars * 0.45 +
+                i * heightBars * 0.8 -
+                (names_filter.length - 1) * (heightBars * 0.4),
+              y: y(rank1),
+            })
+            .styles({
+              fill: derrota_color,
+              "font-weight": 600,
+              "font-size": heightBars * 0.18,
+              "text-anchor": "start",
+              "alignment-baseline": "central",
+            })
+            .text(`${team.pts_deducted > 0 ? team.pts_deducted : ""} `)
+            .call(halo1, heightBars * 0.18, "#f1f1f1");
+        });
+
+        svg
+          .append("image")
+          .style("filter", "url(#dropshadow)")
+          .attrs({
+            transform: `translate(${margin_left * 2}, 0)`,
+            class: "line",
+            x:
+              x(wks) +
+              heightBars * 0.8 -
+              defaults.mini_logo.size / 2 +
+              (pts1.vs == "none" ? -heightBars * 0.8 : 0) +
+              (names_filter.length - 1) * (heightBars * 0.5) +
+              (pts1.l_or_v == "V" ? -heightBars * 0.35 : heightBars * 0.0) +
+              (pts1.l_or_v == "V" && pts1.goles_en_contra_fecha == 1
+                ? heightBars * 0.05
+                : pts1.goles_en_contra_fecha == 1
+                  ? -heightBars * 0.05
+                  : heightBars * 0.0),
+            y: y(rank1) - heightBars / 3.25 - defaults.mini_logo.size / 2,
+            height: defaults.mini_logo.size,
+            href:
+              pts1.campeonato_ganado_matematicamente == 1
+                ? `./icons/trofeo1.png`
+                : "",
+          });
+      } else {
+        let pts1 = yearSlice1.find((d) => d.name == nombre);
+        svg
+          .append("text")
+          .attrs({
+            transform: `translate(${margin_left * 2}, 0)`,
+            x: x(wks) - heightBars * 0.0,
+            y: y(rank1),
+          })
+          .styles({
+            fill:
+              pts1.campeonato_perdido_matematicamente == 1
+                ? derrota_color
+                : pts1.campeonato_ganado_matematicamente1 == 1
+                  ? victoria_color
+                  : black_color,
+            "font-weight": 600,
+            "font-size": heightBars * 0.25,
+            "text-anchor": "middle",
+            "alignment-baseline": "central",
+          })
+          .text(`${pts1.final != true ? pts1.value : ""}`)
+          .call(halo1, heightBars * 0.25, "#f1f1f1");
+      }
+
+      let pts1 = yearSlice1.find((d) => d.name == nombre);
+
+      svg
+        .append("text")
+        .attrs({
+          transform: `translate(${margin_left * 2}, 0)`,
+          class: "line",
+          x: x(wks) + heightBars * 0.01 + weeks * 0.65,
+          y:
+            y(rank1) +
+            (pts1.racha_sin_derrotas > 2
+              ? -heightBars / 3.25
+              : pts1.racha_sin_empates > 2
+                ? -heightBars / 3.25
+                : heightBars / 3.25),
+        })
+        .styles({
+          "font-weight": 600,
+          "font-size": defaults.subValue.style.font_size,
+          fill: black_color,
+          "text-anchor": "end",
+          "alignment-baseline": "central",
+        })
+        .text(
+          pts1.goles_fecha !== not_played_yet
+            ? pts1.semana == dates[dates.length - 2]
+              ? pts1.racha_sin_victorias > 2
+                ? pts1.racha_sin_victorias
+                : ""
+              : ""
+            : "",
+        )
+        .call(halo1, defaults.subValue.style.font_size, "#f1f1f1");
+
+      svg.append("image").attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+        x:
+          x(wks) +
+          heightBars * 0.125 -
+          (defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35) /
+            2 +
+          weeks * 0.65,
+        y:
+          y(rank1) +
+          (pts1.racha_sin_derrotas > 2
+            ? -heightBars / 3.25
+            : pts1.racha_sin_empates > 2
+              ? -heightBars / 3.25
+              : heightBars / 3.25) -
+          (defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35) /
+            2,
+        height:
+          defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35,
+        href:
+          pts1.goles_fecha !== not_played_yet
+            ? pts1.semana == dates[dates.length - 2]
+              ? pts1.racha_sin_victorias > 2
+                ? `./icons/racha_sin_victorias2.png`
+                : ""
+              : ""
+            : "",
+      });
+
+      svg
+        .append("text")
+        .attrs({
+          transform: `translate(${margin_left * 2}, 0)`,
+          class: "line",
+          x: x(wks) + heightBars * 0.01 + weeks * 0.65,
+          y: y(rank1) + heightBars / 3.25,
+        })
+        .styles({
+          "font-weight": 600,
+          "font-size": defaults.subValue.style.font_size,
+          fill: black_color,
+          "text-anchor": "end",
+          "alignment-baseline": "central",
+        })
+        .text(
+          pts1.goles_fecha !== not_played_yet
+            ? pts1.semana == dates[dates.length - 2]
+              ? pts1.racha_sin_derrotas > 2
+                ? pts1.racha_sin_derrotas
+                : ""
+              : ""
+            : "",
+        )
+        .call(halo1, defaults.subValue.style.font_size, "#f1f1f1");
+
+      svg.append("image").attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+        x:
+          x(wks) +
+          heightBars * 0.125 -
+          (defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35) /
+            2 +
+          weeks * 0.65,
+        y:
+          y(rank1) +
+          heightBars / 3.25 -
+          (defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35) /
+            2,
+        height:
+          defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35,
+        href:
+          pts1.goles_fecha !== not_played_yet
+            ? pts1.semana == dates[dates.length - 2]
+              ? pts1.racha_sin_derrotas > 2
+                ? `./icons/racha_sin_derrotas2.png`
+                : ""
+              : ""
+            : "",
+      });
+
+      svg
+        .append("text")
+        .attrs({
+          transform: `translate(${margin_left * 2}, 0)`,
+          class: "line",
+          x: x(wks) + heightBars * 0.01 + weeks * 0.65,
+          y:
+            y(rank1) +
+            (pts1.racha_sin_derrotas > 2
+              ? -heightBars / 3.25
+              : heightBars / 3.25),
+        })
+        .styles({
+          "font-weight": 600,
+          "font-size": defaults.subValue.style.font_size,
+          fill: black_color,
+          "text-anchor": "end",
+          "alignment-baseline": "central",
+        })
+        .text(
+          pts1.goles_fecha !== not_played_yet
+            ? pts1.semana == dates[dates.length - 2]
+              ? pts1.racha_sin_empates > 2
+                ? pts1.racha_sin_empates
+                : ""
+              : ""
+            : "",
+        )
+        .call(halo1, defaults.subValue.style.font_size, "#f1f1f1");
+
+      svg.append("image").attrs({
+        transform: `translate(${margin_left * 2}, 0)`,
+        class: "line",
+        x:
+          x(wks) +
+          heightBars * 0.125 -
+          (defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35) /
+            2 +
+          weeks * 0.65,
+        y:
+          y(rank1) +
+          (pts1.racha_sin_derrotas > 2
+            ? -heightBars / 3.25
+            : heightBars / 3.25) -
+          (defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35) /
+            2,
+        height:
+          defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35,
+        href:
+          pts1.goles_fecha !== not_played_yet
+            ? pts1.semana == dates[dates.length - 2]
+              ? pts1.racha_sin_empates > 2
+                ? `./icons/racha_sin_empates2.png`
+                : ""
+              : ""
+            : "",
+      });
+
+      wks++;
+    });
+  });
+
+})
+
+  } else {
+    /* svg
+      .selectAll(".rect")
+      .data(grupos_1)
+      .enter()
+      .append("rect")
+      .attrs({
+        class: "bars_names_grupos",
+        x: 0,
+        y: (d, i) => y(indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - heightBars / 2,
+        width: width,
+        height: heightBars/2,
+      })
+      .styles({
+        fill: "#ebebeb",
+        opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
+      }); */
+
+    /* svg
+      .append("text")
+      .attrs({
+        class: "name",
+        x: 500,
+        y: (d, i) => y(indice_grupo*(equipos_por_grupos+distancia_entre_grupos) + 0.75) - ((y(1)-y(0))),
+      })
+      .styles({
+        fill: defaults.name.style.fill,
+        "font-size": defaults.name.style.font_size,
+        "font-weight": defaults.name.style.font_weight,
+        "text-anchor": defaults.name.style.text_anchor,
+        "alignment-baseline": defaults.name.style.alignment_baseline,
+      })
+      .text(grupo) */
+
+    /* svg
+      .selectAll(".rect")
+      .data(yearSlice.slice(indice_grupo*equipos_por_grupos, (indice_grupo+equipos_por_grupos)*equipos_por_grupos))
+      .enter()
+      .append("rect")
+      .attrs({
+        class: "bars_names",
+        x: 0,
+        y: (d, i) => y(d.rank+0.5+indice_grupo*0.5) - heightBars / 2,
+        width: width,
+        height: heightBars,
+      })
+      .styles({
+        fill: (d, i) =>
+          i < clasificacion_por_grupo
+            ? i % 2 == 1 ? "#72bb72" : '#3b913b'
+            : i % 2 == 1
+              ? "#cccccc"
+              : "#a0a0a0",
+
+        opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
+      }) */
+
+      svg
+    .selectAll(".rect")
+    .data(dates)
+    .enter()
+    .append("rect")
+    .attrs({
+      class: "lines_years",
+      x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
+      y: y(0) - heightBars / 2,
+      width: heightBars * 0.05,
+      height: heightBars*equipos_por_grupos,
+      transform: `translate(${margin_left * 2}, 0)`,
+    })
+    .styles({
+      fill: black_color,
+      opacity: 0.4,
+    });
+
+      svg
+    .append("rect")
+    .attrs({
+      class: "bars_names",
+      x: margin_left - 1,
+      y: y(0),
+      width: margin_left / 4,
+      height: heightBars*equipos_por_grupos,
+    })
+    .styles({
+      fill: (d, i) => "url(#areaGradient0)",
+    });
+
+names.forEach((nombre) => {
     let wks = 0;
 
     var points = [];
@@ -3075,6 +4074,7 @@ const render = (
       wks++;
     });
   });
+  }
 
   var areaGradient0 = svg
     .append("defs")
@@ -3097,7 +4097,48 @@ const render = (
     .attr("stop-color", "#000")
     .attr("stop-opacity", 0);
 
-  svg
+  /* svg
+    .append("rect")
+    .attrs({
+      class: "bars_names",
+      x: margin_left - 1,
+      y: margin.top * 0.5,
+      width: margin_left / 4,
+      height: height,
+    })
+    .styles({
+      fill: (d, i) =>
+        i == 0
+          ? "url(#areaGradient0)"
+          : i % 2 == 1
+            ? "url(#areaGradient0)"
+            : "url(#areaGradient0)",
+    }); */
+
+  if (grupos > 1) {
+    
+    grupos1.forEach((e, index) => {
+      svg
+        .selectAll(".text")
+        .data(d3.range(1, equipos_por_grupos + 1))
+        .enter()
+        .append("text")
+        .attrs({
+          x: margin_left / 2,
+          y: (d, i) => y(i + 0.5 + index * equipos_por_grupos) + index * heightBars/2,
+        })
+        .styles({
+          fill: black_color,
+          "font-size": heightBars * 0.5,
+          "alignment-baseline": "central",
+          "text-anchor": "middle",
+          "font-weight": 600,
+        })
+        .text((d) => d);
+    });
+  } else {
+
+    svg
     .append("rect")
     .attrs({
       class: "bars_names",
@@ -3115,27 +4156,6 @@ const render = (
             : "url(#areaGradient0)",
     });
 
-  if (grupos > 1) {
-    grupos1.forEach((e, index) => {
-      svg
-        .selectAll(".text")
-        .data(d3.range(1, equipos_por_grupos + 1))
-        .enter()
-        .append("text")
-        .attrs({
-          x: margin_left / 2,
-          y: (d, i) => y(i + index * equipos_por_grupos),
-        })
-        .styles({
-          fill: black_color,
-          "font-size": heightBars * 0.5,
-          "alignment-baseline": "central",
-          "text-anchor": "middle",
-          "font-weight": 600,
-        })
-        .text((d) => d);
-    });
-  } else {
     svg
       .selectAll(".text")
       .data(d3.range(1, top_n + 1))
@@ -3777,7 +4797,7 @@ const render = (
 
   var rankingSVG = svg
     .selectAll(".g")
-    .data(yearSlice)
+    .data((yearSlice))
     .enter()
     .append("g")
     .attr("class", "rankingSVG");
@@ -4619,7 +5639,175 @@ const render = (
           ),
       );
   } else {
-    rankingSVG
+    if (grupos > 1) {
+
+    grupos_1.forEach((grupo, indice_grupo) => {
+
+    rankingSVG.filter(d => d.name.split('-')[1]==grupo)
+      .append("text")
+      .attrs({
+        class: "name",
+        x:
+          x(
+            dates.length -
+              1 -
+              (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+          ) +
+          (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+          margin_left * 2 +
+          defaults.logo.size / 2 +
+          defaults.name.position.x,
+        y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.name.position.y,
+        /* "clip-path": `url(#ellipse-clip-margin-bottom)`, */
+      })
+      .styles({
+        fill: defaults.name.style.fill,
+        "font-size": defaults.name.style.font_size,
+        "font-weight": defaults.name.style.font_weight,
+        "text-anchor": defaults.name.style.text_anchor,
+        "alignment-baseline": defaults.name.style.alignment_baseline,
+      })
+      .text((d) => d.name.split("-")[0])
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "efec",
+          })
+          .styles({
+            fill: (d) => {
+              var myColor = d3
+                .scaleLinear()
+                .domain([
+                  d3.min(
+                    yearSlice,
+                    (d) =>
+                      +formatEfec(
+                        (d.value / (d.partidos_jugados * puntos_por_partido)) *
+                          100,
+                      ),
+                  ),
+                  d3.max(
+                    yearSlice,
+                    (d) =>
+                      +formatEfec(
+                        (d.value / (d.partidos_jugados * puntos_por_partido)) *
+                          100,
+                      ),
+                  ),
+                ]);
+              var myColor1 = d3.interpolateRgbBasis([
+                derrota_color,
+                empate_color,
+                victoria_color,
+              ]);
+
+              return myColor1(
+                myColor(
+                  +formatEfec(
+                    (d.value / (d.partidos_jugados * puntos_por_partido)) * 100,
+                  ),
+                ),
+              );
+            },
+            "font-size": heightBars * 0.275,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d, i) =>
+            d.partidos_jugados == 0
+              ? ""
+              : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace(".", ",")}%)`,
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "goles_por_partido",
+          })
+          .styles({
+            fill: (d) => {
+              var myColor = d3
+                .scaleLinear()
+                .domain([
+                  d3.min(
+                    yearSlice,
+                    (d) => +d3.format(".1f")(d.goles / d.partidos_jugados),
+                  ),
+                  d3.max(
+                    yearSlice,
+                    (d) => +d3.format(".1f")(d.goles / d.partidos_jugados),
+                  ),
+                ]);
+              var myColor1 = d3.interpolateRgbBasis([
+                derrota_color,
+                empate_color,
+                victoria_color,
+              ]);
+
+              return myColor1(
+                myColor(+d3.format(".1f")(d.goles / d.partidos_jugados)),
+              );
+            },
+            "font-size": heightBars * 0.275,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d, i) =>
+            d.partidos_jugados == 0
+              ? ""
+              : ` (${d3
+                  .format(".1f")(d.goles / d.partidos_jugados)
+                  .replace(".", ",")})`,
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "campeon",
+          })
+          .styles({
+            fill: black_color,
+            "font-size": heightBars * 0.275,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d, i, total) => " " + probabilidades[d.name].probabilidad + "%",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "campeon",
+          })
+          .styles({
+            fill: black_color,
+            "font-size": heightBars * 0.275,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d, i) =>
+            d.partidos_jugados + d.partidos_jugados1 == 0
+              ? ""
+              : `${i == 0 && d.partidos_jugados + d.partidos_jugados1 == dates.length - 1 ? " (Campeón)" : ""}`,
+          ),
+      )
+      })
+
+    } else {
+      rankingSVG
       .append("text")
       .attrs({
         class: "name",
@@ -4780,6 +5968,7 @@ const render = (
               : `${i == 0 && d.partidos_jugados + d.partidos_jugados1 == dates.length - 1 ? " (Campeón)" : ""}`,
           ),
       );
+    }
   }
 
   if (localia) {
@@ -6045,6 +7234,604 @@ const render = (
           .text((d) => (d.partidos_jugados1 == 0 ? "" : "]")),
       );
   } else {
+    if (grupos > 1) {
+
+    grupos_1.forEach((grupo, indice_grupo) => {
+    rankingSVG.filter(d => d.name.split('-')[1]==grupo)
+      .append("text")
+      .attrs({
+        x:
+          x(
+            dates.length -
+              1 -
+              (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+          ) +
+          (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+          margin_left * 2 +
+          defaults.logo.size / 2 +
+          defaults.name.position.x,
+        y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.value.position.y,
+        /* "clip-path": `url(#ellipse-clip-margin-bottom)`, */
+      })
+      .styles({
+        fill: "green",
+        "font-size": defaults.value.style.font_size,
+        "font-weight": 600,
+        "text-anchor": defaults.value.style.text_anchor,
+        "alignment-baseline": defaults.value.style.alignment_baseline,
+      })
+      .text((d) => "")
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({})
+          .styles({
+            fill: black_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              d.value +
+              (ress_ratio == "16:9"
+                ? ""
+                : ress_ratio == "1:1"
+                  ? "\xa0\xa0\xa0"
+                  : "\xa0"),
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: black_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => "\xa0\xa0\xa0" + d.partidos_jugados),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => " " + d.partidos_ganados),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: empate_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => " " + d.partidos_empatados),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => " " + d.partidos_perdidos),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => "\xa0\xa0\xa0" + d.goles),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: black_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text("-"),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => d.goles_en_contra),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: (d) =>
+              d.diferencia_de_goles > 0
+                ? victoria_color
+                : d.diferencia_de_goles < 0
+                  ? derrota_color
+                  : empate_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              " " +
+              (d.diferencia_de_goles > 0 ? "+" : "") +
+              d.diferencia_de_goles,
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? "" : "\xa0\xa0\xa0[")),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pts1",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0 ? "" : d.value1 + "\xa0\xa0\xa0",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pj1",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0 ? "" : d.partidos_jugados1 + " ",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pg1",
+          })
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0 ? "" : d.partidos_ganados1 + " ",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pe1",
+          })
+          .styles({
+            fill: empate_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0 ? "" : d.partidos_empatados1 + " ",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pp1",
+          })
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0
+              ? ""
+              : d.partidos_perdidos1 + "\xa0\xa0\xa0",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gf1",
+          })
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? "" : d.goles1)),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gf1_guion",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? "" : "-")),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gc1",
+          })
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0 ? "" : d.goles_en_contra1 + " ",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "dif1",
+          })
+          .styles({
+            fill: (d) =>
+              d.diferencia_de_goles1 > 0
+                ? victoria_color
+                : d.diferencia_de_goles1 < 0
+                  ? derrota_color
+                  : empate_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados1 == 0
+              ? ""
+              : (d.diferencia_de_goles1 > 0 ? "+" : "") +
+                d.diferencia_de_goles1,
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "bracket2",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? "" : "]")),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? "\xa0\xa0\xa0[" : "")),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pts1",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pj1",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pj_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pg1",
+          })
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pg_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pe1",
+          })
+          .styles({
+            fill: empate_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pe_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "pp1",
+          })
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
+          }
+          ),
+      )
+
+          .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gf1",
+          })
+          .styles({
+            fill: victoria_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.gf_directo: ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gf1_guion",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? "-": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "gc1",
+          })
+          .styles({
+            fill: derrota_color,
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? valor?.gc_directo + " ": ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "dif1",
+          })
+          .styles({
+            fill: (d) => {
+              let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+              let valor = statsDirectos(empates)[d.name]
+              return valor.diff_directo > 0
+                ? victoria_color
+                : valor.diff_directo < 0
+                  ? derrota_color
+                  : empate_color
+          },
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos(empates)[d.name]
+            return empates.length > 1 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
+          }
+          ),
+      )
+
+      .call((text) =>
+        text
+          .append("tspan")
+          .attrs({
+            class: "bracket2",
+          })
+          .styles({
+            fill: "black",
+            "font-size": defaults.value.style.font_size,
+            "font-weight": 600,
+            "text-anchor": defaults.value.style.text_anchor,
+            "alignment-baseline": defaults.value.style.alignment_baseline,
+          })
+          .text((d) => {
+
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            return empates.length > 1 ? "]" : ""
+          }
+          ),
+      )
+    })
+  } else {
     rankingSVG
       .append("text")
       .attrs({
@@ -6639,8 +8426,167 @@ const render = (
           ),
       );
   }
+  }
 
-  rankingSVG.append("image").attrs({
+  /* grupos_1.forEach((grupo, indice_grupo) => {
+
+    svg.selectAll('.escudo').data(yearSlice.filter(d => d.name.split('-')[1]==grupo)).enter().append("image").attrs({
+      class: "logo",
+      x:
+        x(
+          dates.length -
+            1 -
+            (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+        ) +
+        (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+        margin_left * 2 -
+        (defaults.logo.size1 * 1.1) / 2,
+      y: (d, i) => y(0.5 + indice_grupo*4.5 + d.rank) - (defaults.logo.size1 * 1.1) / 2,
+      href: (d) => `./escudos/${d.name.split("-")[0]}.png`,
+      height: defaults.logo.size1 * 1.1,
+    });
+  }) */
+
+    if (grupos > 1) {
+
+    grupos_1.forEach((grupo, indice_grupo) => {
+
+  rankingSVG.filter(d => d.name.split('-')[1]==grupo).append("image").attrs({
+    class: "logo",
+    x:
+      x(
+        dates.length -
+          1 -
+          (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+      ) +
+      (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+      margin_left * 2 -
+      (defaults.logo.size1 * 1.1) / 2,
+    y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - (defaults.logo.size1 * 1.1) / 2,
+    href: (d) => /* getPng(d.name) */`./escudos/${d.name.split("-")[0]}.png`,
+    height: defaults.logo.size1 * 1.1,
+  })
+
+  rankingSVG.filter(d => d.name.split('-')[1]==grupo)
+    .append("text")
+    .attrs({
+      class: "info_fecha",
+      x:
+        x(dates.length - 1) +
+        margin_left * 2 +
+        defaults.logo.size / 2 +
+        defaults.name.position.x,
+      y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.name.position.y - heightBars / 3,
+      "clip-path": `url(#ellipse-clip-margin-bottom)`,
+    })
+    .styles({
+      fill: black_color,
+      "font-size": defaults.value.style.font_size,
+      "font-weight": 600,
+      "text-anchor": defaults.value.style.text_anchor,
+      "alignment-baseline": defaults.value.style.alignment_baseline,
+    })
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "numero_fecha",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": defaults.value.style.font_size,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d) => d.fecha),
+    )
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "goles_fecha",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": defaults.value.style.font_size,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d) => d.goles_fecha),
+    )
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "guion",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": defaults.value.style.font_size,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d) => " " + d.guion_text_dia + " "),
+    )
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "goles_en_contra_fecha",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": defaults.value.style.font_size,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d) => d.goles_en_contra_fecha + " "),
+    )
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "vs",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": defaults.value.style.font_size,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d) => (d.vs == "none" ? "" : d.vs)),
+    )
+
+    .call((text) =>
+      text
+        .append("tspan")
+        .attrs({
+          class: "l_or_v",
+        })
+        .styles({
+          fill: black_color,
+          "font-size": heightBars * 0.225,
+          "font-weight": 600,
+          "text-anchor": defaults.value.style.text_anchor,
+          "alignment-baseline": defaults.value.style.alignment_baseline,
+        })
+        .text((d) => (d.vs == "none" ? "" : " (" + d.l_or_v + ")")),
+    )
+
+     });
+
+    } else {
+      rankingSVG.append("image").attrs({
     class: "logo",
     x:
       x(
@@ -6771,6 +8717,7 @@ const render = (
         })
         .text((d) => (d.vs == "none" ? "" : " (" + d.l_or_v + ")")),
     );
+    }
 
   svg
     .append("clipPath")
@@ -7025,7 +8972,119 @@ const render = (
       height: defaults.final_infos.logos.size * 0.9,
     });
 
+    if (grupos > 1) {
+
+    grupos_1.forEach((grupo, indice_grupo) => {
+
     svg
+      .selectAll(".text")
+      .data(lastSlice.filter(d => d.name.split('-')[1]==grupo))
+      .enter()
+      .append("text")
+      .attrs({
+        class: "final_infos",
+        opacity: 1,
+        x: (d) => {
+          length = 0;
+          array_p.slice(0, index).forEach((ee, oo) => {
+            ee == "racha_derrotas" ? length++ : 0;
+            ee == "racha_sin_derrotas" ? length++ : 0;
+            ee == "goleadas_en_contra" ? length++ : 0;
+            ee == "valla_invicta" ? length++ : 0;
+            length =
+              length +
+              d3
+                .max(
+                  data.filter((e) => e.name == d.name),
+                  (e) => e[ee],
+                )
+                .toString().length;
+          });
+          return (
+            x(
+              dates.length -
+                1 -
+                (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+            ) +
+            (fechas_not_played < dates.length - 1
+              ? x(1 * not_played_yet_x)
+              : 0) +
+            margin_left * 2 +
+            defaults.logo.size / 2 +
+            defaults.name.position.x +
+            length * heightBars * 0.225 +
+            index * heightBars * 0.4
+          );
+        },
+        y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.final_infos.position.y - heightBars / 3,
+      })
+      .styles({
+        fill: black_color,
+        "font-size": defaults.value.style.font_size,
+        "font-weight": 600,
+        "text-anchor": "start",
+        "alignment-baseline": defaults.value.style.alignment_baseline,
+      })
+      .text((d) =>
+        d3.max(
+          data.filter((e) => e.name == d.name),
+          (e) => e[p],
+        ),
+      )
+
+    svg
+      .selectAll(".images")
+      .data(lastSlice.filter(d => d.name.split('-')[1]==grupo))
+      .enter()
+      .append("image")
+      .attrs({
+        class: "final_infos",
+        x: (d) => {
+          length = 0;
+          array_p.slice(0, index + 1).forEach((ee, oo) => {
+            ee == "racha_sin_victorias" ? length++ : 0;
+            ee == "goleadas" ? length++ : 0;
+            ee == "valla_invicta" ? length++ : 0;
+            ee == "fechas_en_top" ? length++ : 0;
+            length =
+              length +
+              d3
+                .max(
+                  data.filter((e) => e.name == d.name),
+                  (e) => e[ee],
+                )
+                .toString().length;
+          });
+          return (
+            x(
+              dates.length -
+                1 -
+                (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+            ) +
+            (fechas_not_played < dates.length - 1
+              ? x(1 * not_played_yet_x)
+              : 0) +
+            margin_left * 2 +
+            defaults.logo.size / 2 +
+            defaults.name.position.x +
+            length * heightBars * 0.225 +
+            index * heightBars * 0.4 -
+            heightBars * 0.05
+          );
+        },
+        y: (d) =>
+          y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) +
+          defaults.final_infos.position.y -
+          heightBars / 3 -
+          (defaults.final_infos.logos.size * 0.9) / 2,
+        href: `./icons/${p}.png`,
+        height: defaults.final_infos.logos.size * 0.9,
+      })
+
+      })
+
+    } else {
+svg
       .selectAll(".text")
       .data(lastSlice)
       .enter()
@@ -7129,6 +9188,7 @@ const render = (
         href: `./icons/${p}.png`,
         height: defaults.final_infos.logos.size * 0.9,
       });
+    }
   });
 };
 
@@ -7504,10 +9564,10 @@ function poisson(lambda) {
 
 const LAMBDAS = {
   mundial:       { local: 1.35, visitante: 1.35 },
-  ligaArgentina: { local: 1.10, visitante: 0.80 },
+  argentina: { local: 1.10, visitante: 0.80 },
   libertadores:  { local: 1.40, visitante: 0.81 },
   premierLeague: { local: 1.55, visitante: 1.15 },
-  laLiga:        { local: 1.55, visitante: 1.10 },
+  españa:        { local: 1.55, visitante: 1.10 },
   bundesliga:    { local: 1.65, visitante: 1.20 },
 };
 
@@ -7545,7 +9605,7 @@ console.log(lambdas);
   };
 } */
 
-  function generarResultado(liga = 'ligaArgentina', override = null) {
+  function generarResultado(liga = 'argentina', override = null) {
   const config = override ?? LAMBDAS[liga];
   return {
     goles_local: poisson(config.local),
@@ -7619,9 +9679,9 @@ console.table(resultado); */
 /* generarResultado('ligaArgentina', { local: 1.6, visitante: 0.6 }) */
 
 // Uso:
-console.log(generarResultado('mundial'))        // { goles_local: 1, goles_visitante: 2 }
+/* console.log(generarResultado('mundial'))        // { goles_local: 1, goles_visitante: 2 }
 console.log(generarResultado('ligaArgentina'))  // { goles_local: 0, goles_visitante: 0 }
-console.log(generarResultado('bundesliga')) 
+console.log(generarResultado('bundesliga'))  */
 
   let casos = [];
 
@@ -7642,7 +9702,7 @@ console.log(generarResultado('bundesliga'))
       const partidosSimulados = partidos.map((p) => {
         if (p.jugado) return { ...p, simulados: false, id: sim };
 
-        const resultado = generarResultado('libertadores');
+        const resultado = generarResultado(competencia);
         /* console.log(p.fecha, p.local, resultado.goles_local, p.visitante, resultado.goles_visitante) */
         return {
           ...p,
@@ -7668,12 +9728,12 @@ console.log(generarResultado('bundesliga'))
         clasif.forEach((equipo) => clasificaciones[equipo]++);
 
         
-        if (d == 'H' && clasif.includes("River Plate-H")) {
+        /* if (d == 'H' && clasif.includes("River Plate-H")) {
           casos.push(grupo);
-        }
+        } */
       })
     }
-    console.log(clasificaciones['River Plate-H']);
+    /* console.log(clasificaciones['River Plate-H']); */
 
     /* casos.forEach(d => {
       console.log(calcularPosiciones(d), d)
@@ -7726,7 +9786,7 @@ console.log(generarResultado('bundesliga'))
     })
     console.log(structuredClone(data1)); */
 
-    console.log(structuredClone(casos));
+    /* console.log(structuredClone(casos));
 
     function returnCasoMasCercano(d) {
       let masCercano = casos[0];
@@ -7741,9 +9801,6 @@ console.log(generarResultado('bundesliga'))
         let rankGrupo = calcularYOrdenarTabla(p);
         let indiceEquipo = rankGrupo.indexOf('River Plate-H');
         let equipo = calcularPosiciones(p)['River Plate-H'];
-        /* console.log(p) */
-        /* console.log(rankGrupo)
-        console.log(indiceEquipo) */
         if (indiceEquipo <= posD && equipo.pts <= ptsD && equipo.diff <= diffD && equipo.gf <= gfD && equipo.gc >= gcD) {
           posD = indiceEquipo;
           ptsD = equipo.pts;
@@ -7771,7 +9828,7 @@ console.log(generarResultado('bundesliga'))
       d.goles_local = d.goles_local.toString()
       d.goles_visitante = d.goles_visitante.toString()
     })
-    console.log(structuredClone(data1));
+    console.log(structuredClone(data1)); */
 
     // Convertir conteos a porcentajes
     const resultado = {};
@@ -7787,7 +9844,7 @@ console.log(generarResultado('bundesliga'))
     return resultado;
   }
 
-  let probabilidades = calcularProbabilidades(data_cruda, 2, 1000);
+  let probabilidades = calcularProbabilidades(data_cruda, clasificacion_por_grupo, 1000);
   console.table(probabilidades);
 
   let nombre_torneo =
