@@ -147,6 +147,29 @@ let teamColorss1 = {
   "Bragantino": ["rayado", "#d61f40", "#fff"],
   "Blooming": ["rayado", "#599cd2", "#266faa"],
   Carabobo: ["rayado", "#592022", "#fff"],
+  Olimpia: ["rayado", "#000000", "#ffffff"],
+  Macara: ["dos lineas", "#3397c4", "#ffffff"],
+  Juventud: ["linea", "#ffffff", "#2e5099"],
+  'Vasco Da Gama': ["linea", "#000000", "#ffffff"],
+  Santos: ["rayado", "#ffffff", "#010101"],
+  'Deportivo Recoleta': ["rayado", "#000000", "#cfa747"],
+  'Independiente Petrolero': ["rayado", "#e90914", "#ffffff"],
+  Botafogo: ["rayado", "#000000", "#fff"],
+  Gremio: ["rayado", "#1f1a17", "#0d80bf"],
+  Cienciano: ["rayado", "#102051", "#085680"],
+  'Atletico Mineiro': ["rayado", "#000000", "#fff"],
+  'Audax Italiano': ["rayado", "#049e6e", "#02855b"],
+  'Palestino': ["3 colores", "#008954", "#ce2035", '#fff'],
+  'Sao Paulo': ["3 colores", "#fe0000", "#000000", '#fff'],
+  'Montevideo City Torque': ["rayado", "#72b0e0", "#4e8dbd"],
+  'Alianza Atletico': ["linea", "#fdfdfa", "#34348e"],
+  'Academia Puerto Cabello': ["rayado", "#ff4d00", "#262a81"],
+  'America De Cali': ["rayado", "#b30a0a", "#cc0f0f"],
+  'OHiggins': ["rayado", "#5d8dda", "#3e77d3"],
+  'Millonarios': ["rayado", "#293378", "#161f5c"],
+  'Boston River': ["rayado", "#016634", "#eb3236"],
+  'Deportivo Cuenca': ["rayado", "#e6312d", "#9e2b27"],
+  'Caracas': ["rayado", "#ee3124", "#7e221f"],
 }
 
 function colores(name) {
@@ -162,6 +185,8 @@ function colores(name) {
     return [teamColorss1[name][1], teamColorss1[name][1], teamColorss1[name][1], teamColorss1[name][2]]
   } else if (teamColorss1[name][0] == 'linea gruesa') {
     return [teamColorss1[name][1], teamColorss1[name][2], teamColorss1[name][2], teamColorss1[name][2]]
+  } else if (teamColorss1[name][0] == '3 colores') {
+    return [teamColorss1[name][1], teamColorss1[name][2], teamColorss1[name][2], teamColorss1[name][3]]
   } else {
     return ['grey', 'grey', 'grey', 'grey']
   }
@@ -641,8 +666,8 @@ const render = (
       position: {
         x: -32.5,
       },
-      size: heightBars * 0.7,
-      size1: heightBars * 0.7,
+      size: heightBars * 1.2,
+      size1: heightBars * 0.75,
     },
     escudo: {
       size: heightBars * 0.4
@@ -712,8 +737,99 @@ const render = (
     return stats;
   }
 
+  const cacheStats = new Map();
 
+  function statsDirectos1(nombres) {
+    const key = [...nombres].sort().join("|");
+    if (cacheStats.has(key)) return cacheStats.get(key);
 
+    const stats = {};
+    nombres.forEach(n => { stats[n] = { pts_directo: 0, pj_directo: 0, pg_directo: 0, pe_directo: 0, pp_directo: 0, diff_directo: 0, gf_directo: 0, gc_directo: 0 }; });
+
+    const semanaMax = semanas.size;
+    // Pre-filtrar data UNA sola vez para este subconjunto
+    const nombresSet = new Set(nombres);
+    const dataRelevante = data.filter(d =>
+      d.goles_fecha !== 99 &&
+      d.semana <= semanaMax &&
+      nombresSet.has(d.name)
+    );
+
+    nombres.forEach(nombre => {
+      const rivales = nombres.filter(d => d !== nombre);
+      rivales.forEach(rival => {
+        const match = dataRelevante.find(d => d.name === nombre && d.vs.includes(rival));
+        if (match) {
+          stats[nombre].pts_directo  += match.pts_fecha ?? 0;
+          stats[nombre].pj_directo += match ? 1 : 0 ?? 0;
+          stats[nombre].pg_directo += match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0 ?? 0;
+          stats[nombre].pe_directo += match.goles_fecha == match.goles_en_contra_fecha ? 1 : 0 ?? 0;
+          stats[nombre].pp_directo += match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0 ?? 0;
+          stats[nombre].gf_directo   += match.goles_fecha ?? 0;
+          stats[nombre].gc_directo += match.goles_en_contra_fecha ?? 0;
+          stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
+        }
+      });
+    });
+
+    cacheStats.set(key, stats);
+    return stats;
+  }
+
+  console.log(statsDirectos1(['Independiente', 'Platense']))
+
+  /* console.log(data)
+  console.log(names_1)
+  semanas.forEach(semana => {
+    let filter_semana = data.filter(d => d.semana == semana)
+    names_1.forEach(equipo => {
+      console.log(filter_semana.filter(d => d.name == equipo)[0].value)
+    })
+    filter_semana.forEach(partido => {
+      console.log(partido)
+    })
+  }) */
+
+  /* grupos_1.forEach(grupo => {
+    console.log(grupo)
+    let filter_grupo = data.filter(d => d.name.split('-')[1] == grupo)
+    let equipos_grupo = [...new Set(filter_grupo.map((d) => d.name))]
+    semanas.forEach(semana => {
+      console.log(filter_semana)
+      let filter_semana = filter_grupo.filter(d => d.semana == semana)
+      equipos_grupo.forEach(equipo => {
+        let filter_equipo = filter_semana.filter(d => d.name == equipo)[0].value
+        let filter_pts = filter_semana.filter(d => d.value == filter_equipo)
+        console.log(filter_pts.length > 1 ? filter_pts : '')
+      })
+    })
+  }) */
+
+  /* const tabla = [
+  { equipo: "River",   puntos: 20 },
+  { equipo: "Boca",    puntos: 17 },
+  { equipo: "Racing",  puntos: 19 },
+  { equipo: "San Lorenzo", puntos: 20 },
+];
+
+  const encontrarEmpatados = (tabla, key) => {
+  const conteo = {};
+
+  // Contar cuántos equipos tienen cada valor
+  for (const obj of tabla) {
+    const val = obj[key];
+    conteo[val] = (conteo[val] || 0) + 1;
+  }
+
+  // Filtrar solo los que comparten valor con otro
+  return tabla.filter(obj => conteo[obj[key]] > 1);
+};
+
+const empatados = encontrarEmpatados(tabla, "puntos");
+console.log(empatados);
+ */
+
+/* 
   let sort_teams1 = (array) => {
   array = removeDuplicates(array);
 
@@ -779,6 +895,95 @@ const render = (
     const textA = a.name.toUpperCase();
     const textB = b.name.toUpperCase();
     return textA < textB ? -1 : textA > textB ? 1 : 0;
+  });
+
+  array.forEach((d, i) => (d.rank = i));
+  array.forEach((d, i) => (d.rankInGroup = i % 4));
+  array.forEach((d, i) => (d.position = d.rankInGroup + 1 + d.name.split("-")[1]));
+  array.forEach((d, i) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
+
+  return array;
+}; */
+
+let sort_teams1 = (array) => {
+  array = removeDuplicates(array);
+
+  // Cache para no recalcular statsDirectos con el mismo conjunto
+  const cacheStats = new Map();
+
+  function statsDirectos(nombres) {
+    const key = [...nombres].sort().join("|");
+    if (cacheStats.has(key)) return cacheStats.get(key);
+
+    const stats = {};
+    nombres.forEach(n => { stats[n] = { pts_directo: 0, diff_directo: 0, gf_directo: 0 }; });
+
+    const semanaMax = array[0].semana;
+    // Pre-filtrar data UNA sola vez para este subconjunto
+    const nombresSet = new Set(nombres);
+    const dataRelevante = data.filter(d =>
+      d.goles_fecha !== 99 &&
+      d.semana <= semanaMax &&
+      nombresSet.has(d.name)
+    );
+
+    nombres.forEach(nombre => {
+      const rivales = nombres.filter(d => d !== nombre);
+      rivales.forEach(rival => {
+        const match = dataRelevante.find(d => d.name === nombre && d.vs.includes(rival));
+        if (match) {
+          stats[nombre].pts_directo  += match.pts_fecha ?? 0;
+          stats[nombre].gf_directo   += match.goles_fecha ?? 0;
+          stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
+        }
+      });
+    });
+
+    cacheStats.set(key, stats);
+    return stats;
+  }
+
+  // Pre-calcular grupos y empatados ANTES del sort
+  // Así no se recalcula en cada comparación
+  const grupoEmpatadosCache = new Map();
+
+  function getEmpatados(grupo, pts) {
+    const key = `${grupo}|${pts}`;
+    if (!grupoEmpatadosCache.has(key)) {
+      grupoEmpatadosCache.set(
+        key,
+        array.filter(e => e.name.split("-")[1] === grupo && e.value === pts).map(e => e.name)
+      );
+    }
+    return grupoEmpatadosCache.get(key);
+  }
+
+  array.sort((a, b) => {
+    const ga = a.name.split("-")[1];
+    const gb = b.name.split("-")[1];
+
+    if (gb < ga) return 1;
+    if (gb > ga) return -1;
+
+    if (b.value !== a.value) return b.value - a.value;
+
+    // Usar cache de empatados
+    const empatados = getEmpatados(ga, a.value);
+
+    // Llamar statsDirectos UNA vez por par, con resultado cacheado
+    const sd = statsDirectos(empatados);
+    const sdA = sd[a.name];
+    const sdB = sd[b.name];
+
+    if (sdB.pts_directo  !== sdA.pts_directo)  return sdB.pts_directo  - sdA.pts_directo;
+    if (sdB.diff_directo !== sdA.diff_directo)  return sdB.diff_directo - sdA.diff_directo;
+    if (sdB.gf_directo   !== sdA.gf_directo)    return sdB.gf_directo   - sdA.gf_directo;
+
+    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+    if (b.goles !== a.goles) return b.goles - a.goles;
+    if (b.value_away !== a.value_away) return b.value_away - a.value_away;
+
+    return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
   });
 
   array.forEach((d, i) => (d.rank = i));
@@ -859,10 +1064,10 @@ const render = (
 
   console.log(a);
 
-  let yearSlice = sort_teams(
+  let yearSlice = sort_teams1(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
-  console.log(sort_teams(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
+  console.log(sort_teams1(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
 
   let x = d3.scaleLinear().domain([0, ticks_slice]).range([0, weeks_i]);
 
@@ -876,7 +1081,7 @@ const render = (
 
   let names = new Set(data.map((d) => d.name));
 
-  let lastSlice = sort_teams(
+  let lastSlice = sort_teams1(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
 
@@ -2576,7 +2781,7 @@ const render = (
     var points = [];
 
     dates.slice(0).forEach((o) => {
-      let yearSlice1 = sort_teams(
+      let yearSlice1 = sort_teams1(
         data.filter((d) => d.semana == o && d.name.split('-')[1]==grupo && !isNaN(d.value)),
       );
 
@@ -2594,7 +2799,7 @@ const render = (
 
     svg
       .append("path")
-      .style("filter", "url(#dropshadow)")
+      /* .style("filter", "url(#dropshadow)") */
       .attrs({
         transform: `translate(${margin_left * 2}, 0)`,
         class: "line",
@@ -2658,7 +2863,7 @@ const render = (
     let wks = 0;
 
     dates.slice(0).forEach((o, i) => {
-      let yearSlice1 = sort_teams(
+      let yearSlice1 = sort_teams1(
         data.filter((d) => d.semana == o && d.name.split('-')[1]==grupo && !isNaN(d.value)),
       );
 
@@ -2893,7 +3098,7 @@ const render = (
                 i * heightBars * 1.3 -
                 (names_filter.length - 1) * (heightBars * 0.65) +
                 hor +
-                hor_not_played_yet,
+                hor_not_played_yet + defaults.mini_logo.size1*0.35,
               y:
                 y(rank1) -
                 heightBars * 0.325 -
@@ -3418,7 +3623,7 @@ names.forEach((nombre) => {
     var points = [];
 
     dates.slice(0).forEach((o) => {
-      let yearSlice1 = sort_teams(
+      let yearSlice1 = sort_teams1(
         data.filter((d) => d.semana == o && !isNaN(d.value)),
       );
 
@@ -3508,7 +3713,7 @@ names.forEach((nombre) => {
     let wks = 0;
 
     dates.slice(0).forEach((o, i) => {
-      let yearSlice1 = sort_teams(
+      let yearSlice1 = sort_teams1(
         data.filter((d) => d.semana == o && !isNaN(d.value)),
       );
 
@@ -7719,7 +7924,7 @@ names.forEach((nombre) => {
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text((d) =>
-            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
+            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos1(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
           ),
       )
 
@@ -7739,7 +7944,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pj_directo + " ": ""
           }
           ),
@@ -7761,7 +7966,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pg_directo + " ": ""
           }
           ),
@@ -7783,7 +7988,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pe_directo + " ": ""
           }
           ),
@@ -7805,7 +8010,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
           }
           ),
@@ -7827,7 +8032,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.gf_directo: ""
           }
           ),
@@ -7849,7 +8054,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? "-": ""
           }
           ),
@@ -7871,7 +8076,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.gc_directo + " ": ""
           }
           ),
@@ -7886,7 +8091,7 @@ names.forEach((nombre) => {
           .styles({
             fill: (d) => {
               let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-              let valor = statsDirectos(empates)[d.name]
+              let valor = statsDirectos1(empates)[d.name]
               return valor.diff_directo > 0
                 ? victoria_color
                 : valor.diff_directo < 0
@@ -7901,7 +8106,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
           }
           ),
@@ -8314,7 +8519,7 @@ names.forEach((nombre) => {
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text((d) =>
-            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
+            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos1(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
           ),
       )
 
@@ -8334,7 +8539,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pj_directo + " ": ""
           }
           ),
@@ -8356,7 +8561,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pg_directo + " ": ""
           }
           ),
@@ -8378,7 +8583,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pe_directo + " ": ""
           }
           ),
@@ -8400,7 +8605,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
           }
           ),
@@ -8422,7 +8627,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.gf_directo: ""
           }
           ),
@@ -8444,7 +8649,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? "-": ""
           }
           ),
@@ -8466,7 +8671,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? valor?.gc_directo + " ": ""
           }
           ),
@@ -8481,7 +8686,7 @@ names.forEach((nombre) => {
           .styles({
             fill: (d) => {
               let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-              let valor = statsDirectos(empates)[d.name]
+              let valor = statsDirectos1(empates)[d.name]
               return valor.diff_directo > 0
                 ? victoria_color
                 : valor.diff_directo < 0
@@ -8496,7 +8701,7 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            let valor = statsDirectos(empates)[d.name]
+            let valor = statsDirectos1(empates)[d.name]
             return empates.length > 1 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
           }
           ),
@@ -9289,7 +9494,7 @@ svg
   });
 };
 
-Promise.all([d3.csv("/torneos/sudamericana2026.csv")]).then(([data1]) => {
+Promise.all([d3.csv("/torneos/data2.csv")]).then(([data1]) => {
 
   /* data1.forEach(d => {
     if (d.fecha == 'Fecha 3') {
