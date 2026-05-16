@@ -88,7 +88,91 @@ let teamColorss = {
   Belgrano: ["#109fd5", "#109fd5", "#000", "#000"],
   Instituto: ["#fff", "#e31428", "#e31428", "#e31428"],
   "Gimnasia (J)": ["#fff", "#fff", "#20A1E2", "#20A1E2"],
+  "Bragantino": ["#fff", "#d61f40", "#d61f40", "#fff"],
+  "Blooming": ["#599cd2", "#266faa", "#266faa", "#599cd2"],
+  Carabobo: ["#592022", "#fff", "#fff", "#592022"],
 };
+
+let teamColorss1 = {
+  'River Plate' : ['linea', "#fff", "#E2211C"],
+  Estudiantes: ["rayado", "#FB0306", "#fff"],
+  Huracán: ['dos lineas', "#fff", "#FB0306"],
+  "Argentinos Juniors": ["linea fina", "#FB0306", "#fff"],
+  "Newell's Old Boys": ["linea gruesa", "#000", "#E81F1F"],
+  "Boca Juniors": ["linea", "#005EAE", "#FFD900"],
+  Temperley: ["linea", "#fff", "#21bbef"],
+  Quilmes: ["linea", "#fff", "#123567"],
+  Riestra: ["linea", "#fff", "#000"],
+  "All Boys": ["linea", "#fff", "#000"],
+  "Independiente Rivadavia": ["linea", "#381972", "#fff"],
+  "San Lorenzo": ["linea", "#EC212D", "#273B56"],
+  Banfield: ["rayado", "#fff", "#219D3F"],
+  Independiente: ["linea", "#bf0811", "#fff"],
+  Ferro: ["linea", "#156538", "#fff"],
+  "Deportivo Mandiyú": ["linea", "#fff", "#14a943"],
+  Lanús: ["linea", "#62162C", "#fff", "#fff"],
+  Racing: ["rayado", "#00AFE9", "#fff"],
+  "Gimnasia (S)": ["rayado", "#fff", "#29b0e3"],
+  "Atlético Rafaela": ["rayado", "#fff", "#0084c9"],
+  "Godoy Cruz": ["linea", "#0071D5", "#Fff"],
+  Colón: ["linea", "#D6161C", "#000"],
+  "Barracas Central": ["rayado", "#fff", "#FB0306"],
+  "San Martín (T)": ["rayado", "#FB0306", "#fff"],
+  "Rosario Central": ["rayado", "#FFCB05", "#004070"],
+  Arsenal: ["linea", "#12ACDE", "#DB2E26"],
+  Tigre: ["linea", "#2A247A", "#BF1D26"],
+  Gimnasia: ["linea", "#fff", "#11195C"],
+  "Vélez Sarsfield": ["linea", "#fff", "#0469c8"],
+  "Los Andes": ["rayado", "#fff", "#FB0306"],
+  "Nueva Chicago": ["rayado", "#000", "#116d3d"],
+  "San Martín (SJ)": ["rayado", "#000", "#40ab35"],
+  "Huracán (C)": ["rayado", "#281371", "#de341a"],
+  "Chacarita Juniors": ["rayado", "#000", "#fd1000"],
+  Almagro: ["rayado", "#030202", "#6a8ac6"],
+  Olimpo: ["rayado", "#000", "#ffe700"],
+  Unión: ["linea gruesa", "#FB0306", "#fff"],
+  "Deportivo Español": ["linea gruesa", "#fff", "#dc0c15"],
+  "Tiro Federal": ["linea gruesa", "#207caa", "#fff"],
+  Sarmiento: ["linea", "#008447", "#fff"],
+  Platense: ["linea", "#fff", "#804b19"],
+  Talleres: ["linea", "#000c66", "#Fff"],
+  "Defensa y Justicia": ["linea", "#007329", "#FFDE00"],
+  Patronato: ["linea", "#1A1310", "#DB2420"],
+  "Atlético Tucumán": ["rayado", "#fff", "#62BDF1"],
+  "Central Córdoba": ["rayado", "#000", "#fff"],
+  Aldosivi: ["linea", "#00903B", "#FCCB00"],
+  Belgrano: ["linea", "#109fd5", "#000"],
+  Instituto: ["linea gruesa", "#fff", "#e31428"],
+  "Gimnasia (J)": ["linea", "#fff", "#20A1E2"],
+  "Bragantino": ["rayado", "#d61f40", "#fff"],
+  "Blooming": ["rayado", "#599cd2", "#266faa"],
+  Carabobo: ["rayado", "#592022", "#fff"],
+}
+
+function colores(name) {
+  if (!Object.keys(teamColorss1).includes(name)) {
+    return ['grey', 'grey', 'grey', 'grey']
+  } else if (teamColorss1[name][0] == 'linea') {
+    return [teamColorss1[name][1], teamColorss1[name][1], teamColorss1[name][2], teamColorss1[name][2]]
+  } else if (teamColorss1[name][0] == 'rayado') {
+    return [teamColorss1[name][1], teamColorss1[name][2], teamColorss1[name][2], teamColorss1[name][1]]
+  } else if (teamColorss1[name][0] == 'dos lineas') {
+    return [teamColorss1[name][1], teamColorss1[name][1], teamColorss1[name][2], teamColorss1[name][1]]
+  } else if (teamColorss1[name][0] == 'linea fina') {
+    return [teamColorss1[name][1], teamColorss1[name][1], teamColorss1[name][1], teamColorss1[name][2]]
+  } else if (teamColorss1[name][0] == 'linea gruesa') {
+    return [teamColorss1[name][1], teamColorss1[name][2], teamColorss1[name][2], teamColorss1[name][2]]
+  } else {
+    return ['grey', 'grey', 'grey', 'grey']
+  }
+   
+}
+
+console.log(!Object.keys(teamColorss1).includes('River Plate'))
+console.log(colores('Botafogo')[3])
+console.log(colores('Estudiantess'))
+console.log(colores('Estudiantes'))
+console.log(teamColorss['Estudiantes'])
 
 let background_color = "#e5e5e5";
 let header_color = "#00001a";
@@ -109,11 +193,11 @@ let fps = 60;
 
 let localia = false;
 let stats_on_top = true;
-let competencia = 'argentina'
+let competencia = 'libertadores'
 
   const clasificados_por_competencia = {
     libertadores: 2,
-    argentina: 2,
+    argentina: 8,
     mundial: 2,
 };
 
@@ -557,15 +641,18 @@ const render = (
       position: {
         x: -32.5,
       },
-      size: heightBars * 1.2,
-      size1: heightBars * 1.2,
+      size: heightBars * 0.7,
+      size1: heightBars * 0.7,
+    },
+    escudo: {
+      size: heightBars * 0.4
     },
     mini_logo: {
       position: {
         x: -32.5,
       },
       size: heightBars * 0.5,
-      size1: heightBars * 0.5,
+      size1: heightBars * 0.3,
     },
     yearText: {
       position: {
@@ -772,10 +859,10 @@ const render = (
 
   console.log(a);
 
-  let yearSlice = sort_teams1(
+  let yearSlice = sort_teams(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
-  console.log(sort_teams1(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
+  console.log(sort_teams(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
 
   let x = d3.scaleLinear().domain([0, ticks_slice]).range([0, weeks_i]);
 
@@ -789,7 +876,7 @@ const render = (
 
   let names = new Set(data.map((d) => d.name));
 
-  let lastSlice = sort_teams1(
+  let lastSlice = sort_teams(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
 
@@ -1987,7 +2074,7 @@ const render = (
       d.rankInGroup <= 1 && d.fecha == '' ? d.fecha = 'Fecha 1/8' : ''
     }) */
 
-    if (fechas_playoff.length == 0) {
+    /* if (fechas_playoff.length == 0) {
       svg
         .selectAll(".image")
         .data(
@@ -2074,7 +2161,7 @@ const render = (
           opacity: 0.7,
         })
         .text((d) => d.name.split("-")[0]);
-    }
+    } */
   }
 
   let fechasNotPlayed = (i) => {
@@ -2447,7 +2534,7 @@ const render = (
       opacity: 0.4,
     });
 
-      svg
+    svg
     .append("rect")
     .attrs({
       class: "bars_names",
@@ -2460,6 +2547,28 @@ const render = (
       fill: (d, i) => "url(#areaGradient0)",
     });
 
+      /* svg
+    .append("rect")
+    .attrs({
+      class: "bars_names",
+      x: margin_left - 1,
+      y: y(indice_grupo*(equipos_por_grupos)),
+      width: 
+          x(
+            dates.length -
+              1 -
+              (dates.length - 1 - fechas_not_played) * not_played_yet_x,
+          ) +
+          (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
+          margin_left * 2 +
+          defaults.logo.size / 2 +
+          defaults.name.position.x + heightBars*10,
+      height: margin_left / 4,
+    })
+    .styles({
+      fill: (d, i) => "url(#areaGradient0)",
+    }); */
+
   names_1.filter(d => d.split('-')[1]==grupo).forEach((nombre) => {
     console.log(nombre)
     let wks = 0;
@@ -2467,7 +2576,7 @@ const render = (
     var points = [];
 
     dates.slice(0).forEach((o) => {
-      let yearSlice1 = sort_teams1(
+      let yearSlice1 = sort_teams(
         data.filter((d) => d.semana == o && d.name.split('-')[1]==grupo && !isNaN(d.value)),
       );
 
@@ -2492,10 +2601,7 @@ const render = (
       })
       .styles({
         fill: "none",
-        stroke:
-          teamColorss[nombre.split("-")[0]] == undefined
-            ? "grey"
-            : teamColorss[nombre.split("-")[0]][0],
+        stroke: colores(nombre.split('-')[0])[0],
         "stroke-width": ((heightBars * 0.35) / 7) * 5,
         "stroke-linejoin": "round",
       })
@@ -2509,10 +2615,7 @@ const render = (
       })
       .styles({
         fill: "none",
-        stroke:
-          teamColorss[nombre.split("-")[0]] == undefined
-            ? "grey"
-            : teamColorss[nombre.split("-")[0]][1],
+        stroke: colores(nombre.split('-')[0])[1],
         "stroke-width": ((heightBars * 0.35) / 7) * 3,
         "stroke-linejoin": "round",
       })
@@ -2526,10 +2629,7 @@ const render = (
       })
       .styles({
         fill: "none",
-        stroke:
-          teamColorss[nombre.split("-")[0]] == undefined
-            ? "grey"
-            : teamColorss[nombre.split("-")[0]][2],
+        stroke: colores(nombre.split('-')[0])[2],
         "stroke-width": ((heightBars * 0.35) / 7) * 1.75,
         "stroke-linejoin": "round",
       })
@@ -2543,10 +2643,7 @@ const render = (
       })
       .styles({
         fill: "none",
-        stroke:
-          teamColorss[nombre.split("-")[0]] == undefined
-            ? "grey"
-            : teamColorss[nombre.split("-")[0]][3],
+        stroke: colores(nombre.split('-')[0])[3],
         "stroke-width": (heightBars * 0.35) / 7,
         "stroke-linejoin": "round",
       })
@@ -2561,7 +2658,7 @@ const render = (
     let wks = 0;
 
     dates.slice(0).forEach((o, i) => {
-      let yearSlice1 = sort_teams1(
+      let yearSlice1 = sort_teams(
         data.filter((d) => d.semana == o && d.name.split('-')[1]==grupo && !isNaN(d.value)),
       );
 
@@ -3321,7 +3418,7 @@ names.forEach((nombre) => {
     var points = [];
 
     dates.slice(0).forEach((o) => {
-      let yearSlice1 = sort_teams1(
+      let yearSlice1 = sort_teams(
         data.filter((d) => d.semana == o && !isNaN(d.value)),
       );
 
@@ -3411,7 +3508,7 @@ names.forEach((nombre) => {
     let wks = 0;
 
     dates.slice(0).forEach((o, i) => {
-      let yearSlice1 = sort_teams1(
+      let yearSlice1 = sort_teams(
         data.filter((d) => d.semana == o && !isNaN(d.value)),
       );
 
@@ -10687,37 +10784,3 @@ console.log(generarResultado('bundesliga'))  */
     probabilidades,
   );
 });
-
-/* final_list1.push({
-          name: ,
-          vs: ,
-          grupo ,
-          l_or_v: d.l_or_v,
-          dia: ,
-          fecha: ,
-          pts: ,
-          partidos_jugados: ,
-          partidos_ganados: ,
-          partidos_empatados: ,
-          partidos_perdidos: ,
-          goles_a_favor: goles,
-          goles_en_contra: ,
-          diferencia_de_goles: ,
-          pts_directo: ,
-          partidos_jugados_directo: ,
-          partidos_ganados_directo: ,
-          partidos_empatados_directo: ,
-          partidos_perdidos_directo: ,
-          goles_a_favor_directo: ,
-          goles_en_contra_directo: ,
-          diferencia_de_goles_directo: ,
-          racha_victorias: ,
-          racha_derrotas: ,
-          racha_empates: ,
-          racha_sin_victorias: ,
-          racha_sin_derrotas: ,
-          racha_sin_empates: ,
-          goleadas_a_favor: ,
-          goleadas_en_contra: ,
-          valla_invicta: ,
-        }); */
