@@ -217,7 +217,8 @@ let fechas_not_played = 1;
 let fps = 60;
 
 let localia = false;
-let stats_on_top = true;
+let stats_on_top = false;
+let rachas = true;
 let competencia = 'libertadores'
 
   const clasificados_por_competencia = {
@@ -452,6 +453,17 @@ const render = (
   let grupos_1 = [...new Set(data.map((d) => d.name.split("-")[1]))].sort()
   let names_1 = [...new Set(data.map((d) => d.name))]
 
+  function probabilidad(name) {
+  if (!Object.keys(probabilidades).includes(name)) {
+    return ['']
+  } else if (Object.keys(probabilidades).includes(name)) {
+    return probabilidades[name].probabilidad
+  }  else {
+    return ['']
+  }
+   
+}
+
   console.log(grupos);
 
   /* let competencia = 'libertadores'
@@ -604,7 +616,7 @@ const render = (
     name: {
       position: {
         x: ress_ratio != "9:16" ? heightBars * 0 : -heightBars * 0.0,
-        y: ress_ratio != "9:16" ? -heightBars * 0.03 : -heightBars * 0.18,
+        y: ress_ratio != "9:16" ? !stats_on_top ? -heightBars * 0.15 : -heightBars * 0.03 : -heightBars * 0.18,
       },
       style: {
         fill: black_color,
@@ -617,7 +629,7 @@ const render = (
     value: {
       position: {
         x: 0,
-        y: ress_ratio != "9:16" ? heightBars * 0.32 : heightBars * 0.18,
+        y: ress_ratio != "9:16" ? !stats_on_top ? heightBars * 0.25 : heightBars * 0.32 : heightBars * 0.18,
       },
       style: {
         fill: black_color,
@@ -666,7 +678,7 @@ const render = (
       position: {
         x: -32.5,
       },
-      size: heightBars * 1.2,
+      size: heightBars * 1.1,
       size1: heightBars * 0.75,
     },
     escudo: {
@@ -751,24 +763,25 @@ const render = (
     const nombresSet = new Set(nombres);
     const dataRelevante = data.filter(d =>
       d.goles_fecha !== 99 &&
-      d.semana <= semanaMax &&
       nombresSet.has(d.name)
     );
 
     nombres.forEach(nombre => {
       const rivales = nombres.filter(d => d !== nombre);
       rivales.forEach(rival => {
-        const match = dataRelevante.find(d => d.name === nombre && d.vs.includes(rival));
-        if (match) {
-          stats[nombre].pts_directo  += match.pts_fecha ?? 0;
-          stats[nombre].pj_directo += match ? 1 : 0 ?? 0;
-          stats[nombre].pg_directo += match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0 ?? 0;
-          stats[nombre].pe_directo += match.goles_fecha == match.goles_en_contra_fecha ? 1 : 0 ?? 0;
-          stats[nombre].pp_directo += match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0 ?? 0;
-          stats[nombre].gf_directo   += match.goles_fecha ?? 0;
-          stats[nombre].gc_directo += match.goles_en_contra_fecha ?? 0;
-          stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
-        }
+        let matches = dataRelevante.filter(d => d.name === nombre && d.vs===rival);
+        matches.forEach(match => {
+          if (match) {
+            stats[nombre].pts_directo  += match.pts_fecha ?? 0;
+            stats[nombre].pj_directo += match ? 1 : 0 ?? 0;
+            stats[nombre].pg_directo += match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0 ?? 0;
+            stats[nombre].pe_directo += match.goles_fecha == match.goles_en_contra_fecha ? 1 : 0 ?? 0;
+            stats[nombre].pp_directo += match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0 ?? 0;
+            stats[nombre].gf_directo   += match.goles_fecha ?? 0;
+            stats[nombre].gc_directo += match.goles_en_contra_fecha ?? 0;
+            stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
+          }
+        })
       });
     });
 
@@ -776,7 +789,10 @@ const render = (
     return stats;
   }
 
-  console.log(statsDirectos1(['Independiente', 'Platense']))
+  console.log(structuredClone(data))
+  console.log(statsDirectos(['Platense', 'Independiente']))
+  console.log(statsDirectos1(['Platense', 'Independiente']))
+  console.log(statsDirectos1(['Riestra', 'Instituto']))
 
   /* console.log(data)
   console.log(names_1)
@@ -905,7 +921,7 @@ console.log(empatados);
   return array;
 }; */
 
-let sort_teams1 = (array) => {
+/* let sort_teams1 = (array) => {
   array = removeDuplicates(array);
 
   // Cache para no recalcular statsDirectos con el mismo conjunto
@@ -992,6 +1008,145 @@ let sort_teams1 = (array) => {
   array.forEach((d, i) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
 
   return array;
+}; */
+
+let sort_teams1 = (array, { usarDirecto = true } = {}) => {
+  array = removeDuplicates(array);
+
+  const cacheStats = new Map();
+
+  function statsDirectos(nombres) {
+    const key = [...nombres].sort().join("|");
+    if (cacheStats.has(key)) return cacheStats.get(key);
+
+    const stats = {};
+    nombres.forEach(n => { stats[n] = { pts_directo: 0, diff_directo: 0, gf_directo: 0 }; });
+
+    const semanaMax = array[0].semana;
+    const nombresSet = new Set(nombres);
+    const dataRelevante = data.filter(d =>
+      d.goles_fecha !== 99 &&
+      d.semana <= semanaMax &&
+      nombresSet.has(d.name)
+    );
+
+    nombres.forEach(nombre => {
+      const rivales = nombres.filter(d => d !== nombre);
+      rivales.forEach(rival => {
+        let matches = dataRelevante.filter(d => d.name === nombre && d.vs===rival);
+        matches.forEach(match => {
+          if (match) {
+            stats[nombre].pts_directo  += match.pts_fecha ?? 0;
+            stats[nombre].gf_directo   += match.goles_fecha ?? 0;
+            stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
+          }
+        })
+      });
+    });
+
+    cacheStats.set(key, stats);
+    return stats;
+  }
+
+  const grupoEmpatadosCache = new Map();
+
+  function getEmpatados(grupo, pts) {
+    const key = `${grupo}|${pts}`;
+    if (!grupoEmpatadosCache.has(key)) {
+      grupoEmpatadosCache.set(
+        key,
+        array.filter(e => e.name.split("-")[1] === grupo && e.value === pts).map(e => e.name)
+      );
+    }
+    return grupoEmpatadosCache.get(key);
+  }
+
+  array.sort((a, b) => {
+    const ga = a.name.split("-")[1];
+    const gb = b.name.split("-")[1];
+
+    if (gb < ga) return 1;
+    if (gb > ga) return -1;
+
+    if (b.value !== a.value) return b.value - a.value;
+
+    // Criterios directos (opcionales)
+    if (usarDirecto) {
+      const empatados = getEmpatados(ga, a.value);
+      const sd = statsDirectos(empatados);
+      const sdA = sd[a.name];
+      const sdB = sd[b.name];
+
+      if (sdB.pts_directo  !== sdA.pts_directo)  return sdB.pts_directo  - sdA.pts_directo;
+      if (sdB.diff_directo !== sdA.diff_directo)  return sdB.diff_directo - sdA.diff_directo;
+      if (sdB.gf_directo   !== sdA.gf_directo)    return sdB.gf_directo   - sdA.gf_directo;
+    }
+
+    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+    if (b.goles !== a.goles) return b.goles - a.goles;
+    if (b.value_away !== a.value_away) return b.value_away - a.value_away;
+
+    return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
+  });
+
+  array.forEach((d, i) => (d.rank = i));
+  array.forEach((d, i) => (d.rankInGroup = i % 4));
+  array.forEach((d, i) => (d.position = d.rankInGroup + 1 + d.name.split("-")[1]));
+  array.forEach((d, i) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
+
+  return array;
+};
+
+let sort_teams2 = (array, { usarDirecto = true } = {}) => {
+  array = removeDuplicates(array);
+
+  const grupoEmpatadosCache = new Map();
+
+  function getEmpatados(grupo, pts) {
+    const key = `${grupo}|${pts}`;
+    if (!grupoEmpatadosCache.has(key)) {
+      grupoEmpatadosCache.set(
+        key,
+        array.filter(e => e.name.split("-")[1] === grupo && e.value === pts).map(e => e.name)
+      );
+    }
+    return grupoEmpatadosCache.get(key);
+  }
+
+  array.sort((a, b) => {
+    const ga = a.name.split("-")[1];
+    const gb = b.name.split("-")[1];
+
+    if (gb < ga) return 1;
+    if (gb > ga) return -1;
+
+    if (b.value !== a.value) return b.value - a.value;
+
+    // Criterios directos (opcionales)
+    if (usarDirecto) {
+      const empatados = getEmpatados(ga, a.value);
+      const sd = statsDirectos1(empatados);
+      const sdA = sd[a.name];
+      const sdB = sd[b.name];
+
+      if (sdB.pts_directo  !== sdA.pts_directo)  return sdB.pts_directo  - sdA.pts_directo;
+      if (sdB.diff_directo !== sdA.diff_directo)  return sdB.diff_directo - sdA.diff_directo;
+      if (sdB.gf_directo   !== sdA.gf_directo)    return sdB.gf_directo   - sdA.gf_directo;
+    }
+
+    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+    if (b.goles !== a.goles) return b.goles - a.goles;
+    if (b.value_away !== a.value_away) return b.value_away - a.value_away;
+
+    return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
+  });
+
+  array.forEach((d, i) => (d.rank = i));
+  array.forEach((d, i) => (d.rankInGroup = i % 4));
+  array.forEach((d, i) => (d.position = d.rankInGroup + 1 + d.name.split("-")[1]));
+  array.forEach((d, i) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
+
+  return array;
 };
 
   let sort_teams = (array) => {
@@ -1064,10 +1219,10 @@ let sort_teams1 = (array) => {
 
   console.log(a);
 
-  let yearSlice = sort_teams1(
+  let yearSlice = sort_teams2(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
-  console.log(sort_teams1(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
+  console.log(sort_teams2(data.filter((d) => d.semana == 6 && !isNaN(d.value))));
 
   let x = d3.scaleLinear().domain([0, ticks_slice]).range([0, weeks_i]);
 
@@ -1081,7 +1236,7 @@ let sort_teams1 = (array) => {
 
   let names = new Set(data.map((d) => d.name));
 
-  let lastSlice = sort_teams1(
+  let lastSlice = sort_teams2(
     data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)),
   );
 
@@ -2627,23 +2782,9 @@ let sort_teams1 = (array) => {
   feMerge.append("feMergeNode").attr("in", "offsetBlur");
   feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-  /* grupos_1 = [] */
-  console.log(grupos_1)
-  /* let holla = []
-
-  holla.forEach(d => {
-    console.log(holla)
-  }) */
-  console.log(names_1)
-
-  
-  console.log(names_1)
-
-
   if (grupos > 1) {
   
   grupos_1.forEach((grupo, indice_grupo) => {
-    console.log(grupo)
 
     svg
       .selectAll(".rect")
@@ -2686,8 +2827,6 @@ let sort_teams1 = (array) => {
         "alignment-baseline": defaults.name.style.alignment_baseline,
       })
       .text('Grupo ' + grupo)
-
-      console.log(yearSlice.slice(indice_grupo*equipos_por_grupos, (indice_grupo*equipos_por_grupos)+equipos_por_grupos))
 
     svg
       .selectAll(".rect")
@@ -2775,7 +2914,6 @@ let sort_teams1 = (array) => {
     }); */
 
   names_1.filter(d => d.split('-')[1]==grupo).forEach((nombre) => {
-    console.log(nombre)
     let wks = 0;
 
     var points = [];
@@ -2853,6 +2991,7 @@ let sort_teams1 = (array) => {
         "stroke-linejoin": "round",
       })
       .attr("d", d3.line().curve(d3.curveCardinal.tension(1))(points));
+      
   })
 
 })
@@ -3014,7 +3153,7 @@ let sort_teams1 = (array) => {
                   }`,
                 )
                 .text(
-                  `${team.goles_en_contra_fecha == not_played_yet ? "" : team.goles_fecha}`,
+                  `${team.goles_en_contra_fecha == not_played_yet ? "" : team.l_or_v == "V" ? team.goles_en_contra_fecha : team.goles_fecha}`,
                 ),
             )
 
@@ -3080,7 +3219,7 @@ let sort_teams1 = (array) => {
                   "alignment-baseline": "central",
                 })
                 .text(
-                  `${team.goles_fecha == not_played_yet ? "" : team.goles_en_contra_fecha}`,
+                  `${team.goles_fecha == not_played_yet ? "" : team.l_or_v == "V" ? team.goles_fecha : team.goles_en_contra_fecha }`,
                 ),
             )
             .call(halo1, defaults.value.style.font_size, "#f1f1f1");
@@ -3094,11 +3233,11 @@ let sort_teams1 = (array) => {
               x:
                 x(wks) +
                 heightBars * 0.2 +
-                (team.goles_fecha == not_played_yet ? -heightBars * 0.2 : 0) +
+                (team.goles_fecha == not_played_yet ? team.l_or_v == "V" ? heightBars * 0.2 : -heightBars * 0.2 : 0) +
                 i * heightBars * 1.3 -
                 (names_filter.length - 1) * (heightBars * 0.65) +
                 hor +
-                hor_not_played_yet + defaults.mini_logo.size1*0.35,
+                hor_not_played_yet + defaults.mini_logo.size1*0.35 + (team.l_or_v == "V" ? - heightBars * 0.95 : 0),
               y:
                 y(rank1) -
                 heightBars * 0.325 -
@@ -3124,15 +3263,7 @@ let sort_teams1 = (array) => {
             })
             .styles({
               fill:
-                team.campeonato_perdido_matematicamente == 1 ||
-                names_filter[names_filter.length - 1]
-                  .campeonato_perdido_matematicamente == 1
-                  ? derrota_color
-                  : team.campeonato_ganado_matematicamente1 == 1 ||
-                      names_filter[names_filter.length - 1]
-                        .campeonato_ganado_matematicamente1 == 1
-                    ? victoria_color
-                    : black_color,
+                team.goles_fecha > team.goles_en_contra_fecha ? victoria_color : team.goles_fecha < team.goles_en_contra_fecha ? derrota_color : empate_color,
               "font-weight": 600,
               "font-size": heightBars * 0.225,
               "text-anchor": "middle",
@@ -5097,6 +5228,8 @@ names.forEach((nombre) => {
       );
   }
 
+  console.log(structuredClone(yearSlice))
+
   var rankingSVG = svg
     .selectAll(".g")
     .data((yearSlice))
@@ -5916,11 +6049,11 @@ names.forEach((nombre) => {
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text(
-            (d, i, total) => " " + probabilidades[d.name].probabilidad + "%",
+            (d, i, total) => " (" + probabilidad(d.name) + "%)",
           ),
       )
 
-      .call((text) =>
+      /* .call((text) =>
         text
           .append("tspan")
           .attrs({
@@ -5939,7 +6072,7 @@ names.forEach((nombre) => {
               ? ""
               : `${i == 0 && d.partidos_jugados + d.partidos_jugados1 == dates.length - 1 ? " (Campeón)" : ""}`,
           ),
-      );
+      ); */
   } else {
     if (grupos > 1) {
 
@@ -5959,7 +6092,7 @@ names.forEach((nombre) => {
           margin_left * 2 +
           defaults.logo.size / 2 +
           defaults.name.position.x,
-        y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.name.position.y,
+        y: (d, i) => y(i+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.name.position.y,
         /* "clip-path": `url(#ellipse-clip-margin-bottom)`, */
       })
       .styles({
@@ -6083,11 +6216,11 @@ names.forEach((nombre) => {
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text(
-            (d, i, total) => " " + probabilidades[d.name].probabilidad + "%",
+            (d, i, total) => " (" + probabilidad(d.name) + "%)",
           ),
       )
 
-      .call((text) =>
+      /* .call((text) =>
         text
           .append("tspan")
           .attrs({
@@ -6105,7 +6238,7 @@ names.forEach((nombre) => {
               ? ""
               : `${i == 0 && d.partidos_jugados + d.partidos_jugados1 == dates.length - 1 ? " (Campeón)" : ""}`,
           ),
-      )
+      ) */
       })
 
     } else {
@@ -6123,7 +6256,7 @@ names.forEach((nombre) => {
           margin_left * 2 +
           defaults.logo.size / 2 +
           defaults.name.position.x,
-        y: (d) => y(d.rank) + defaults.name.position.y,
+        y: (d, i) => y(i) + defaults.name.position.y, // OJO y(d.rank)
         "clip-path": `url(#ellipse-clip-margin-bottom)`,
       })
       .styles({
@@ -6247,7 +6380,7 @@ names.forEach((nombre) => {
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text(
-            (d, i, total) => " " + probabilidades[d.name].probabilidad + "%",
+            (d, i, total) => " (" + probabilidad(d.name) + "%)",
           ),
       )
 
@@ -6287,7 +6420,7 @@ names.forEach((nombre) => {
           margin_left * 2 +
           defaults.logo.size / 2 +
           defaults.name.position.x,
-        y: (d) => y(d.rank) + defaults.value.position.y,
+        y: (d, i) => y(i) + defaults.value.position.y, // ojo y(d.rank)
         "clip-path": `url(#ellipse-clip-margin-bottom)`,
       })
       .styles({
@@ -7552,7 +7685,7 @@ names.forEach((nombre) => {
           margin_left * 2 +
           defaults.logo.size / 2 +
           defaults.name.position.x,
-        y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.value.position.y,
+        y: (d, i) => y(i+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.value.position.y, // ojo d.rank
         /* "clip-path": `url(#ellipse-clip-margin-bottom)`, */
       })
       .styles({
@@ -7907,7 +8040,12 @@ names.forEach((nombre) => {
             "text-anchor": defaults.value.style.text_anchor,
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
-          .text((d) => (data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? "\xa0\xa0\xa0[" : "")),
+          .text((d) => {
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos1(empates)[d.name]
+            return valor.pj_directo > 0 ? "\xa0\xa0\xa0["  : ""
+          }
+          ),
       )
 
       .call((text) =>
@@ -7923,8 +8061,11 @@ names.forEach((nombre) => {
             "text-anchor": defaults.value.style.text_anchor,
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
-          .text((d) =>
-            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos1(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
+          .text((d) => {
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos1(empates)[d.name]
+            return valor.pj_directo > 0 ? valor.pts_directo + "\xa0\xa0\xa0"  : ""
+          }
           ),
       )
 
@@ -7945,7 +8086,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pj_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.pj_directo + " ": ""
           }
           ),
       )
@@ -7967,7 +8108,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pg_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.pg_directo + " ": ""
           }
           ),
       )
@@ -7989,7 +8130,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pe_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.pe_directo + " ": ""
           }
           ),
       )
@@ -8011,7 +8152,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
+            return valor.pj_directo > 0 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
           }
           ),
       )
@@ -8033,7 +8174,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.gf_directo: ""
+            return valor.pj_directo > 0 ? valor?.gf_directo: ""
           }
           ),
       )
@@ -8055,7 +8196,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? "-": ""
+            return valor.pj_directo > 0 ? "-": ""
           }
           ),
       )
@@ -8077,7 +8218,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.gc_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.gc_directo + " ": ""
           }
           ),
       )
@@ -8107,7 +8248,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
+            return valor.pj_directo > 0 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
           }
           ),
       )
@@ -8126,9 +8267,9 @@ names.forEach((nombre) => {
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
           .text((d) => {
-
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            return empates.length > 1 ? "]" : ""
+            let valor = statsDirectos1(empates)[d.name]
+            return valor.pj_directo > 0 ? "]" : ""
           }
           ),
       )
@@ -8147,7 +8288,7 @@ names.forEach((nombre) => {
           margin_left * 2 +
           defaults.logo.size / 2 +
           defaults.name.position.x,
-        y: (d) => y(d.rank) + defaults.value.position.y,
+        y: (d, i) => y(i) + defaults.value.position.y, //ojo (d.rank)
         "clip-path": `url(#ellipse-clip-margin-bottom)`,
       })
       .styles({
@@ -8502,7 +8643,12 @@ names.forEach((nombre) => {
             "text-anchor": defaults.value.style.text_anchor,
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
-          .text((d) => (data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? "\xa0\xa0\xa0[" : "")),
+          .text((d) => {
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos1(empates)[d.name]
+            return valor.pj_directo > 0 ? "\xa0\xa0\xa0["  : ""
+          }
+          ),
       )
 
       .call((text) =>
@@ -8518,8 +8664,11 @@ names.forEach((nombre) => {
             "text-anchor": defaults.value.style.text_anchor,
             "alignment-baseline": defaults.value.style.alignment_baseline,
           })
-          .text((d) =>
-            data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name).length > 1 ? statsDirectos1(data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name))[d.name].pts_directo + "\xa0\xa0\xa0" : "",
+          .text((d) => {
+            let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
+            let valor = statsDirectos1(empates)[d.name]
+            return valor.pj_directo > 0 ? valor.pts_directo + "\xa0\xa0\xa0" : ""
+          }
           ),
       )
 
@@ -8540,7 +8689,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pj_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.pj_directo + " ": ""
           }
           ),
       )
@@ -8562,7 +8711,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pg_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.pg_directo + " ": ""
           }
           ),
       )
@@ -8584,7 +8733,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pe_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.pe_directo + " ": ""
           }
           ),
       )
@@ -8606,7 +8755,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
+            return valor.pj_directo > 0 ? valor?.pp_directo + "\xa0\xa0\xa0": ""
           }
           ),
       )
@@ -8628,7 +8777,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.gf_directo: ""
+            return valor.pj_directo > 0 ? valor?.gf_directo: ""
           }
           ),
       )
@@ -8650,7 +8799,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? "-": ""
+            return valor.pj_directo > 0 ? "-": ""
           }
           ),
       )
@@ -8672,7 +8821,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? valor?.gc_directo + " ": ""
+            return valor.pj_directo > 0 ? valor?.gc_directo + " ": ""
           }
           ),
       )
@@ -8702,7 +8851,7 @@ names.forEach((nombre) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
             let valor = statsDirectos1(empates)[d.name]
-            return empates.length > 1 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
+            return valor.pj_directo > 0 ? (valor.diff_directo > 0 ? "+" : "") + valor?.diff_directo : ""
           }
           ),
       )
@@ -8723,7 +8872,8 @@ names.forEach((nombre) => {
           .text((d) => {
 
             let empates = data.filter(e => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == "" && e.value == d.value).map(e => e.name)
-            return empates.length > 1 ? "]" : ""
+            let valor = statsDirectos1(empates)[d.name]
+            return valor.pj_directo > 0 ? "]" : ""
           }
           ),
       );
@@ -8764,7 +8914,7 @@ names.forEach((nombre) => {
       (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
       margin_left * 2 -
       (defaults.logo.size1 * 1.1) / 2,
-    y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - (defaults.logo.size1 * 1.1) / 2,
+    y: (d, i) => y(i+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) - (defaults.logo.size1 * 1.1) / 2, //ojo d.rank
     href: (d) => /* getPng(d.name) */`./escudos/${d.name.split("-")[0]}.png`,
     height: defaults.logo.size1 * 1.1,
   })
@@ -8778,7 +8928,7 @@ names.forEach((nombre) => {
         margin_left * 2 +
         defaults.logo.size / 2 +
         defaults.name.position.x,
-      y: (d) => y(d.rank+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.name.position.y - heightBars / 3,
+      y: (d, i) => y(i+distancia_entre_grupos + indice_grupo*(equipos_por_grupos+distancia_entre_grupos)) + defaults.name.position.y - heightBars / 3,
       "clip-path": `url(#ellipse-clip-margin-bottom)`,
     })
     .styles({
@@ -8899,7 +9049,7 @@ names.forEach((nombre) => {
       (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) +
       margin_left * 2 -
       (defaults.logo.size1 * 1.1) / 2,
-    y: (d) => y(d.rank) - (defaults.logo.size1 * 1.1) / 2,
+    y: (d, i) => y(i) - (defaults.logo.size1 * 1.1) / 2, // ojo y(d.rank)
     href: (d) => /* getPng(d.name) */`./escudos/${d.name.split("-")[0]}.png`,
     height: defaults.logo.size1 * 1.1,
   });
@@ -8913,7 +9063,7 @@ names.forEach((nombre) => {
         margin_left * 2 +
         defaults.logo.size / 2 +
         defaults.name.position.x,
-      y: (d) => y(d.rank) + defaults.name.position.y - heightBars / 3,
+      y: (d, i) => y(i) + defaults.name.position.y - heightBars / 3, // ojo (d.rank)
       "clip-path": `url(#ellipse-clip-margin-bottom)`,
     })
     .styles({
@@ -9494,7 +9644,7 @@ svg
   });
 };
 
-Promise.all([d3.csv("/torneos/data2.csv")]).then(([data1]) => {
+Promise.all([d3.csv("/torneos/sudamericana2026.csv")]).then(([data1]) => {
 
   /* data1.forEach(d => {
     if (d.fecha == 'Fecha 3') {
@@ -9710,8 +9860,6 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
       stats[e] = { pts: 0, diff: 0, gf: 0 };
     });
 
-    /* console.log(partidos) */
-
     partidos.forEach(p => {
       if (!p.jugado) return;
       if (!equiposEnDisputa.includes(p.local) || !equiposEnDisputa.includes(p.visitante)) return;
@@ -9819,6 +9967,137 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   }); */
 }
 
+function calcularYOrdenarTabla1(partidos) {
+  // --- 1. Construir tabla general desde partidos ---
+  const tabla = {};
+
+  partidos.forEach(p => {
+
+    [p.local, p.visitante].forEach(equipo => {
+      if (!tabla[equipo]) {
+        tabla[equipo] = { pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, diff: 0, rojas: 0, amarillas: 0 };
+      }
+    });
+
+    const gl = p.goles_local;
+    const gv = p.goles_visitante;
+
+    tabla[p.local].pj++;
+    tabla[p.visitante].pj++;
+    tabla[p.local].gf += gl;
+    tabla[p.local].gc += gv;
+    tabla[p.local].diff += gl - gv;
+    tabla[p.visitante].gf += gv;
+    tabla[p.visitante].gc += gl;
+    tabla[p.visitante].diff += gv - gl;
+
+    if (gl > gv) {
+      tabla[p.local].pts += 3;
+      tabla[p.local].pg++;
+      tabla[p.visitante].pp++;
+    } else if (gl === gv) {
+      tabla[p.local].pts += 1;
+      tabla[p.visitante].pts += 1;
+      tabla[p.local].pe++;
+      tabla[p.visitante].pe++;
+    } else {
+      tabla[p.visitante].pts += 3;
+      tabla[p.visitante].pg++;
+      tabla[p.local].pp++;
+    }
+  });
+
+  // --- 2. Stats de enfrentamientos directos entre un subconjunto ---
+  function statsDirectos(equiposEnDisputa) {
+    const stats = {};
+    equiposEnDisputa.forEach(e => {
+      stats[e] = { pts: 0, diff: 0, gf: 0 };
+    });
+
+    partidos.forEach(p => {
+      if (!equiposEnDisputa.includes(p.local) || !equiposEnDisputa.includes(p.visitante)) return;
+
+      const gl = p.goles_local;
+      const gv = p.goles_visitante;
+
+      if (gl > gv) {
+        stats[p.local].pts += 3;
+      } else if (gl === gv) {
+        stats[p.local].pts += 1;
+        stats[p.visitante].pts += 1;
+      } else {
+        stats[p.visitante].pts += 3;
+      }
+
+      stats[p.local].gf += gl;
+      stats[p.local].diff += gl - gv;
+      stats[p.visitante].gf += gv;
+      stats[p.visitante].diff += gv - gl;
+    });
+
+    return stats;
+  }
+
+  // --- 3. Comparador con todos los criterios ---
+  function comparar(a, b, empatados) {
+    const sa = tabla[a];
+    const sb = tabla[b];
+    
+    // 1º Enfrentamientos directos entre los empatados
+    const directos = statsDirectos(empatados);
+    /* console.log(directos) */
+    const da = directos[a];
+    const db = directos[b];
+
+    if (db.pts !== da.pts) return db.pts - da.pts;
+    if (db.diff !== da.diff) return db.diff - da.diff;
+    if (db.gf !== da.gf) return db.gf - da.gf;
+
+    // 2º Diferencia de goles general
+    if (sb.diff !== sa.diff) return sb.diff - sa.diff;
+
+    // 3º Goles a favor general
+    if (sb.gf !== sa.gf) return sb.gf - sa.gf;
+
+    // 4º Menor tarjetas rojas
+    if (sa.rojas !== sb.rojas) return sa.rojas - sb.rojas;
+
+    // 5º Menor tarjetas amarillas
+    if (sa.amarillas !== sb.amarillas) return sa.amarillas - sb.amarillas;
+
+    // 6º Sorteo
+    return Math.random() - 0.5;
+  }
+
+  // --- 4. Ordenar con grupos de empatados ---
+  const equipos = Object.keys(tabla);
+
+  const ordenados = equipos.sort((a, b) => {
+    if (tabla[b].pts !== tabla[a].pts) return tabla[b].pts - tabla[a].pts;
+
+    const empatados = equipos.filter(e => tabla[e].pts === tabla[a].pts);
+    return comparar(a, b, empatados);
+  });
+
+  // --- 5. Resultado final ---
+  return ordenados.map((equipo, i) => {
+    const empatados = ordenados.filter(e => tabla[e].pts === tabla[equipo].pts);
+    const directos = empatados.length > 1 ? statsDirectos(empatados) : null;
+    const d = directos ? directos[equipo] : null;
+
+    return {
+      pos: i + 1,
+      equipo,
+      ...tabla[equipo],
+      ...(d ? {
+        pts_directo: d.pts,
+        gf_directo: d.gf,
+        diff_directo: d.diff,
+      } : {})
+    };
+  });
+}
+
   /* function ordenarTabla1(tabla) {
     return Object.keys(tabla).sort((a, b) => {
       const sa = tabla[a];
@@ -9899,14 +10178,6 @@ function calcularLambdas(data) {
 const lambdas = calcularLambdas(data1);
 console.log(lambdas);
 
-/* function generarResultado(liga = 'ligaArgentina') {
-  const { local, visitante } = LAMBDAS[liga];
-  return {
-    goles_local: poisson(local),
-    goles_visitante: poisson(visitante),
-  };
-} */
-
   function generarResultado(liga = 'argentina', override = null) {
   const config = override ?? LAMBDAS[liga];
   return {
@@ -9935,8 +10206,8 @@ console.log(lambdas);
 
 // Uso:
 const tabla = simular('mundial', 50000);
-console.table(tabla); // top 15
- */
+console.table(tabla); // top 15 */
+
 
 /* function simularGrupo(partidos, equipos, n = 100000) {
   const campeon = {};
@@ -10030,9 +10301,9 @@ console.log(generarResultado('bundesliga'))  */
         clasif.forEach((equipo) => clasificaciones[equipo]++);
 
         
-        /* if (d == 'H' && clasif.includes("River Plate-H")) {
+        if (d == 'H' && clasif.includes("River Plate-H")) {
           casos.push(grupo);
-        } */
+        }
       })
     }
     /* console.log(clasificaciones['River Plate-H']); */
@@ -10088,7 +10359,7 @@ console.log(generarResultado('bundesliga'))  */
     })
     console.log(structuredClone(data1)); */
 
-    /* console.log(structuredClone(casos));
+    // --- SIMULAR PEOR CASO ---
 
     function returnCasoMasCercano(d) {
       let masCercano = casos[0];
@@ -10096,6 +10367,7 @@ console.log(generarResultado('bundesliga'))  */
       let i = 0;
       let posD = 0;
       let ptsD = 99;
+      let ptsD2 = 0;
       let diffD = 99;
       let gfD = 99;
       let gcD = 0;
@@ -10103,9 +10375,11 @@ console.log(generarResultado('bundesliga'))  */
         let rankGrupo = calcularYOrdenarTabla(p);
         let indiceEquipo = rankGrupo.indexOf('River Plate-H');
         let equipo = calcularPosiciones(p)['River Plate-H'];
-        if (indiceEquipo <= posD && equipo.pts <= ptsD && equipo.diff <= diffD && equipo.gf <= gfD && equipo.gc >= gcD) {
+        let equipo2 = calcularPosiciones(p)[rankGrupo[2]];
+        if (indiceEquipo >= posD && equipo.pts <= ptsD && equipo2.pts >= ptsD2 && equipo.diff <= diffD && equipo.gf <= gfD && equipo.gc >= gcD) {
           posD = indiceEquipo;
           ptsD = equipo.pts;
+          ptsD2 = equipo2.pts;
           diffD = equipo.diff;
           gfD = equipo.gf;
           gcD = equipo.gc;
@@ -10118,19 +10392,19 @@ console.log(generarResultado('bundesliga'))  */
       return masCercano
     }
 
-    console.log(calcularYOrdenarTabla(casos[0]))
-    console.log(ordenarTabla(calcularPosiciones(casos[0])))
-
-    console.log(returnCasoMasCercano(casos))
-
+    let grupo_filtrado = data1.filter(d => (d.local.split('-')[1] == 'H'));
+    console.log(grupo_filtrado)
     data1 = data1.filter(d => (d.local.split('-')[1] !== 'H'));
     console.log(structuredClone(data1));
-    data1 = data1.concat(returnCasoMasCercano(casos));
+    let caso = returnCasoMasCercano(casos)
+    console.log(caso)
+    console.log(calcularYOrdenarTabla1(caso))
+    data1 = data1.concat(caso);
     data1.forEach(d => {
       d.goles_local = d.goles_local.toString()
       d.goles_visitante = d.goles_visitante.toString()
     })
-    console.log(structuredClone(data1)); */
+    console.log(structuredClone(data1));
 
     // Convertir conteos a porcentajes
     const resultado = {};
@@ -10146,7 +10420,9 @@ console.log(generarResultado('bundesliga'))  */
     return resultado;
   }
 
-  let probabilidades = calcularProbabilidades(data_cruda, clasificacion_por_grupo, 1000);
+  console.log(structuredClone(data_cruda.filter(d => d.local.split('-')[1]=='H')));
+  let probabilidades = calcularProbabilidades(data_cruda.filter(d => d.local.split('-')[1]=='H'), clasificacion_por_grupo, 10000);
+  console.log(structuredClone(data_cruda));
   console.table(probabilidades);
 
   let nombre_torneo =
