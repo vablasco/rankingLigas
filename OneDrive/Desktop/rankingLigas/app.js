@@ -1673,7 +1673,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
           .attrs({
             transform: `translate(${margin_left * 2}, 0)`,
             class: 'line',
-            ...(i === 0 && { filter: 'url(#dropshadow)' }), // solo la primera capa tiene sombra
+            /* ...(i === 0 && { filter: 'url(#dropshadow)' }), // solo la primera capa tiene sombra */
           })
           .styles({
             fill: 'none',
@@ -4349,533 +4349,101 @@ grupos_1.forEach((grupo, indice_grupo) => {
           .call(halo1, defaults.value.style.font_size*0.25, '#f1f1f1')
       });
     } else {
-      rankingSVG
-        .append('text')
-        .attrs({
-          x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-          y: (d, i) => y(i) + defaults.value.position.y, //ojo (d.rank)
-        })
-        .styles({
-          fill: 'green',
-          'font-size': defaults.value.style.font_size,
-          'font-weight': 600,
-          'text-anchor': defaults.value.style.text_anchor,
-          'alignment-baseline': defaults.value.style.alignment_baseline,
-        })
-        .text('')
 
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({})
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => d.value + (ress_ratio == '16:9' ? '' : ress_ratio == '1:1' ? '\xa0\xa0\xa0' : '\xa0'))
-        )
+      // Helper para no repetir .append('tspan').style('fill', ...).text(...)
+const tspan = (text, fill, textFn, cls) => {
+  const t = text.append('tspan');
+  if (cls) t.attr('class', cls);
+  if (fill) t.style('fill', fill);
+  t.text(textFn);
+};
 
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => '\xa0\xa0\xa0' + d.partidos_jugados)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: victoria_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => ' ' + d.partidos_ganados)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: empate_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => ' ' + d.partidos_empatados)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: derrota_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => ' ' + d.partidos_perdidos)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: victoria_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => '\xa0\xa0\xa0' + d.goles)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text('-')
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: derrota_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => d.goles_en_contra)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color),
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pts1',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pj1',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pg1',
-            })
-            .styles({
-              fill: victoria_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pe1',
-            })
-            .styles({
-              fill: empate_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pp1',
-            })
-            .styles({
-              fill: derrota_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + '\xa0\xa0\xa0'))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'gf1',
-            })
-            .styles({
-              fill: victoria_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles1))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'gf1_guion',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : '-'))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'gc1',
-            })
-            .styles({
-              fill: derrota_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'dif1',
-            })
-            .styles({
-              fill: (d) => (d.diferencia_de_goles1 > 0 ? victoria_color : d.diferencia_de_goles1 < 0 ? derrota_color : empate_color),
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'bracket2',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? '\xa0\xa0\xa0[' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pts1',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor.pts_directo + '\xa0\xa0\xa0' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pj1',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor?.pj_directo + ' ' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pg1',
-            })
-            .styles({
-              fill: victoria_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor?.pg_directo + ' ' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pe1',
-            })
-            .styles({
-              fill: empate_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor?.pe_directo + ' ' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'pp1',
-            })
-            .styles({
-              fill: derrota_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor?.pp_directo + '\xa0\xa0\xa0' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'gf1',
-            })
-            .styles({
-              fill: victoria_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor?.gf_directo : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'gf1_guion',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? '-' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'gc1',
-            })
-            .styles({
-              fill: derrota_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? valor?.gc_directo + ' ' : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'dif1',
-            })
-            .styles({
-              fill: (d) => {
-                let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-                let valor = statsDirectos(empates)[d.name];
-                return valor.diff_directo > 0 ? victoria_color : valor.diff_directo < 0 ? derrota_color : empate_color;
-              },
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? (valor.diff_directo > 0 ? '+' : '') + valor?.diff_directo : '';
-            })
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'bracket2',
-            })
-            .styles({
-              fill: 'black',
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => {
-              let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos(empates)[d.name];
-              return valor.pj_directo > 0 ? ']' : '';
-            })
-        );
+// Helper para obtener stats directos cacheados por datum
+const getValor = (() => {
+  const cache = new Map();
+  return (d) => {
+    if (!cache.has(d)) {
+      const empates = data
+        .filter((e) => e.name.split('-')[1] === d.name.split('-')[1] && e.fecha === '' && e.value === d.value)
+        .map((e) => e.name);
+      cache.set(d, statsDirectos(empates)[d.name]);
     }
+    return cache.get(d);
+  };
+})();
+
+const padding =
+  ress_ratio === '16:9' ? '' :
+  ress_ratio === '1:1' ? '\xa0\xa0\xa0' :
+  '\xa0';
+
+const diffColor    = (diff) => diff > 0 ? victoria_color : diff < 0 ? derrota_color : empate_color;
+const signedDiff   = (diff) => (diff > 0 ? '+' : '') + diff;
+const show1        = (d, val) => d.partidos_jugados1 === 0 ? '' : val;
+const showDirecto  = (d, val) => getValor(d).pj_directo > 0 ? val : '';
+
+rankingSVG
+  .append('text')
+  .attrs({
+    x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
+      + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
+      + margin_left * 2
+      + defaults.logo.size / 2
+      + defaults.name.position.x,
+    y: (d, i) => y(i) + defaults.value.position.y,
+  })
+  .styles({
+    fill: black_color,
+    'font-size': defaults.value.style.font_size,
+    'font-weight': 600,
+    'text-anchor': defaults.value.style.text_anchor,
+    'alignment-baseline': defaults.value.style.alignment_baseline,
+  })
+  .call((text) => {
+    // --- Puntos + stats generales ---
+    tspan(text, null,           (d) => d.value + padding);
+    tspan(text, null,           (d) => '\xa0\xa0\xa0' + d.partidos_jugados);
+    tspan(text, victoria_color, (d) => ' ' + d.partidos_ganados);
+    tspan(text, empate_color,   (d) => ' ' + d.partidos_empatados);
+    tspan(text, derrota_color,  (d) => ' ' + d.partidos_perdidos);
+
+    // --- Goles generales ---
+    tspan(text, victoria_color, (d) => '\xa0\xa0\xa0' + d.goles);
+    tspan(text, null,           ()  => '-');
+    tspan(text, derrota_color,  (d) => d.goles_en_contra);
+    tspan(text, (d) => diffColor(d.diferencia_de_goles), (d) => ' ' + signedDiff(d.diferencia_de_goles));
+
+    // --- Bloque stats fase 1 [ ... ] ---
+    tspan(text, 'black',        (d) => show1(d, '\xa0\xa0\xa0['));
+    tspan(text, 'black',        (d) => show1(d, d.value1 + '\xa0\xa0\xa0'));
+    tspan(text, 'black',        (d) => show1(d, d.partidos_jugados1 + ' ')   );
+    tspan(text, victoria_color, (d) => show1(d, d.partidos_ganados1 + ' ')   );
+    tspan(text, empate_color,   (d) => show1(d, d.partidos_empatados1 + ' ') );
+    tspan(text, derrota_color,  (d) => show1(d, d.partidos_perdidos1 + '\xa0\xa0\xa0'));
+    tspan(text, victoria_color, (d) => show1(d, d.goles1)                    );
+    tspan(text, 'black',        (d) => show1(d, '-')                         );
+    tspan(text, derrota_color,  (d) => show1(d, d.goles_en_contra1 + ' ')    );
+    tspan(text, (d) => diffColor(d.diferencia_de_goles1),
+                                (d) => show1(d, signedDiff(d.diferencia_de_goles1))   );
+    tspan(text, 'black',        (d) => show1(d, ']')                         );
+
+    // --- Bloque stats directos [ ... ] ---
+    tspan(text, 'black',        (d) => showDirecto(d, '\xa0\xa0\xa0['));
+    tspan(text, 'black',        (d) => showDirecto(d, getValor(d).pts_directo + '\xa0\xa0\xa0') );
+    tspan(text, 'black',        (d) => showDirecto(d, getValor(d).pj_directo  + ' ')  );
+    tspan(text, victoria_color, (d) => showDirecto(d, getValor(d).pg_directo  + ' ')  );
+    tspan(text, empate_color,   (d) => showDirecto(d, getValor(d).pe_directo  + ' ')  );
+    tspan(text, derrota_color,  (d) => showDirecto(d, getValor(d).pp_directo  + '\xa0\xa0\xa0'));
+    tspan(text, victoria_color, (d) => showDirecto(d, getValor(d).gf_directo)         );
+    tspan(text, 'black',        (d) => showDirecto(d, '-')                             );
+    tspan(text, derrota_color,  (d) => showDirecto(d, getValor(d).gc_directo  + ' ')  );
+    tspan(text, (d) => diffColor(getValor(d).diff_directo),
+                                (d) => showDirecto(d, signedDiff(getValor(d).diff_directo))    );
+    tspan(text, 'black',        (d) => showDirecto(d, ']')                             );
+  });
+
+  
+}
   }
 
   if (grupos > 1) {

@@ -1,6 +1,6 @@
 /* global d3 */
 export async function procesarDatos() {
-    let data1 = await d3.csv('./torneos/sudamericana2026.csv');
+    let data1 = await d3.csv('./torneos/data2.csv');
 
     let competencia = 'libertadores'
     const clasificados_por_competencia = {
@@ -452,9 +452,9 @@ console.log(generarResultado('bundesliga'))  */
         clasif.forEach((equipo) => clasificaciones[equipo]++);
 
         
-        if (d == 'H' && clasif.includes("River Plate-H")) {
+        /* if (d == 'H' && clasif.includes("River Plate-H")) {
           casos.push(grupo);
-        }
+        } */
       })
     }
     /* console.log(clasificaciones['River Plate-H']); */
@@ -551,7 +551,7 @@ console.log(generarResultado('bundesliga'))  */
 /* const sonIguales = (a, b) => a.join() === b.join(); */
 
 
-let grupo_filtrado = data1.filter(d => (d.local.split('-')[1] == 'H'));
+/* let grupo_filtrado = data1.filter(d => (d.local.split('-')[1] == 'H'));
 console.log(grupo_filtrado)
 data1 = data1.filter(d => (d.local.split('-')[1] !== 'H'));
 console.log(structuredClone(data1));
@@ -570,7 +570,7 @@ const sinDuplicados = arrays1.filter((arr, index, self) =>
 );
 
 console.log(structuredClone(arrays1))
-console.log(structuredClone(sinDuplicados))
+console.log(structuredClone(sinDuplicados)) */
 
 
     // Convertir conteos a porcentajes
