@@ -1,6 +1,6 @@
 /* global d3 */
 export async function procesarDatos() {
-    let data1 = await d3.csv('./torneos/data2.csv');
+    let data1 = await d3.csv('./torneos/sudamericana2026.csv');
 
     let competencia = 'libertadores'
     const clasificados_por_competencia = {

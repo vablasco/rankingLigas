@@ -36,7 +36,7 @@ let not_played_yet_x = 0.4;
 let fechas_not_played = 1;
 
 let localia = false;
-let stats_on_top = false;
+let stats_on_top = true;
 let competencia = 'libertadores';
 
 const clasificados_por_competencia = {
@@ -4265,106 +4265,18 @@ grupos_1.forEach((grupo, indice_grupo) => {
           .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
       );
   } else {
-    if (grupos > 1) {
-      grupos_1.forEach((grupo, indice_grupo) => {
-        
-        const getValorDirecto = (d) => {
-        const empates = data
-          .filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value)
-          .map((e) => e.name);
-        return statsDirectos(empates)[d.name];
-      };
+    // --- Helpers compartidos (fuera del if/else) ---
 
-        const commonStyles = {
-          fill: black_color,
-          'font-size': defaults.value.style.font_size,
-          'font-weight': 600,
-          'text-anchor': defaults.value.style.text_anchor,
-          'alignment-baseline': defaults.value.style.alignment_baseline,
-        };
+const diffColor  = (diff) => diff > 0 ? victoria_color : diff < 0 ? derrota_color : empate_color;
+const signedDiff = (diff) => (diff > 0 ? '+' : '') + diff;
+const show1      = (d, val) => d.partidos_jugados1 == 0 ? '' : val;
 
-        const appendTspan = (text, content, fill = black_color, attrs = {}) =>
-          text
-            .append('tspan')
-            .attrs(attrs)
-            .styles({
-              ...commonStyles,
-              fill,
-            })
-            .text(content);
-
-        const xPos = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x;
-
-        rankingSVG
-          .filter((d) => d.name.split('-')[1] == grupo)
-          .append('text')
-          .attrs({
-            x: xPos,
-            y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y,
-          })
-          .styles(commonStyles)
-          .call((text) => appendTspan(text, (d) => d.value))
-          .call((text) => appendTspan(text, (d) => '\xa0\xa0\xa0' + d.partidos_jugados))
-          .call((text) => appendTspan(text, (d) => ' ' + d.partidos_ganados, victoria_color))
-          .call((text) => appendTspan(text, (d) => ' ' + d.partidos_empatados, empate_color))
-          .call((text) => appendTspan(text, (d) => ' ' + d.partidos_perdidos, derrota_color))
-          .call((text) => appendTspan(text, (d) => '\xa0\xa0\xa0' + d.goles, victoria_color))
-          .call((text) => appendTspan(text, '-', black_color))
-          .call((text) => appendTspan(text, (d) => d.goles_en_contra, derrota_color))
-          .call((text) =>
-            appendTspan(
-              text,
-              (d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles,
-              (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color)
-            )
-          )
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['), black_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'), black_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '), black_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '), victoria_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '), empate_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + ' '), derrota_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.goles1 + ' '), victoria_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : '-'), black_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '), derrota_color))
-          .call((text) => appendTspan(text, (d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1), derrota_color))
-          .call((text) =>
-            appendTspan(
-              text,
-              (d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1),
-              (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color)
-            )
-          )
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? '\xa0\xa0\xa0[' : '' }, black_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.pts_directo + '\xa0\xa0\xa0' : '' }, black_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.pj_directo + ' ' : ''; }, black_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.pg_directo + ' ' : ''; }, victoria_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.pe_directo + ' ' : ''; }, empate_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.pp_directo + '\xa0\xa0\xa0' : ''; }, derrota_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.gf_directo : ''; }, victoria_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? '-' : ''; }, black_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? v.gc_directo + ' ' : ''; }, derrota_color))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? (v.diff_directo > 0 ? '+' : '') + v.diff_directo : ''; }, (d) => { const v = getValorDirecto(d); return v.diff_directo > 0 ? victoria_color : v.diff_directo < 0 ? derrota_color : empate_color; }))
-          .call((text) => appendTspan(text, (d) => { const v = getValorDirecto(d); return v.pj_directo > 0 ? ']' : ''; }, black_color))
-          .call(halo1, defaults.value.style.font_size*0.25, '#f1f1f1')
-      });
-    } else {
-
-      // Helper para no repetir .append('tspan').style('fill', ...).text(...)
-const tspan = (text, fill, textFn, cls) => {
-  const t = text.append('tspan');
-  if (cls) t.attr('class', cls);
-  if (fill) t.style('fill', fill);
-  t.text(textFn);
-};
-
-// Helper para obtener stats directos cacheados por datum
-const getValor = (() => {
+const getValorDirecto = (() => {
   const cache = new Map();
   return (d) => {
     if (!cache.has(d)) {
       const empates = data
-        .filter((e) => e.name.split('-')[1] === d.name.split('-')[1] && e.fecha === '' && e.value === d.value)
+        .filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value)
         .map((e) => e.name);
       cache.set(d, statsDirectos(empates)[d.name]);
     }
@@ -4377,72 +4289,98 @@ const padding =
   ress_ratio === '1:1' ? '\xa0\xa0\xa0' :
   '\xa0';
 
-const diffColor    = (diff) => diff > 0 ? victoria_color : diff < 0 ? derrota_color : empate_color;
-const signedDiff   = (diff) => (diff > 0 ? '+' : '') + diff;
-const show1        = (d, val) => d.partidos_jugados1 === 0 ? '' : val;
-const showDirecto  = (d, val) => getValor(d).pj_directo > 0 ? val : '';
+const commonStyles = {
+  fill: black_color,
+  'font-size': defaults.value.style.font_size,
+  'font-weight': 600,
+  'text-anchor': defaults.value.style.text_anchor,
+  'alignment-baseline': defaults.value.style.alignment_baseline,
+};
 
-rankingSVG
-  .append('text')
-  .attrs({
-    x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
-      + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
-      + margin_left * 2
-      + defaults.logo.size / 2
-      + defaults.name.position.x,
-    y: (d, i) => y(i) + defaults.value.position.y,
-  })
-  .styles({
-    fill: black_color,
-    'font-size': defaults.value.style.font_size,
-    'font-weight': 600,
-    'text-anchor': defaults.value.style.text_anchor,
-    'alignment-baseline': defaults.value.style.alignment_baseline,
-  })
-  .call((text) => {
-    // --- Puntos + stats generales ---
-    tspan(text, null,           (d) => d.value + padding);
-    tspan(text, null,           (d) => '\xa0\xa0\xa0' + d.partidos_jugados);
-    tspan(text, victoria_color, (d) => ' ' + d.partidos_ganados);
-    tspan(text, empate_color,   (d) => ' ' + d.partidos_empatados);
-    tspan(text, derrota_color,  (d) => ' ' + d.partidos_perdidos);
+const xPos =
+  x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
+  + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
+  + margin_left * 2
+  + defaults.logo.size / 2
+  + defaults.name.position.x;
 
-    // --- Goles generales ---
-    tspan(text, victoria_color, (d) => '\xa0\xa0\xa0' + d.goles);
-    tspan(text, null,           ()  => '-');
-    tspan(text, derrota_color,  (d) => d.goles_en_contra);
-    tspan(text, (d) => diffColor(d.diferencia_de_goles), (d) => ' ' + signedDiff(d.diferencia_de_goles));
+const tspan = (text, fill, textFn, cls) => {
+  const t = text.append('tspan');
+  if (cls) t.attr('class', cls);
+  t.style('fill', fill || black_color);  // fill puede ser función o string
+  t.text(textFn);
+};
 
-    // --- Bloque stats fase 1 [ ... ] ---
-    tspan(text, 'black',        (d) => show1(d, '\xa0\xa0\xa0['));
-    tspan(text, 'black',        (d) => show1(d, d.value1 + '\xa0\xa0\xa0'));
-    tspan(text, 'black',        (d) => show1(d, d.partidos_jugados1 + ' ')   );
-    tspan(text, victoria_color, (d) => show1(d, d.partidos_ganados1 + ' ')   );
-    tspan(text, empate_color,   (d) => show1(d, d.partidos_empatados1 + ' ') );
-    tspan(text, derrota_color,  (d) => show1(d, d.partidos_perdidos1 + '\xa0\xa0\xa0'));
-    tspan(text, victoria_color, (d) => show1(d, d.goles1)                    );
-    tspan(text, 'black',        (d) => show1(d, '-')                         );
-    tspan(text, derrota_color,  (d) => show1(d, d.goles_en_contra1 + ' ')    );
-    tspan(text, (d) => diffColor(d.diferencia_de_goles1),
-                                (d) => show1(d, signedDiff(d.diferencia_de_goles1))   );
-    tspan(text, 'black',        (d) => show1(d, ']')                         );
+const appendAllTspans = (selection) =>
+  selection
+    .call((text) => {
+      // --- Puntos + stats generales ---
+      tspan(text, null,           (d) => d.value + padding);
+      tspan(text, null,           (d) => '\xa0\xa0\xa0' + d.partidos_jugados);
+      tspan(text, victoria_color, (d) => ' ' + d.partidos_ganados);
+      tspan(text, empate_color,   (d) => ' ' + d.partidos_empatados);
+      tspan(text, derrota_color,  (d) => ' ' + d.partidos_perdidos);
 
-    // --- Bloque stats directos [ ... ] ---
-    tspan(text, 'black',        (d) => showDirecto(d, '\xa0\xa0\xa0['));
-    tspan(text, 'black',        (d) => showDirecto(d, getValor(d).pts_directo + '\xa0\xa0\xa0') );
-    tspan(text, 'black',        (d) => showDirecto(d, getValor(d).pj_directo  + ' ')  );
-    tspan(text, victoria_color, (d) => showDirecto(d, getValor(d).pg_directo  + ' ')  );
-    tspan(text, empate_color,   (d) => showDirecto(d, getValor(d).pe_directo  + ' ')  );
-    tspan(text, derrota_color,  (d) => showDirecto(d, getValor(d).pp_directo  + '\xa0\xa0\xa0'));
-    tspan(text, victoria_color, (d) => showDirecto(d, getValor(d).gf_directo)         );
-    tspan(text, 'black',        (d) => showDirecto(d, '-')                             );
-    tspan(text, derrota_color,  (d) => showDirecto(d, getValor(d).gc_directo  + ' ')  );
-    tspan(text, (d) => diffColor(getValor(d).diff_directo),
-                                (d) => showDirecto(d, signedDiff(getValor(d).diff_directo))    );
-    tspan(text, 'black',        (d) => showDirecto(d, ']')                             );
+      // --- Goles generales ---
+      tspan(text, victoria_color, (d) => '\xa0\xa0\xa0' + d.goles);
+      tspan(text, null,           ()  => '-');
+      tspan(text, derrota_color,  (d) => d.goles_en_contra);
+      tspan(text, (d) => diffColor(d.diferencia_de_goles), (d) => ' ' + signedDiff(d.diferencia_de_goles));
+
+      // --- Bloque stats fase 1 [ ... ] ---
+      tspan(text, null,           (d) => show1(d, '\xa0\xa0\xa0['));
+      tspan(text, null,           (d) => show1(d, d.value1 + '\xa0\xa0\xa0'));
+      tspan(text, null,           (d) => show1(d, d.partidos_jugados1 + ' '));
+      tspan(text, victoria_color, (d) => show1(d, d.partidos_ganados1 + ' '));
+      tspan(text, empate_color,   (d) => show1(d, d.partidos_empatados1 + ' '));
+      tspan(text, derrota_color,  (d) => show1(d, d.partidos_perdidos1 + '\xa0\xa0\xa0'));
+      tspan(text, victoria_color, (d) => show1(d, d.goles1));
+      tspan(text, null,           (d) => show1(d, '-'));
+      tspan(text, derrota_color,  (d) => show1(d, d.goles_en_contra1 + ' '));
+      tspan(text, (d) => diffColor(d.diferencia_de_goles1), (d) => show1(d, signedDiff(d.diferencia_de_goles1)));
+      tspan(text, null,           (d) => show1(d, ']'));
+
+      // --- Bloque stats directos [ ... ] ---
+      const v = (d) => getValorDirecto(d);
+      const sd = (d, val) => v(d).pj_directo > 0 ? val : '';
+
+      tspan(text, null,           (d) => sd(d, '\xa0\xa0\xa0['));
+      tspan(text, null,           (d) => sd(d, v(d).pts_directo + '\xa0\xa0\xa0'));
+      tspan(text, null,           (d) => sd(d, v(d).pj_directo  + ' '));
+      tspan(text, victoria_color, (d) => sd(d, v(d).pg_directo  + ' '));
+      tspan(text, empate_color,   (d) => sd(d, v(d).pe_directo  + ' '));
+      tspan(text, derrota_color,  (d) => sd(d, v(d).pp_directo  + '\xa0\xa0\xa0'));
+      tspan(text, victoria_color, (d) => sd(d, v(d).gf_directo));
+      tspan(text, null,           (d) => sd(d, '-'));
+      tspan(text, derrota_color,  (d) => sd(d, v(d).gc_directo  + ' '));
+      tspan(text, (d) => diffColor(v(d).diff_directo), (d) => sd(d, signedDiff(v(d).diff_directo)));
+      tspan(text, null,           (d) => sd(d, ']'));
+    })
+    .call(halo1, defaults.value.style.font_size * 0.25, '#f1f1f1');
+
+// --- Renderizado ---
+
+if (grupos > 1) {
+  grupos_1.forEach((grupo, indice_grupo) => {
+    rankingSVG
+      .filter((d) => d.name.split('-')[1] == grupo)
+      .append('text')
+      .attrs({
+        x: xPos,
+        y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y,
+      })
+      .styles(commonStyles)
+      .call(appendAllTspans);
   });
-
-  
+} else {
+  rankingSVG
+    .append('text')
+    .attrs({
+      x: xPos,
+      y: (d, i) => y(i) + defaults.value.position.y,
+    })
+    .styles(commonStyles)
+    .call(appendAllTspans);
 }
   }
 
@@ -4472,6 +4410,7 @@ rankingSVG
         const code = TEAM_COUNTRY[name];
         return code ? `${code}.svg` : null;
       };
+
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
@@ -4494,118 +4433,6 @@ rankingSVG
         })
         .style('filter', 'url(#dropshadow)');
 
-      rankingSVG
-        .filter((d) => d.name.split('-')[1] == grupo)
-        .append('text')
-        .attrs({
-          class: 'info_fecha',
-          x: x(dates.length - 1) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-          y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.name.position.y - heightBars / 3,
-          'clip-path': `url(#ellipse-clip-margin-bottom)`,
-        })
-        .styles({
-          fill: black_color,
-          'font-size': defaults.value.style.font_size,
-          'font-weight': 600,
-          'text-anchor': defaults.value.style.text_anchor,
-          'alignment-baseline': defaults.value.style.alignment_baseline,
-        })
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'numero_fecha',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => d.fecha)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'goles_fecha',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => d.goles_fecha)
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'guion',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => ' ' + d.guion_text_dia + ' ')
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'goles_en_contra_fecha',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => d.goles_en_contra_fecha + ' ')
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'vs',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': defaults.value.style.font_size,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.vs == 'none' ? '' : d.vs))
-        )
-
-        .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'l_or_v',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': heightBars * 0.225,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d) => (d.vs == 'none' ? '' : ' (' + d.l_or_v + ')'))
-        );
     });
   } else {
     rankingSVG.append('image').attrs({
@@ -4615,131 +4442,7 @@ rankingSVG
       href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
       height: defaults.logo.size1 * 1.1,
     });
-
-    rankingSVG
-      .append('text')
-      .attrs({
-        class: 'info_fecha',
-        x: x(dates.length - 1) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-        y: (d, i) => y(i) + defaults.name.position.y - heightBars / 3, // ojo (d.rank)
-        'clip-path': `url(#ellipse-clip-margin-bottom)`,
-      })
-      .styles({
-        fill: black_color,
-        'font-size': defaults.value.style.font_size,
-        'font-weight': 600,
-        'text-anchor': defaults.value.style.text_anchor,
-        'alignment-baseline': defaults.value.style.alignment_baseline,
-      })
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'numero_fecha',
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => d.fecha)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'goles_fecha',
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => d.goles_fecha)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'guion',
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.guion_text_dia + ' ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'goles_en_contra_fecha',
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => d.goles_en_contra_fecha + ' ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'vs',
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.vs == 'none' ? '' : d.vs))
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'l_or_v',
-          })
-          .styles({
-            fill: black_color,
-            'font-size': heightBars * 0.225,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.vs == 'none' ? '' : ' (' + d.l_or_v + ')'))
-      );
   }
-
-  svg
-    .append('clipPath')
-    .attr('id', `ellipse-clip-final-info`)
-    .append('rect')
-    .attrs({
-      class: 'clippath_final_info',
-      x: 0,
-      y: 0,
-      width: width - margin_right,
-      height: height,
-    });
 
   yearSlice.forEach((d) => {
     d.fechas_en_top = d3.sum(
@@ -4748,58 +4451,36 @@ rankingSVG
     );
   });
 
-  /* yearSlice.forEach((d) => {
-    d.posicion_promedio = d3.format('.1f')(
-      d3.mean(
-        data.filter((e) => e.name == d.name && e.final != true),
-        (e) => (e.goles_fecha !== not_played_yet ? e.rank + 1 : 0)
-      )
-    );
-  }); */
-
   let array_p = [];
-
-  if (stats_on_top) {
-    array_p = ['racha', 'racha_empates', 'racha_derrotas', 'racha_sin_victorias', 'racha_sin_empates', 'racha_sin_derrotas', 'goleadas', 'goleadas_en_contra', 'valla_invicta', 'fechas_en_top'];
-  }
+if (stats_on_top) {
+  array_p = ['racha', 'racha_empates', 'racha_derrotas', 'racha_sin_victorias', 'racha_sin_empates', 'racha_sin_derrotas', 'goleadas', 'goleadas_en_contra', 'valla_invicta', 'fechas_en_top'];
+}
 
 function generarPositions(max) {
   const positions = {};
-
   for (let n = 1; n <= max; n++) {
     const filas = Math.ceil(n / 3);
     const cols  = Math.ceil(n / filas);
-    const resto = n % cols; // items en la última fila (0 = completa)
-
+    const resto = n % cols;
     const offsetsCols = Array.from({ length: cols }, (_, i) => i - (cols - 1) / 2);
-
     const result = [];
     for (let i = 0; i < n; i++) {
-      const esUltimaFila = i >= n - (resto || cols);
-      const itemsEnEstaFila = esUltimaFila && resto ? resto : cols;
+      const esUltimaFila      = i >= n - (resto || cols);
+      const itemsEnEstaFila   = esUltimaFila && resto ? resto : cols;
       const offsetsFilaActual = Array.from({ length: itemsEnEstaFila }, (_, j) => j - (itemsEnEstaFila - 1) / 2);
-
-      const col  = i % cols;
-      const fila = Math.floor(i / cols);
+      const col       = i % cols;
+      const fila      = Math.floor(i / cols);
       const colOffset = esUltimaFila && resto ? offsetsFilaActual[i - (n - resto)] : offsetsCols[col];
-
       result.push([colOffset, fila]);
     }
-
     positions[n] = result;
   }
-
   return positions;
 }
 
-const positions = generarPositions(15);
+const positions     = generarPositions(15);
+const try_positions = (a, b, c) => { try { return positions[a][b][c]; } catch { return 0; } };
 
-const try_positions = (a, b, c) => {
-  try { return positions[a][b][c]; }
-  catch { console.error('error record'); return 0; }
-};
-
-// Extras que suman 1 al length según qué array se itera
 const EXTRAS_HASTA_INDEX  = new Set(['racha_derrotas', 'racha_sin_derrotas', 'goleadas_en_contra', 'valla_invicta']);
 const EXTRAS_HASTA_INDEX1 = new Set(['racha_sin_victorias', 'goleadas', 'valla_invicta', 'fechas_en_top']);
 
@@ -4807,11 +4488,9 @@ const xBase = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_
   + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
   + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x;
 
-// Precalcula el max de cada propiedad una sola vez
-const maxPorProp = Object.fromEntries(
-  array_p.map((p) => [p, d3.max(data, (d) => d[p])])
-);
+const maxPorProp = Object.fromEntries(array_p.map((p) => [p, d3.max(data, (d) => d[p])]));
 
+// calcLength global (para los elementos de arriba, usa el máximo global)
 function calcLength(slice, extrasSet) {
   let length = 0;
   slice.forEach((ee) => {
@@ -4821,16 +4500,84 @@ function calcLength(slice, extrasSet) {
   return length;
 }
 
+// calcLength por equipo (para los elementos del ranking, usa el máximo de ese equipo)
+function calcLengthPorDatum(slice, extrasSet, name) {
+  let length = 0;
+  slice.forEach((ee) => {
+    if (extrasSet.has(ee)) length++;
+    length += maxByName[name][ee].toString().length;
+  });
+  return length;
+}
+
+const commonTextStyles = {
+  fill: '#f1f1f1',
+  'font-size': defaults.value.style.font_size,
+  'font-weight': 600,
+  'text-anchor': 'start',
+  'alignment-baseline': defaults.value.style.alignment_baseline,
+};
+
+const commonTextStylesRanking = {
+  ...commonTextStyles,
+  fill: black_color,
+  // text-anchor: 'start' se hereda del spread
+};
+
+const getRank = (grupos > 1)
+  ? (d, indice_grupo) => d.rank + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)
+  : (d) => d.rank;
+
+const maxByName = Object.fromEntries(
+  [...new Set(data.map((d) => d.name))].map((name) => [
+    name,
+    Object.fromEntries(array_p.map((p) => [p, d3.max(data.filter((e) => e.name == name), (e) => e[p])]))
+  ])
+);
+
+const renderGroup = (dataSlice, indice_grupo, p, index) => {
+  const yPos = (d) => y(getRank(d, indice_grupo)) + defaults.final_infos.position.y - heightBars / 3;
+
+  svg
+    .selectAll('.text')
+    .data(dataSlice)
+    .enter()
+    .append('text')
+    .attrs({
+      class: 'final_infos',
+      opacity: 1,
+      x: (d) => xBase + calcLengthPorDatum(array_p.slice(0, index), EXTRAS_HASTA_INDEX, d.name) * heightBars * 0.225 + index * heightBars * 0.4,
+      y: (d) => yPos(d),
+    })
+    .styles(commonTextStylesRanking)
+    .text((d) => maxByName[d.name][p]);
+
+  svg
+    .selectAll('.images')
+    .data(dataSlice)
+    .enter()
+    .append('image')
+    .attrs({
+      class: 'final_infos',
+      x: (d) => xBase + calcLengthPorDatum(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1, d.name) * heightBars * 0.225 + index * heightBars * 0.4 - heightBars * 0.05,
+      y: (d) => yPos(d) - (defaults.final_infos.logos.size * 0.9) / 2,
+      href: `./icons/${p}.png`,
+      height: defaults.final_infos.logos.size * 0.9,
+    });
+};
+
+// --- Loop principal ---
+
 array_p.forEach((p, index) => {
-  const maxVal     = maxPorProp[p];
-  const maxValLen  = maxVal.toString().length;
-  const dataMax    = removeDuplicates(data.filter((d) => d[p] == maxVal));
+  const maxVal    = maxPorProp[p];
+  const maxValLen = maxVal.toString().length;
+  const dataMax   = removeDuplicates(data.filter((d) => d[p] == maxVal));
 
   const lengthHasta  = calcLength(array_p.slice(0, index),     EXTRAS_HASTA_INDEX);
   const lengthHasta1 = calcLength(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1);
   const xComun       = xBase + index * heightBars * 0.6;
 
-  // Imágenes de escudos (equipos con el máximo)
+  // Escudos de los equipos con el máximo (arriba)
   svg.selectAll('.img')
     .data(dataMax)
     .enter()
@@ -4848,23 +4595,17 @@ array_p.forEach((p, index) => {
       href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
     });
 
-  // Texto con el valor máximo
+  // Número máximo (arriba)
   svg.append('text')
     .attrs({
       class: 'final_infos',
       x: xComun + lengthHasta * heightBars * 0.225,
       y: margin.top * 0.8,
     })
-    .styles({
-      fill: '#f1f1f1',
-      'font-size': defaults.value.style.font_size,
-      'font-weight': 600,
-      'text-anchor': 'start',
-      'alignment-baseline': defaults.value.style.alignment_baseline,
-    })
+    .styles(commonTextStyles)
     .text(maxVal);
 
-  // Ícono de la propiedad
+  // Ícono de la propiedad (arriba)
   svg.append('image')
     .attrs({
       class: 'final_infos',
@@ -4874,155 +4615,18 @@ array_p.forEach((p, index) => {
       height: defaults.final_infos.logos.size * 0.9,
     });
 
-
-    if (grupos > 1) {
-      grupos_1.forEach((grupo, indice_grupo) => {
-        svg
-          .selectAll('.text')
-          .data(yearSlice.filter((d) => d.name.split('-')[1] == grupo))
-          .enter()
-          .append('text')
-          .attrs({
-            class: 'final_infos',
-            opacity: 1,
-            x: (d) => {
-              length = 0;
-              array_p.slice(0, index).forEach((ee, oo) => {
-                ee == 'racha_derrotas' ? length++ : 0;
-                ee == 'racha_sin_derrotas' ? length++ : 0;
-                ee == 'goleadas_en_contra' ? length++ : 0;
-                ee == 'valla_invicta' ? length++ : 0;
-                length =
-                  length +
-                  d3
-                    .max(
-                      data.filter((e) => e.name == d.name),
-                      (e) => e[ee]
-                    )
-                    .toString().length;
-              });
-              return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4;
-            },
-            y: (d) => y(d.rank + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.final_infos.position.y - heightBars / 3,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': 'start',
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d3.max(
-              data.filter((e) => e.name == d.name),
-              (e) => e[p]
-            )
-          );
-
-        svg
-          .selectAll('.images')
-          .data(yearSlice.filter((d) => d.name.split('-')[1] == grupo))
-          .enter()
-          .append('image')
-          .attrs({
-            class: 'final_infos',
-            x: (d) => {
-              length = 0;
-              array_p.slice(0, index + 1).forEach((ee, oo) => {
-                ee == 'racha_sin_victorias' ? length++ : 0;
-                ee == 'goleadas' ? length++ : 0;
-                ee == 'valla_invicta' ? length++ : 0;
-                ee == 'fechas_en_top' ? length++ : 0;
-                length =
-                  length +
-                  d3
-                    .max(
-                      data.filter((e) => e.name == d.name),
-                      (e) => e[ee]
-                    )
-                    .toString().length;
-              });
-              return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4 - heightBars * 0.05;
-            },
-            y: (d) => y(d.rank + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.final_infos.position.y - heightBars / 3 - (defaults.final_infos.logos.size * 0.9) / 2,
-            href: `./icons/${p}.png`,
-            height: defaults.final_infos.logos.size * 0.9,
-          });
-      });
-    } else {
-      svg
-        .selectAll('.text')
-        .data(yearSlice)
-        .enter()
-        .append('text')
-        .attrs({
-          class: 'final_infos',
-          opacity: 1,
-          x: (d) => {
-            length = 0;
-            array_p.slice(0, index).forEach((ee, oo) => {
-              ee == 'racha_derrotas' ? length++ : 0;
-              ee == 'racha_sin_derrotas' ? length++ : 0;
-              ee == 'goleadas_en_contra' ? length++ : 0;
-              ee == 'valla_invicta' ? length++ : 0;
-              length =
-                length +
-                d3
-                  .max(
-                    data.filter((e) => e.name == d.name),
-                    (e) => e[ee]
-                  )
-                  .toString().length;
-            });
-            return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4;
-          },
-          y: (d) => y(d.rank) + defaults.final_infos.position.y - heightBars / 3,
-        })
-        .styles({
-          fill: black_color,
-          'font-size': defaults.value.style.font_size,
-          'font-weight': 600,
-          'text-anchor': 'start',
-          'alignment-baseline': defaults.value.style.alignment_baseline,
-        })
-        .text((d) =>
-          d3.max(
-            data.filter((e) => e.name == d.name),
-            (e) => e[p]
-          )
-        );
-
-      svg
-        .selectAll('.images')
-        .data(yearSlice)
-        .enter()
-        .append('image')
-        .attrs({
-          class: 'final_infos',
-          x: (d) => {
-            length = 0;
-            array_p.slice(0, index + 1).forEach((ee, oo) => {
-              ee == 'racha_sin_victorias' ? length++ : 0;
-              ee == 'goleadas' ? length++ : 0;
-              ee == 'valla_invicta' ? length++ : 0;
-              ee == 'fechas_en_top' ? length++ : 0;
-              length =
-                length +
-                d3
-                  .max(
-                    data.filter((e) => e.name == d.name),
-                    (e) => e[ee]
-                  )
-                  .toString().length;
-            });
-            return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4 - heightBars * 0.05;
-          },
-          y: (d) => y(d.rank) + defaults.final_infos.position.y - heightBars / 3 - (defaults.final_infos.logos.size * 0.9) / 2,
-          href: `./icons/${p}.png`,
-          height: defaults.final_infos.logos.size * 0.9,
-        });
-    }
-  });
+  // Stats por equipo en el ranking (por grupo o sin grupos)
+  if (grupos > 1) {
+    grupos_1.forEach((grupo, indice_grupo) => {
+      renderGroup(
+        yearSlice.filter((d) => d.name.split('-')[1] == grupo),
+        indice_grupo, p, index
+      );
+    });
+  } else {
+    renderGroup(yearSlice, 0, p, index);
+  }
+});
 };
 
 render(final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades);
