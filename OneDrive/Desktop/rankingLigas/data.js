@@ -551,19 +551,19 @@ console.log(generarResultado('bundesliga'))  */
 /* const sonIguales = (a, b) => a.join() === b.join(); */
 
 
-/* let grupo_filtrado = data1.filter(d => (d.local.split('-')[1] == 'H'));
+let grupo_filtrado = data1.filter(d => (d.local.split('-')[1] == 'H'));
 console.log(grupo_filtrado)
 data1 = data1.filter(d => (d.local.split('-')[1] !== 'H'));
 console.log(structuredClone(data1));
 let caso = returnCasoMasCercano(casos)
 console.log(caso)
-console.log(calcularYOrdenarTabla1(caso))
+console.log(calcularYOrdenarTabla(caso))
 data1 = data1.concat(caso);
 data1.forEach(d => {
     d.goles_local = d.goles_local.toString()
     d.goles_visitante = d.goles_visitante.toString()
 })
-console.log(structuredClone(data1)); */
+console.log(structuredClone(data1));
 
 const sinDuplicados = arrays1.filter((arr, index, self) =>
     index === self.findIndex((a) => a.join() === arr.join())
@@ -1311,5 +1311,6 @@ console.log(structuredClone(sinDuplicados))
 
   final_list1 = final_list1.filter((d) => d.name != "hola");
 
-    return { final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades };
+  window.__appData = { final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades };
+    return window.__appData
 }

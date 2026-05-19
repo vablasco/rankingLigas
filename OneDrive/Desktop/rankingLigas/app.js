@@ -2,7 +2,7 @@ import { procesarDatos } from './data.js';
 import { colores } from './colores.js';
 /* global d3 */
 
-const { final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades } = await procesarDatos();
+const { final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades } = window.__appData ?? await procesarDatos();
 
 let ress_ratio = '16:9';
 let resulution = 2;
@@ -159,13 +159,15 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
 
   console.log(`[${width}, ${height}]`);
 
-  const svg = d3
-    .select('body')
-    .append('svg')
-    .attrs({
-      width: width,
-      height: grupos > 1 ? height + grupos * (heightBars / 2) : height,
-    });
+d3.select('body svg').remove();
+
+const svg = d3
+  .select('body')
+  .append('svg')
+  .attrs({
+    width: width,
+    height: grupos > 1 ? height + grupos * (heightBars / 2) : height,
+  });
 
   svg.append('rect').attrs({
     x: 0,
@@ -326,8 +328,8 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
 
   const cacheStats = new Map();
 
-  function statsDirectos1(nombres) {
-    const key = [...nombres].sort().join('|');
+  function statsDirectos(nombres, semanaMax = Infinity) {
+    const key = [...nombres].sort().join('|') + '|' + semanaMax;
     if (cacheStats.has(key)) return cacheStats.get(key);
 
     const stats = {};
@@ -335,25 +337,22 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       stats[n] = { pts_directo: 0, pj_directo: 0, pg_directo: 0, pe_directo: 0, pp_directo: 0, diff_directo: 0, gf_directo: 0, gc_directo: 0 };
     });
 
-    // Pre-filtrar data UNA sola vez para este subconjunto
     const nombresSet = new Set(nombres);
-    const dataRelevante = data.filter((d) => d.goles_fecha !== 99 && nombresSet.has(d.name));
+    const dataRelevante = data.filter((d) => d.goles_fecha !== 99 && d.semana <= semanaMax && nombresSet.has(d.name));
 
     nombres.forEach((nombre) => {
       const rivales = nombres.filter((d) => d !== nombre);
       rivales.forEach((rival) => {
-        let matches = dataRelevante.filter((d) => d.name === nombre && d.vs === rival);
+        const matches = dataRelevante.filter((d) => d.name === nombre && d.vs === rival);
         matches.forEach((match) => {
-          if (match) {
-            stats[nombre].pts_directo += match.pts_fecha ?? 0;
-            stats[nombre].pj_directo += (match ? 1 : 0) ?? 0;
-            stats[nombre].pg_directo += (match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0) ?? 0;
-            stats[nombre].pe_directo +=( match.goles_fecha == match.goles_en_contra_fecha ? 1 : 0) ?? 0;
-            stats[nombre].pp_directo += (match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0) ?? 0;
-            stats[nombre].gf_directo += match.goles_fecha ?? 0;
-            stats[nombre].gc_directo += match.goles_en_contra_fecha ?? 0;
-            stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
-          }
+          stats[nombre].pts_directo  += match.pts_fecha ?? 0;
+          stats[nombre].pj_directo   += 1;
+          stats[nombre].pg_directo   += match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0;
+          stats[nombre].pe_directo   += match.goles_fecha === match.goles_en_contra_fecha ? 1 : 0;
+          stats[nombre].pp_directo   += match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0;
+          stats[nombre].gf_directo   += match.goles_fecha ?? 0;
+          stats[nombre].gc_directo   += match.goles_en_contra_fecha ?? 0;
+          stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
         });
       });
     });
@@ -365,39 +364,6 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
   let sort_teams1 = (array, { usarDirecto = true } = {}) => {
     array = removeDuplicates(array);
 
-    const cacheStats = new Map();
-
-    function statsDirectos(nombres) {
-      const key = [...nombres].sort().join('|');
-      if (cacheStats.has(key)) return cacheStats.get(key);
-
-      const stats = {};
-      nombres.forEach((n) => {
-        stats[n] = { pts_directo: 0, diff_directo: 0, gf_directo: 0 };
-      });
-
-      const semanaMax = array[0].semana;
-      const nombresSet = new Set(nombres);
-      const dataRelevante = data.filter((d) => d.goles_fecha !== 99 && d.semana <= semanaMax && nombresSet.has(d.name));
-
-      nombres.forEach((nombre) => {
-        const rivales = nombres.filter((d) => d !== nombre);
-        rivales.forEach((rival) => {
-          let matches = dataRelevante.filter((d) => d.name === nombre && d.vs === rival);
-          matches.forEach((match) => {
-            if (match) {
-              stats[nombre].pts_directo += match.pts_fecha ?? 0;
-              stats[nombre].gf_directo += match.goles_fecha ?? 0;
-              stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
-            }
-          });
-        });
-      });
-
-      cacheStats.set(key, stats);
-      return stats;
-    }
-
     const grupoEmpatadosCache = new Map();
 
     function getEmpatados(grupo, pts) {
@@ -423,7 +389,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       // Criterios directos (opcionales)
       if (usarDirecto) {
         const empatados = getEmpatados(ga, a.value);
-        const sd = statsDirectos(empatados);
+        const sd = statsDirectos(empatados, array[0].semana);
         const sdA = sd[a.name];
         const sdB = sd[b.name];
 
@@ -447,60 +413,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
     return array;
   };
 
-  let sort_teams2 = (array, { usarDirecto = true } = {}) => {
-    array = removeDuplicates(array);
-
-    const grupoEmpatadosCache = new Map();
-
-    function getEmpatados(grupo, pts) {
-      const key = `${grupo}|${pts}`;
-      if (!grupoEmpatadosCache.has(key)) {
-        grupoEmpatadosCache.set(
-          key,
-          array.filter((e) => e.name.split('-')[1] === grupo && e.value === pts).map((e) => e.name)
-        );
-      }
-      return grupoEmpatadosCache.get(key);
-    }
-
-    array.sort((a, b) => {
-      const ga = a.name.split('-')[1];
-      const gb = b.name.split('-')[1];
-
-      if (gb < ga) return 1;
-      if (gb > ga) return -1;
-
-      if (b.value !== a.value) return b.value - a.value;
-
-      // Criterios directos (opcionales)
-      if (usarDirecto) {
-        const empatados = getEmpatados(ga, a.value);
-        const sd = statsDirectos1(empatados);
-        const sdA = sd[a.name];
-        const sdB = sd[b.name];
-
-        if (sdB.pts_directo !== sdA.pts_directo) return sdB.pts_directo - sdA.pts_directo;
-        if (sdB.diff_directo !== sdA.diff_directo) return sdB.diff_directo - sdA.diff_directo;
-        if (sdB.gf_directo !== sdA.gf_directo) return sdB.gf_directo - sdA.gf_directo;
-      }
-
-      if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
-      if (b.goles !== a.goles) return b.goles - a.goles;
-      if (b.value_away !== a.value_away) return b.value_away - a.value_away;
-
-      return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
-    });
-
-    array.forEach((d, i) => (d.rank = i));
-    array.forEach((d, i) => (d.rankInGroup = i % 4));
-    array.forEach((d) => (d.position = d.rankInGroup + 1 + d.name.split('-')[1]));
-    array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
-
-    return array;
-  };
-
-  let yearSlice = sort_teams2(data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)));
-  console.log(sort_teams2(data.filter((d) => d.semana == 4 && !isNaN(d.value))))
+  let yearSlice = sort_teams1(data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)));
 
   let x = d3.scaleLinear().domain([0, ticks_slice]).range([0, weeks_i]);
 
@@ -642,7 +555,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
           .styles({
             opacity: (d) => (d.goles_local > d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local > d.penales_visitante ? 1 : 1) : 1),
             fill: 'none',
-            stroke: (d) => (teamColorss[d[dd].split('-')[0]] == undefined ? 'grey' : teamColorss[d[dd].split('-')[0]][ii]),
+            stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
@@ -664,7 +577,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
           .styles({
             opacity: (d) => (dd == 'local' ? (d.goles_local > d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local > d.penales_visitante ? 1 : 0) : 0) : d.goles_local < d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local < d.penales_visitante ? 1 : 0) : 0),
             fill: 'none',
-            stroke: (d) => (teamColorss[d[dd].split('-')[0]] == undefined ? 'grey' : teamColorss[d[dd].split('-')[0]][ii]),
+            stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
@@ -694,7 +607,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
           .styles({
             opacity: (d, i) => (dd == 'local' ? (d.goles_local > d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local > d.penales_visitante ? 1 : 0) : 0) : d.goles_local < d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local < d.penales_visitante ? 1 : 0) : 0),
             fill: 'none',
-            stroke: (d) => (teamColorss[d[dd].split('-')[0]] == undefined ? 'grey' : teamColorss[d[dd].split('-')[0]][ii]),
+            stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
@@ -727,7 +640,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
           .styles({
             opacity: (d) => (dd == 'local' ? (d.goles_local > d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local > d.penales_visitante ? 1 : 0) : 0) : d.goles_local < d.goles_visitante ? 1 : d.goles_local == d.goles_visitante ? (d.penales_local < d.penales_visitante ? 1 : 0) : 0),
             fill: 'none',
-            stroke: (d) => (teamColorss[d[dd].split('-')[0]] == undefined ? 'grey' : teamColorss[d[dd].split('-')[0]][ii]),
+            stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
@@ -1268,167 +1181,136 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
   feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
   if (grupos > 1) {
-    grupos_1.forEach((grupo, indice_grupo) => {
-      svg
-        .selectAll('.rect')
-        .data(grupos_1)
-        .enter()
-        .append('rect')
-        .attrs({
-          class: 'bars_names_grupos',
-          x: 0,
-          y: y(indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - heightBars / 2,
-          width: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + heightBars * 10,
-          height: heightBars / 2,
-        })
-        .styles({
-          fill: '#ebebeb',
-          opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
-        });
+    const strokeWidthBase = (heightBars * 0.35) / 7;
+const capas = [
+  { colorIdx: 0, width: strokeWidthBase * 5 },
+  { colorIdx: 1, width: strokeWidthBase * 3 },
+  { colorIdx: 2, width: strokeWidthBase * 1.75 },
+  { colorIdx: 3, width: strokeWidthBase },
+];
 
-      svg
-        .append('text')
-        .attrs({
-          class: 'name',
-          x: weeks_o,
-          y: y(indice_grupo * (equipos_por_grupos + distancia_entre_grupos) + 0.75) - (y(1) - y(0)),
-        })
-        .styles({
-          fill: defaults.name.style.fill,
-          'font-size': defaults.name.style.font_size,
-          'font-weight': defaults.name.style.font_weight,
-          'text-anchor': defaults.name.style.text_anchor,
-          'alignment-baseline': defaults.name.style.alignment_baseline,
-        })
-        .text('Grupo ' + grupo);
+const barWidth = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
+  + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0)
+  + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + heightBars * 10;
 
-      svg
-        .selectAll('.rect')
-        .data(yearSlice.slice(indice_grupo * equipos_por_grupos, indice_grupo * equipos_por_grupos + equipos_por_grupos))
-        .enter()
-        .append('rect')
-        .attrs({
-          class: 'bars_names',
-          x: 0,
-          y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - heightBars / 2,
-          width: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + heightBars * 10,
-          height: heightBars,
-        })
-        .styles({
-          fill: (d, i) => (i < clasificacion_por_grupo ? (i % 2 == 1 ? '#94e694' : '#76c476') : i % 2 == 1 ? '#dddddd' : '#c2c2c2'),
+const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
 
-          opacity: (d, i) => (i <= equipos_por_grupos - 1 ? 1 : 1),
-        });
+grupos_1.forEach((grupo, indice_grupo) => {
+  const offsetGrupo = indice_grupo * (equipos_por_grupos + distancia_entre_grupos);
 
-      svg
-        .selectAll('.rect')
-        .data(dates)
-        .enter()
-        .append('rect')
-        .attrs({
-          class: 'lines_years',
-          x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
-          y: y(distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - heightBars / 2,
-          width: heightBars * 0.05,
-          height: heightBars * equipos_por_grupos,
-          transform: `translate(${margin_left * 2}, 0)`,
-        })
-        .styles({
-          fill: black_color,
-          opacity: 0.4,
-        });
+  // Rect encabezado grupo
+  svg.selectAll('.rect')
+    .data(grupos_1)
+    .enter()
+    .append('rect')
+    .attrs({
+      class: 'bars_names_grupos',
+      x: 0,
+      y: y(offsetGrupo) - heightBars / 2,
+      width: barWidth,
+      height: heightBars / 2,
+    })
+    .style('fill', '#ebebeb');
 
-      svg
-        .append('rect')
-        .attrs({
-          class: 'bars_names',
-          x: margin_left - 1,
-          y: y(indice_grupo * (equipos_por_grupos + distancia_entre_grupos)),
-          width: margin_left / 4,
-          height: heightBars * equipos_por_grupos,
-        })
-        .styles({
-          fill: 'url(#areaGradient0)',
-        });
+  // Texto grupo
+  svg.append('text')
+    .attrs({
+      class: 'name',
+      x: weeks_o,
+      y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
+    })
+    .styles({
+      fill: defaults.name.style.fill,
+      'font-size': defaults.name.style.font_size,
+      'font-weight': defaults.name.style.font_weight,
+      'text-anchor': defaults.name.style.text_anchor,
+      'alignment-baseline': defaults.name.style.alignment_baseline,
+    })
+    .text('Grupo ' + grupo);
 
-      names_1
-        .filter((d) => d.split('-')[1] == grupo)
-        .forEach((nombre) => {
-          let wks = 0;
+  // Rects equipos
+  svg.selectAll('.rect')
+    .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
+    .enter()
+    .append('rect')
+    .attrs({
+      class: 'bars_names',
+      x: 0,
+      y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo) - heightBars / 2,
+      width: barWidth,
+      height: heightBars,
+    })
+    .style('fill', (d, i) => i < clasificacion_por_grupo
+      ? (i % 2 === 1 ? '#94e694' : '#76c476')
+      : (i % 2 === 1 ? '#dddddd' : '#c2c2c2')
+    );
 
-          var points = [];
+  // Líneas verticales de fechas
+  svg.selectAll('.rect')
+    .data(dates)
+    .enter()
+    .append('rect')
+    .attrs({
+      class: 'lines_years',
+      x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
+      y: y(distancia_entre_grupos + offsetGrupo) - heightBars / 2,
+      width: heightBars * 0.05,
+      height: heightBars * equipos_por_grupos,
+      transform: `translate(${margin_left * 2}, 0)`,
+    })
+    .styles({ fill: black_color, opacity: 0.4 });
 
-          dates.slice(0).forEach((o) => {
-            let yearSlice1 = sort_teams1(data.filter((d) => d.semana == o && d.name.split('-')[1] == grupo && !isNaN(d.value)));
+  // Rect gradiente lateral
+  svg.append('rect')
+    .attrs({
+      class: 'bars_names',
+      x: margin_left - 1,
+      y: y(offsetGrupo),
+      width: margin_left / 4,
+      height: heightBars * equipos_por_grupos,
+    })
+    .style('fill', 'url(#areaGradient0)');
 
-            let rank1 = yearSlice1.find((d) => d.name == nombre).rank + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos);
+  // Líneas de posición por equipo
+  names_1
+    .filter((d) => d.split('-')[1] == grupo)
+    .forEach((nombre) => {
+      let wks = 0;
+      const points = [];
+      const club = nombre.split('-')[0];
 
-            wks > fechas_not_played ? (wks = wks - not_played_yet_x) : '';
-            o == dates[dates.length - 1] && fechas_not_played < dates.length - 1 ? (wks = wks + not_played_yet_x) : '';
+      dates.forEach((o) => {
+        const yearSlice1 = sort_teams1(
+          data.filter((d) => d.semana == o && d.name.split('-')[1] == grupo && !isNaN(d.value))
+        );
+        const rank1 = yearSlice1.find((d) => d.name == nombre).rank
+          + distancia_entre_grupos + offsetGrupo;
 
-            points.push([x(wks), y(rank1)]);
+        if (wks > fechas_not_played) wks -= not_played_yet_x;
+        if (o == dates[dates.length - 1] && fechas_not_played < dates.length - 1) wks += not_played_yet_x;
 
-            wks++;
-          });
+        points.push([x(wks), y(rank1)]);
+        wks++;
+      });
 
-          svg
-            .append('path')
-            /* .style("filter", "url(#dropshadow)") */
-            .attrs({
-              transform: `translate(${margin_left * 2}, 0)`,
-              class: 'line',
-            })
-            .styles({
-              fill: 'none',
-              stroke: colores(nombre.split('-')[0])[0],
-              'stroke-width': ((heightBars * 0.35) / 7) * 5,
-              'stroke-linejoin': 'round',
-            })
-            .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
+      const pathD = pathLine(points);
 
-          svg
-            .append('path')
-            .attrs({
-              transform: `translate(${margin_left * 2}, 0)`,
-              class: 'line',
-            })
-            .styles({
-              fill: 'none',
-              stroke: colores(nombre.split('-')[0])[1],
-              'stroke-width': ((heightBars * 0.35) / 7) * 3,
-              'stroke-linejoin': 'round',
-            })
-            .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
-
-          svg
-            .append('path')
-            .attrs({
-              transform: `translate(${margin_left * 2}, 0)`,
-              class: 'line',
-            })
-            .styles({
-              fill: 'none',
-              stroke: colores(nombre.split('-')[0])[2],
-              'stroke-width': ((heightBars * 0.35) / 7) * 1.75,
-              'stroke-linejoin': 'round',
-            })
-            .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
-
-          svg
-            .append('path')
-            .attrs({
-              transform: `translate(${margin_left * 2}, 0)`,
-              class: 'line',
-            })
-            .styles({
-              fill: 'none',
-              stroke: colores(nombre.split('-')[0])[3],
-              'stroke-width': (heightBars * 0.35) / 7,
-              'stroke-linejoin': 'round',
-            })
-            .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
-        });
+      capas.forEach(({ colorIdx, width }) => {
+        svg.append('path')
+          .attrs({
+            transform: `translate(${margin_left * 2}, 0)`,
+            class: 'line',
+          })
+          .styles({
+            fill: 'none',
+            stroke: colores(club)[colorIdx],
+            'stroke-width': width,
+            'stroke-linejoin': 'round',
+          })
+          .attr('d', pathD);
+      });
     });
+});
 
     grupos_1.forEach((grupo, indice_grupo) => {
       names_1
@@ -1757,83 +1639,50 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       .styles({
         fill: 'url(#areaGradient0)',
       });
-
-    names_1.forEach((nombre) => {
       /* if (nombre !== 'Defensa y Justicia') return; */
 
+    names_1.forEach((nombre) => {
       let wks = 0;
-
-      var points = [];
+      const points = [];
 
       dates.slice(0).forEach((o) => {
-        let yearSlice1 = sort_teams1(data.filter((d) => d.semana == o && !isNaN(d.value)));
-
-        let rank1 = yearSlice1.find((d) => d.name == nombre).rank;
+        const yearSlice1 = sort_teams1(data.filter((d) => d.semana == o && !isNaN(d.value)));
+        const rank1 = yearSlice1.find((d) => d.name == nombre).rank;
 
         wks > fechas_not_played ? (wks = wks - not_played_yet_x) : '';
         o == dates[dates.length - 1] && fechas_not_played < dates.length - 1 ? (wks = wks + not_played_yet_x) : '';
 
         points.push([x(wks), y(rank1)]);
-
         wks++;
       });
 
-      svg
-        .append('path')
-        .style('filter', 'url(#dropshadow)')
-        .attrs({
-          transform: `translate(${margin_left * 2}, 0)`,
-          class: 'line',
-        })
-        .styles({
-          fill: 'none',
-          stroke: colores(nombre.split('-')[0])[0],
-          'stroke-width': ((heightBars * 0.35) / 7) * 5,
-          'stroke-linejoin': 'round',
-        })
-        .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
+      const strokeWidthBase = (heightBars * 0.35) / 7;
+      const capas = [
+        { colorIdx: 0, width: strokeWidthBase * 5 },
+        { colorIdx: 1, width: strokeWidthBase * 3 },
+        { colorIdx: 2, width: strokeWidthBase * 1.75 },
+        { colorIdx: 3, width: strokeWidthBase },
+      ];
 
-      svg
-        .append('path')
-        .attrs({
-          transform: `translate(${margin_left * 2}, 0)`,
-          class: 'line',
-        })
-        .styles({
-          fill: 'none',
-          stroke: colores(nombre.split('-')[0])[1],
-          'stroke-width': ((heightBars * 0.35) / 7) * 3,
-          'stroke-linejoin': 'round',
-        })
-        .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
+      const pathD = d3.line().curve(d3.curveCardinal.tension(1))(points);
+      const club = nombre.split('-')[0];
 
-      svg
-        .append('path')
-        .attrs({
-          transform: `translate(${margin_left * 2}, 0)`,
-          class: 'line',
-        })
-        .styles({
-          fill: 'none',
-          stroke: colores(nombre.split('-')[0])[2],
-          'stroke-width': ((heightBars * 0.35) / 7) * 1.75,
-          'stroke-linejoin': 'round',
-        })
-        .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
-
-      svg
-        .append('path')
-        .attrs({
-          transform: `translate(${margin_left * 2}, 0)`,
-          class: 'line',
-        })
-        .styles({
-          fill: 'none',
-          stroke: colores(nombre.split('-')[0])[3],
-          'stroke-width': (heightBars * 0.35) / 7,
-          'stroke-linejoin': 'round',
-        })
-        .attr('d', d3.line().curve(d3.curveCardinal.tension(1))(points));
+      capas.forEach(({ colorIdx, width }, i) => {
+        svg
+          .append('path')
+          .attrs({
+            transform: `translate(${margin_left * 2}, 0)`,
+            class: 'line',
+            ...(i === 0 && { filter: 'url(#dropshadow)' }), // solo la primera capa tiene sombra
+          })
+          .styles({
+            fill: 'none',
+            stroke: colores(club)[colorIdx],
+            'stroke-width': width,
+            'stroke-linejoin': 'round',
+          })
+          .attr('d', pathD);
+      });
     });
 
     names_1.forEach((nombre) => {
@@ -2203,7 +2052,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       .append('text')
       .attrs({
         class: 'top',
-        x: width * 0.1,
+        x: width,
         y: margin.top * 0.33,
       })
       .styles({
@@ -2511,7 +2360,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
       .append('text')
       .attrs({
         class: 'top',
-        x: width * 0.1,
+        x: margin_left*2,
         y: margin.top * 0.33,
       })
       .styles({
@@ -4423,7 +4272,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
         const empates = data
           .filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value)
           .map((e) => e.name);
-        return statsDirectos1(empates)[d.name];
+        return statsDirectos(empates)[d.name];
       };
 
         const commonStyles = {
@@ -4818,7 +4667,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? '\xa0\xa0\xa0[' : '';
             })
         )
@@ -4838,7 +4687,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor.pts_directo + '\xa0\xa0\xa0' : '';
             })
         )
@@ -4858,7 +4707,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor?.pj_directo + ' ' : '';
             })
         )
@@ -4878,7 +4727,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor?.pg_directo + ' ' : '';
             })
         )
@@ -4898,7 +4747,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor?.pe_directo + ' ' : '';
             })
         )
@@ -4918,7 +4767,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor?.pp_directo + '\xa0\xa0\xa0' : '';
             })
         )
@@ -4938,7 +4787,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor?.gf_directo : '';
             })
         )
@@ -4958,7 +4807,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? '-' : '';
             })
         )
@@ -4978,7 +4827,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? valor?.gc_directo + ' ' : '';
             })
         )
@@ -4992,7 +4841,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             .styles({
               fill: (d) => {
                 let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-                let valor = statsDirectos1(empates)[d.name];
+                let valor = statsDirectos(empates)[d.name];
                 return valor.diff_directo > 0 ? victoria_color : valor.diff_directo < 0 ? derrota_color : empate_color;
               },
               'font-size': defaults.value.style.font_size,
@@ -5002,7 +4851,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? (valor.diff_directo > 0 ? '+' : '') + valor?.diff_directo : '';
             })
         )
@@ -5022,7 +4871,7 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
             })
             .text((d) => {
               let empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
-              let valor = statsDirectos1(empates)[d.name];
+              let valor = statsDirectos(empates)[d.name];
               return valor.pj_directo > 0 ? ']' : '';
             })
         );
@@ -5031,6 +4880,30 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
 
   if (grupos > 1) {
     grupos_1.forEach((grupo, indice_grupo) => {
+      const COUNTRY_TEAMS = {
+        ar: ["Barracas Central", "Racing", "Tigre", "Riestra", "San Lorenzo", "River Plate"],
+        br: ["Vasco Da Gama", "Sao Paulo", "Atletico Mineiro", "Gremio", "Botafogo", "Santos", "Bragantino"],
+        cl: ["OHiggins", "Audax Italiano", "Palestino", "Deportivo Recoleta"],
+        co: ["Millonarios", "America De Cali"],
+        bo: ["Independiente Petrolero", "Blooming"],
+        ec: ["Deportivo Cuenca", "Macara"],
+        pe: ["Alianza Atletico", "Cienciano"],
+        uy: ["Boston River", "Montevideo City Torque", 'Juventud'],
+        ve: ["Academia Puerto Cabello", "Caracas", "Carabobo"],
+        py: ["Olimpia"],
+      };
+
+      const TEAM_COUNTRY = Object.fromEntries(
+        Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) =>
+          teams.map(team => [team, code])
+        )
+      );
+
+      const getFlag = (raw) => {
+        const name = raw.replace(/-[A-Z]$/, "");
+        const code = TEAM_COUNTRY[name];
+        return code ? `${code}.svg` : null;
+      };
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
@@ -5041,6 +4914,17 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
           href: (d) => /* getPng(d.name) */ `./escudos/${d.name.split('-')[0]}.png`,
           height: defaults.logo.size1 * 1.1,
         });
+
+      rankingSVG
+        .filter((d) => d.name.split('-')[1] == grupo)
+        .append('image')
+        .attrs({
+          x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1 / 3),
+          y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1 / 3), //ojo d.rank
+          href: (d) => `./flags/${getFlag(d.name.split('-')[0])}`,
+          height: defaults.logo.size1 * 0.4,
+        })
+        .style('filter', 'url(#dropshadow)');
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
@@ -5296,14 +5180,14 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
     );
   });
 
-  yearSlice.forEach((d) => {
+  /* yearSlice.forEach((d) => {
     d.posicion_promedio = d3.format('.1f')(
       d3.mean(
         data.filter((e) => e.name == d.name && e.final != true),
         (e) => (e.goles_fecha !== not_played_yet ? e.rank + 1 : 0)
       )
     );
-  });
+  }); */
 
   let array_p = [];
 
@@ -5311,146 +5195,117 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
     array_p = ['racha', 'racha_empates', 'racha_derrotas', 'racha_sin_victorias', 'racha_sin_empates', 'racha_sin_derrotas', 'goleadas', 'goleadas_en_contra', 'valla_invicta', 'fechas_en_top'];
   }
 
-  let positions = {
-    1: [[0, 0]],
-    2: [
-      [0, 0],
-      [0, 1],
-    ],
-    3: [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-    ],
-    4: [
-      [-0.5, 0],
-      [-0.5, 1],
-      [0.5, 0],
-      [0.5, 1],
-    ],
-    5: [
-      [-0.5, 0],
-      [-0.5, 1],
-      [0.5, 0],
-      [0.5, 1],
-      [0, 2],
-    ],
-    6: [
-      [-0.5, 0],
-      [-0.5, 1],
-      [-0.5, 2],
-      [0.5, 0],
-      [0.5, 1],
-      [0.5, 2],
-    ],
-    7: [
-      [-1, 0],
-      [0, 0],
-      [1, 0],
-      [-1, 1],
-      [0, 1],
-      [1, 1],
-      [0, 2],
-    ],
-    8: [
-      [-1, 0],
-      [0, 0],
-      [1, 0],
-      [-1, 1],
-      [0, 1],
-      [1, 1],
-      [-0.5, 2],
-      [0.5, 2],
-    ],
-    9: [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-      [-1, 0],
-      [-1, 1],
-      [-1, 2],
-      [1, 0],
-      [1, 1],
-      [1, 2],
-    ],
-  };
+function generarPositions(max) {
+  const positions = {};
 
-  let try_positions = (a, b, c) => {
-    try {
-      return positions[a][b][c];
-    } catch {
-      console.error('error record');
-      return 0;
+  for (let n = 1; n <= max; n++) {
+    const filas = Math.ceil(n / 3);
+    const cols  = Math.ceil(n / filas);
+    const resto = n % cols; // items en la última fila (0 = completa)
+
+    const offsetsCols = Array.from({ length: cols }, (_, i) => i - (cols - 1) / 2);
+
+    const result = [];
+    for (let i = 0; i < n; i++) {
+      const esUltimaFila = i >= n - (resto || cols);
+      const itemsEnEstaFila = esUltimaFila && resto ? resto : cols;
+      const offsetsFilaActual = Array.from({ length: itemsEnEstaFila }, (_, j) => j - (itemsEnEstaFila - 1) / 2);
+
+      const col  = i % cols;
+      const fila = Math.floor(i / cols);
+      const colOffset = esUltimaFila && resto ? offsetsFilaActual[i - (n - resto)] : offsetsCols[col];
+
+      result.push([colOffset, fila]);
     }
-  };
 
-  array_p.forEach((p, index) => {
-    svg
-      .selectAll('.img')
-      .data(removeDuplicates(data.filter((d) => d[p] == d3.max(data, (d) => d[p]))))
-      .enter()
-      .append('image')
-      .attrs({
-        x: (d, i, total) => {
-          length = 0;
-          array_p.slice(0, index).forEach((ee, oo) => {
-            ee == 'racha_derrotas' ? length++ : 0;
-            ee == 'racha_sin_derrotas' ? length++ : 0;
-            ee == 'goleadas_en_contra' ? length++ : 0;
-            ee == 'valla_invicta' ? length++ : 0;
-            length = length + d3.max(data, (e) => e[ee]).toString().length;
-          });
-          return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4 + try_positions(total.length, i, 0) * defaults.mini_logo.size * 0.65 - defaults.mini_logo.size / 2 + ((d3.max(data, (e) => e[p]).toString().length + 1) / 2) * heightBars * 0.225;
-        },
-        y: (d, i, total) => y(-1) - heightBars / 2 - try_positions(total.length, i, 1) * defaults.mini_logo.size * 0.7,
-        height: defaults.mini_logo.size,
-        href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
-      });
+    positions[n] = result;
+  }
 
-    svg
-      .append('text')
-      .attrs({
-        class: 'final_infos',
-        opacity: 1,
-        x: (d) => {
-          length = 0;
-          array_p.slice(0, index).forEach((ee, oo) => {
-            ee == 'racha_derrotas' ? length++ : 0;
-            ee == 'racha_sin_derrotas' ? length++ : 0;
-            ee == 'goleadas_en_contra' ? length++ : 0;
-            ee == 'valla_invicta' ? length++ : 0;
-            length = length + d3.max(data, (e) => e[ee]).toString().length;
-          });
-          return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4;
-        },
-        y: margin.top * 0.8,
-      })
-      .styles({
-        fill: '#f1f1f1',
-        'font-size': defaults.value.style.font_size,
-        'font-weight': 600,
-        'text-anchor': 'start',
-        'alignment-baseline': defaults.value.style.alignment_baseline,
-      })
-      .text(d3.max(data, (e) => e[p]));
+  return positions;
+}
 
-    svg.append('image').attrs({
+const positions = generarPositions(15);
+
+const try_positions = (a, b, c) => {
+  try { return positions[a][b][c]; }
+  catch { console.error('error record'); return 0; }
+};
+
+// Extras que suman 1 al length según qué array se itera
+const EXTRAS_HASTA_INDEX  = new Set(['racha_derrotas', 'racha_sin_derrotas', 'goleadas_en_contra', 'valla_invicta']);
+const EXTRAS_HASTA_INDEX1 = new Set(['racha_sin_victorias', 'goleadas', 'valla_invicta', 'fechas_en_top']);
+
+const xBase = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
+  + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
+  + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x;
+
+// Precalcula el max de cada propiedad una sola vez
+const maxPorProp = Object.fromEntries(
+  array_p.map((p) => [p, d3.max(data, (d) => d[p])])
+);
+
+function calcLength(slice, extrasSet) {
+  let length = 0;
+  slice.forEach((ee) => {
+    if (extrasSet.has(ee)) length++;
+    length += maxPorProp[ee].toString().length;
+  });
+  return length;
+}
+
+array_p.forEach((p, index) => {
+  const maxVal     = maxPorProp[p];
+  const maxValLen  = maxVal.toString().length;
+  const dataMax    = removeDuplicates(data.filter((d) => d[p] == maxVal));
+
+  const lengthHasta  = calcLength(array_p.slice(0, index),     EXTRAS_HASTA_INDEX);
+  const lengthHasta1 = calcLength(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1);
+  const xComun       = xBase + index * heightBars * 0.6;
+
+  // Imágenes de escudos (equipos con el máximo)
+  svg.selectAll('.img')
+    .data(dataMax)
+    .enter()
+    .append('image')
+    .attrs({
+      x: (d, i, total) =>
+        xComun
+        + lengthHasta * heightBars * 0.225
+        + try_positions(total.length, i, 0) * defaults.mini_logo.size * 0.55
+        - defaults.mini_logo.size1 / 2
+        + ((maxValLen + 1) / 2) * heightBars * 0.225,
+      y: (d, i, total) =>
+        y(-1) - heightBars / 2.5 - try_positions(total.length, i, 1) * defaults.mini_logo.size * 0.65,
+      height: defaults.mini_logo.size1,
+      href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
+    });
+
+  // Texto con el valor máximo
+  svg.append('text')
+    .attrs({
       class: 'final_infos',
-      x: (d) => {
-        length = 0;
-        array_p.slice(0, index + 1).forEach((ee, oo) => {
-          ee == 'racha_sin_victorias' ? length++ : 0;
-          ee == 'goleadas' ? length++ : 0;
-          ee == 'valla_invicta' ? length++ : 0;
-          ee == 'fechas_en_top' ? length++ : 0;
-          length = length + d3.max(data, (e) => e[ee]).toString().length;
-        });
-        return x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + length * heightBars * 0.225 + index * heightBars * 0.4 - heightBars * 0.05;
-      },
+      x: xComun + lengthHasta * heightBars * 0.225,
+      y: margin.top * 0.8,
+    })
+    .styles({
+      fill: '#f1f1f1',
+      'font-size': defaults.value.style.font_size,
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': defaults.value.style.alignment_baseline,
+    })
+    .text(maxVal);
+
+  // Ícono de la propiedad
+  svg.append('image')
+    .attrs({
+      class: 'final_infos',
+      x: xComun + lengthHasta1 * heightBars * 0.225 - heightBars * 0.05,
       y: margin.top * 0.8 - (defaults.final_infos.logos.size * 0.9) / 2,
       href: `./icons/${p}.png`,
       height: defaults.final_infos.logos.size * 0.9,
     });
+
 
     if (grupos > 1) {
       grupos_1.forEach((grupo, indice_grupo) => {
