@@ -2,10 +2,13 @@ import { procesarDatos } from './data.js';
 import { colores } from './colores.js';
 /* global d3 */
 
-const { final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades } = window.__appData ?? await procesarDatos();
+const { totalCasosSimulados, nombre_torneo, puntos_por_partido, probabilidades } = window.__appData ?? await procesarDatos();
+
+const index = (window.__appIndex ?? 0) % totalCasosSimulados.length;
+let final_list1 = totalCasosSimulados[index];
 
 let ress_ratio = '16:9';
-let resulution = 2;
+let resulution = 1;
 
 let width = (ress_ratio == '16:9' ? 16 : ress_ratio == '1:1' ? 9 : 9) * 120;
 let height = (ress_ratio == '16:9' ? 9 : ress_ratio == '1:1' ? 9 : 16) * 120;
@@ -36,7 +39,8 @@ let not_played_yet_x = 0.4;
 let fechas_not_played = 1;
 
 let localia = false;
-let stats_on_top = true;
+let stats_on_top = false;
+let datos_totales = false;
 let competencia = 'libertadores';
 
 const clasificados_por_competencia = {
@@ -64,8 +68,13 @@ d3.timeFormatDefaultLocale({
 
 let formatEfec = d3.format('.0f');
 
-const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades) => {
-  let top_n = clubes.size;
+const render = (data, probabilidades) => {
+  console.log(data)
+  let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
+  let names_1 = [...new Set(data.map((d) => d.name))];
+
+  let grupos = grupos_1.length;
+  let top_n = names_1.length;
   let heightBars = (height - (margin.bottom + margin.top)) / (top_n + 2);
 
   margin = {
@@ -95,10 +104,6 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
     1: 'Final',
   };
 
-  let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
-  let names_1 = [...new Set(data.map((d) => d.name))];
-
-  let grupos = grupos_1.length;
 
   if (grupos == 1) {
     grupos = 0;
@@ -139,27 +144,23 @@ const render = (data, nombre_torneo, clubes, puntos_por_partido, data1, fechas_p
 
   let dates = [...new Set(data.map((d) => d.semana).sort((a, b) => a - b))];
 
-  let margin_right = ress_ratio == '16:9' ? heightBars * 11 : ress_ratio == '1:1' ? heightBars * 7.8 : heightBars * 1.74;
-
-  let ticks_slice = ress_ratio == '16:9' ? top_n - 4 : ress_ratio == '1:1' ? +d3.format('.0f')(top_n * 0.4) : +d3.format('.0f')(top_n * 0.25);
-
-  let weeks_i = width - margin_right;
-
-  let margin_left = weeks_i / ticks_slice / 2;
-  let weeks_o = weeks_i / ticks_slice;
-  let weeks = weeks_o;
+  let margin_right = margin.right;
 
   fechas_not_played = d3.max(data, (d) => d.partidos_jugados + d.partidos_jugados1);
+  
+  let weeks_i = (heightBars * 2) * (dates.length) - ((heightBars) * (((dates.length-1)-fechas_not_played)-1));
 
-  if (grupos > 1) {
-    width = weeks * (fechas_not_played + 1) + (weeks - weeks * not_played_yet_x) * (dates.length - 1 - fechas_not_played) + margin_right + (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff);
-  } else {
-    width = weeks * (fechas_not_played + 1) + (weeks - weeks * not_played_yet_x) * (dates.length - 1 - fechas_not_played) + margin_right;
-  }
+  width = weeks_i + heightBars * 7
 
+  let margin_left = heightBars;
+  let weeks_o = heightBars * 2;
+  let weeks = weeks_o;
+
+  console.log(weeks, weeks_o, weeks_i, fechas_not_played, ((dates.length-1)-fechas_not_played)-1, not_played_yet_x, dates.length, margin_right)
+  
   console.log(`[${width}, ${height}]`);
 
-d3.select('body svg').remove();
+/* d3.select('body svg').remove(); */
 
 const svg = d3
   .select('body')
@@ -198,7 +199,7 @@ const svg = d3
       'text-anchor': 'middle',
       'alignment-baseline': 'central',
     })
-    .text(nombre_torneo.replace('_', '/'));
+    .text(nombre_torneo.replace('_', '/') + ' ' + index);
 
   svg
     .append('text')
@@ -223,8 +224,8 @@ const svg = d3
     },
     name: {
       position: {
-        x: ress_ratio != '9:16' ? heightBars * 0 : -heightBars * 0.0,
-        y: ress_ratio != '9:16' ? (!stats_on_top ? -heightBars * 0.15 : -heightBars * 0.03) : -heightBars * 0.18,
+        x: heightBars * 0,
+        y: !stats_on_top ? -heightBars * 0.2 : -heightBars * 0.0,
       },
       style: {
         fill: black_color,
@@ -237,7 +238,7 @@ const svg = d3
     value: {
       position: {
         x: 0,
-        y: ress_ratio != '9:16' ? (!stats_on_top ? heightBars * 0.25 : heightBars * 0.32) : heightBars * 0.18,
+        y: !stats_on_top ? heightBars * 0.2 : heightBars * 0.275,
       },
       style: {
         fill: black_color,
@@ -415,7 +416,7 @@ const svg = d3
 
   let yearSlice = sort_teams1(data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)));
 
-  let x = d3.scaleLinear().domain([0, ticks_slice]).range([0, weeks_i]);
+  let x = d3.scaleLinear().domain([0, dates.length]).range([0, weeks_i]);
 
   let y = d3
     .scaleLinear()
@@ -507,13 +508,13 @@ const svg = d3
     1: [0, 1],
   };
 
-  fechas_playoff.forEach((d) => {
+  /* fechas_playoff.forEach((d) => {
     let filter = yearSlice.filter((e) => e.name == d.local)[0];
     let filter1 = yearSlice.filter((e) => e.name == d.visitante)[0];
 
     Object.assign(d, { position_local: filter.position });
     Object.assign(d, { position_visitante: filter1.position });
-  });
+  }); */
 
   let yPlayoffs = d3.scaleLinear().range([height - margin.bottom + heightBars / 2, margin.top + heightBars / 2]);
 
@@ -1686,7 +1687,6 @@ grupos_1.forEach((grupo, indice_grupo) => {
     });
 
     names_1.forEach((nombre) => {
-      /* if (nombre !== 'Defensa y Justicia') return; */
 
       let wks = 0;
 
@@ -2040,456 +2040,85 @@ grupos_1.forEach((grupo, indice_grupo) => {
       .text((d) => d);
   }
 
-  svg.append('image').attrs({
+  /* svg.append('image').attrs({
     x: margin_left / 2 - (margin_left * 0.8) / 2,
     y: margin.top * 0.8 - ((120 / 204) * margin_left * 0.8) / 2,
     width: margin_left * 0.8,
     href: `./country-flags/flag-of-${data1[0].pais}.png`,
-  });
+  }); */
 
-  if (localia) {
-    svg
-      .append('text')
-      .attrs({
-        class: 'top',
-        x: width,
-        y: margin.top * 0.33,
-      })
-      .styles({
-        fill: defaults.name.style.fill,
-        'font-size': defaults.name.style.font_size,
-        'font-weight': defaults.name.style.font_weight,
-        'text-anchor': defaults.name.style.text_anchor,
-        'alignment-baseline': defaults.name.style.alignment_baseline,
-      })
+  if (datos_totales) {
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pj_top',
-          })
-          .styles({
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2) + ' ')
-      )
+// ── Variables comunes ─────────────────────────────────────────────────────────
+const totalPJ  = (d3.sum(yearSlice, d => d.partidos_jugados) + d3.sum(yearSlice, d => d.partidos_jugados1)) / 2;
+const totalPG  = d3.sum(yearSlice, d => d.partidos_ganados)  + d3.sum(yearSlice, d => d.partidos_ganados1);
+const totalPE  = Math.round((d3.sum(yearSlice, d => d.partidos_empatados) + d3.sum(yearSlice, d => d.partidos_empatados1)) / 2);
+const totalGF  = d3.sum(yearSlice, d => d.goles);
+const totalGF1 = d3.sum(yearSlice, d => d.goles1);
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pg_top',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.sum(yearSlice, (d) => d.partidos_ganados) + d3.sum(yearSlice, (d) => d.partidos_ganados1) + ' ')
-      )
+const pctPG = d3.format('.0f')(totalPG / totalPJ * 100);
+const pctPE = d3.format('.0f')(totalPE / totalPJ * 100);
+const avgG  = d3.format('.1f')((totalGF + totalGF1) / totalPJ).replace('.', ',');
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pg_por_top',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text('(' + d3.format('.0f')(((d3.sum(yearSlice, (d) => d.partidos_ganados) + d3.sum(yearSlice, (d) => d.partidos_ganados1)) / d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)) * 100) + '%) ')
-      )
+// ── Helper común ──────────────────────────────────────────────────────────────
+const dv = defaults.value.style;
+const tspan = (text, { cls, fill, size = margin.top * 0.3, attrs = {}, text: label }) =>
+  text.append('tspan')
+    .attrs({ ...(cls ? { class: cls } : {}), ...attrs })
+    .styles({
+      fill,
+      'font-size'          : size,
+      'font-weight'        : 600,
+      'text-anchor'        : dv.text_anchor,
+      'alignment-baseline' : dv.alignment_baseline,
+    })
+    .text(label);
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.16,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': margin.top * 0.2,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-              '' +
-              d3.sum(
-                data.filter((e) => e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              ) +
-              ' (' +
-              d3.format('.0%')(
-                d3.sum(
-                  data.filter((e) => e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                ) /
-                  ((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)
-              ) +
-              ') '
-          )
-      )
+// ── Texto principal (común) ───────────────────────────────────────────────────
+const textEl = svg.append('text')
+  .attrs({ class: 'top', x: margin_left * 2, y: margin.top * 0.33 })
+  .styles({
+    fill                 : defaults.name.style.fill,
+    'font-size'          : defaults.name.style.font_size,
+    'font-weight'        : defaults.name.style.font_weight,
+    'text-anchor'        : defaults.name.style.text_anchor,
+    'alignment-baseline' : defaults.name.style.alignment_baseline,
+  })
+  .call(t => tspan(t, { cls: 'pj_top',     fill: 'lightgrey',    text: `${Math.round(totalPJ)} ` }))
+  .call(t => tspan(t, { cls: 'pg_top',     fill: victoria_color, text: `${totalPG} ` }))
+  .call(t => tspan(t, { cls: 'pg_por_top', fill: victoria_color, text: `(${pctPG}%) ` }));
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.32,
-            dx:
-              -(
-                d3.sum(
-                  data.filter((e) => e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                ) +
-                ' (' +
-                d3.format('.0%')(
-                  d3.sum(
-                    data.filter((e) => e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ) /
-                    ((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)
-                ) +
-                ') '
-              ).toString().length *
-              margin.top *
-              0.2 *
-              0.55,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': margin.top * 0.2,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-              '' +
-              d3.sum(
-                data.filter((e) => e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              ) +
-              ' (' +
-              d3.format('.0%')(
-                d3.sum(
-                  data.filter((e) => e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                ) /
-                  ((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)
-              ) +
-              ')\xa0\xa0' +
-              ' '
-          )
-      )
+if (localia) {
+  const played  = data.filter(e => e.final != true);
+  const winsBy  = loc => d3.sum(played, e => e.l_or_v == loc && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0);
+  const goalsBy = loc => d3.sum(played, e => e.l_or_v == loc && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0);
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.16,
-            class: 'pe_top',
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_empatados) + d3.sum(yearSlice, (d) => d.partidos_empatados1)) / 2) + ' ')
-      )
+  const winText_L  = `${winsBy('L')} (${d3.format('.0%')(winsBy('L') / totalPJ)}) `;
+  const winText_V  = `${winsBy('V')} (${d3.format('.0%')(winsBy('V') / totalPJ)})\xa0\xa0 `;
+  const goalText_L = `${goalsBy('L')} (${d3.format('.1f')(goalsBy('L') / totalPJ).replace('.', ',')}) `;
+  const goalText_V = `${goalsBy('V')} (${d3.format('.1f')(goalsBy('V') / totalPJ).replace('.', ',')})  `;
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pe_por_top',
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text('(' + d3.format('.0f')((d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_empatados) + d3.sum(yearSlice, (d) => d.partidos_empatados1)) / 2) / d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)) * 100) + '%)\xa0\xa0\xa0')
-      )
+  const tspanSub = (text, { fill, dy, dx = 0, text: label }) =>
+    tspan(text, { fill, size: margin.top * 0.2, attrs: { dy, ...(dx ? { dx } : {}) }, text: label });
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gf_top',
-          })
-          .styles({
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.sum(yearSlice, (d) => d.goles) + ' ')
-      )
+  textEl
+    .call(t => tspanSub(t, { fill: victoria_color, dy: -heightBars * 0.16, text: winText_L }))
+    .call(t => tspanSub(t, { fill: victoria_color, dy:  heightBars * 0.32, dx: -winText_L.length * margin.top * 0.2 * 0.55, text: winText_V }))
+    .call(t => tspan(t, { cls: 'pe_top',     fill: empate_color, attrs: { dy: -heightBars * 0.16 }, text: `${totalPE} ` }))
+    .call(t => tspan(t, { cls: 'pe_por_top', fill: empate_color, text: `(${pctPE}%)\xa0\xa0\xa0` }))
+    .call(t => tspan(t, { cls: 'gf_top',    fill: 'lightgrey',  text: `${totalGF} ` }))
+    .call(t => tspan(t, { cls: 'avg_g_top', fill: 'lightgrey',  text: `(${avgG}) ` }))
+    .call(t => tspanSub(t, { fill: 'lightgrey', dy: -heightBars * 0.16, text: goalText_L }))
+    .call(t => tspanSub(t, { fill: 'lightgrey', dy:  heightBars * 0.32, dx: -goalText_L.length * margin.top * 0.2 * 0.48, text: goalText_V }));
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'avg_g_top',
-          })
-          .styles({
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            '(' +
-              d3
-                .format('.1f')((d3.sum(yearSlice, (d) => d.goles) + d3.sum(yearSlice, (d) => d.goles1)) / d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2))
-                .replace('.', ',') +
-              ') '
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.16,
-          })
-          .styles({
-            opacity: 1,
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.2,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-              '' +
-              d3.sum(
-                data.filter((e) => e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-              ) +
-              ' (' +
-              d3
-                .format('.1f')(
-                  d3.sum(
-                    data.filter((e) => e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                  ) /
-                    ((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)
-                )
-                .replace('.', ',') +
-              ') '
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.32,
-            dx:
-              -(
-                d3.sum(
-                  data.filter((e) => e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                ) +
-                ' (' +
-                d3
-                  .format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      ((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)
-                  )
-                  .replace('.', ',') +
-                ') '
-              ).toString().length *
-              margin.top *
-              0.2 *
-              0.505,
-          })
-          .styles({
-            opacity: 1,
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.2,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-              '' +
-              d3.sum(
-                data.filter((e) => e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-              ) +
-              ' (' +
-              d3
-                .format('.1f')(
-                  d3.sum(
-                    data.filter((e) => e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                  ) /
-                    ((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)
-                )
-                .replace('.', ',') +
-              ') ' +
-              ' '
-          )
-      );
-  } else {
-    svg
-      .append('text')
-      .attrs({
-        class: 'top',
-        x: margin_left*2,
-        y: margin.top * 0.33,
-      })
-      .styles({
-        fill: defaults.name.style.fill,
-        'font-size': defaults.name.style.font_size,
-        'font-weight': defaults.name.style.font_weight,
-        'text-anchor': defaults.name.style.text_anchor,
-        'alignment-baseline': defaults.name.style.alignment_baseline,
-      })
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pj_top',
-          })
-          .styles({
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2) + ' ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pg_top',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.sum(yearSlice, (d) => d.partidos_ganados) + d3.sum(yearSlice, (d) => d.partidos_ganados1) + ' ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pg_por_top',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text('(' + d3.format('.0f')(((d3.sum(yearSlice, (d) => d.partidos_ganados) + d3.sum(yearSlice, (d) => d.partidos_ganados1)) / d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)) * 100) + '%) ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pe_top',
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_empatados) + d3.sum(yearSlice, (d) => d.partidos_empatados1)) / 2) + ' ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pe_por_top',
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text('(' + d3.format('.0f')((d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_empatados) + d3.sum(yearSlice, (d) => d.partidos_empatados1)) / 2) / d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2)) * 100) + '%)\xa0\xa0\xa0')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gf_top',
-          })
-          .styles({
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(d3.sum(yearSlice, (d) => d.goles) + ' ')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'avg_g_top',
-          })
-          .styles({
-            fill: 'lightgrey',
-            'font-size': margin.top * 0.3,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            '(' +
-              d3
-                .format('.1f')((d3.sum(yearSlice, (d) => d.goles) + d3.sum(yearSlice, (d) => d.goles1)) / d3.format('.0f')((d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2))
-                .replace('.', ',') +
-              ') '
-          )
-      );
+} else {
+  textEl
+    .call(t => tspan(t, { cls: 'pe_top',     fill: empate_color, text: `${totalPE} ` }))
+    .call(t => tspan(t, { cls: 'pe_por_top', fill: empate_color, text: `(${pctPE}%)\xa0\xa0\xa0` }))
+    .call(t => tspan(t, { cls: 'gf_top',    fill: 'lightgrey',  text: `${totalGF} ` }))
+    .call(t => tspan(t, { cls: 'avg_g_top', fill: 'lightgrey',  text: `(${avgG}) ` }));
+}
   }
-
   var rankingSVG = svg.selectAll('.g').data(yearSlice).enter().append('g').attr('class', 'rankingSVG');
 
   rankingSVG.append('clipPath').attr('id', `ellipse-clip-bars`).append('rect').attrs({
@@ -2500,7 +2129,565 @@ grupos_1.forEach((grupo, indice_grupo) => {
   });
 
   if (localia) {
-    rankingSVG
+    if (grupos > 1) {
+      grupos_1.forEach((grupo, indice_grupo) => {
+        rankingSVG.filter((d) => d.name.split('-')[1] == grupo)
+      .append('text')
+      .attrs({
+        class: 'name',
+        x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
+         y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.name.position.y,
+      })
+      .styles({
+        fill: defaults.name.style.fill,
+        'font-size': defaults.name.style.font_size,
+        'font-weight': defaults.name.style.font_weight,
+        'text-anchor': defaults.name.style.text_anchor,
+        'alignment-baseline': defaults.name.style.alignment_baseline,
+      })
+      .text((d) => d.name.split('-')[0])
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'efec',
+          })
+          .styles({
+            fill: (d) => {
+              var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)), d3.max(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100))]);
+              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+              return myColor1(myColor(+formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)));
+            },
+            'font-size': heightBars * 0.275,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.09,
+          })
+          .styles({
+            opacity: 1,
+            fill: (d) => {
+              var myColor = d3.scaleLinear().domain([
+                d3.min(
+                  yearSlice,
+                  (d) =>
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                ),
+                d3.max(
+                  yearSlice,
+                  (d) =>
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                ),
+              ]);
+              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+              if (
+                isNaN(
+                  +formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  )
+                )
+              ) {
+                return grey_color;
+              } else {
+                return myColor1(
+                  myColor(
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                  )
+                );
+              }
+            },
+            'font-size': heightBars * 0.275 * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados == 0
+              ? ''
+              : `(${formatEfec(
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  ) /
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ) *
+                      puntos_por_partido)) *
+                    100
+                ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.18,
+            dx: (d) =>
+              -`(${formatEfec(
+                (d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                ) /
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ) *
+                    puntos_por_partido)) *
+                  100
+              ).replace('.', ',')}%)`
+                .replace('NaN%', 'ND')
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.6,
+          })
+          .styles({
+            opacity: 1,
+            fill: (d) => {
+              var myColor = d3.scaleLinear().domain([
+                d3.min(
+                  yearSlice,
+                  (d) =>
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                ),
+                d3.max(
+                  yearSlice,
+                  (d) =>
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                ),
+              ]);
+              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+              if (
+                isNaN(
+                  +formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  )
+                )
+              ) {
+                return grey_color;
+              } else {
+                return myColor1(
+                  myColor(
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                  )
+                );
+              }
+            },
+            'font-size': heightBars * 0.275 * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados == 0
+              ? ''
+              : ` (${formatEfec(
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  ) /
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ) *
+                      puntos_por_partido)) *
+                    100
+                ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.09,
+            class: 'goles_por_partido',
+            dx: (d) =>
+              -`(${formatEfec(
+                (d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                ) /
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ) *
+                    puntos_por_partido)) *
+                  100
+              ).replace('.', ',')}%)`
+                .replace('NaN%', 'ND')
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.6 +
+              d3.max([
+                `(${formatEfec(
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  ) /
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ) *
+                      puntos_por_partido)) *
+                    100
+                ).replace('.', ',')}%)`
+                  .replace('NaN%', 'ND')
+                  .toString().length,
+                `(${formatEfec(
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  ) /
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ) *
+                      puntos_por_partido)) *
+                    100
+                ).replace('.', ',')}%)`
+                  .replace('NaN%', 'ND')
+                  .toString().length,
+              ]) *
+                defaults.value.style.font_size *
+                0.625 *
+                0.6,
+          })
+          .styles({
+            fill: (d) => {
+              var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados)), d3.max(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados))]);
+              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+              return myColor1(myColor(+d3.format('.1f')(d.goles / d.partidos_jugados)));
+            },
+            'font-size': heightBars * 0.275,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados == 0
+              ? ''
+              : ` (${d3
+                  .format('.1f')(d.goles / d.partidos_jugados)
+                  .replace('.', ',')})`
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.09,
+          })
+          .styles({
+            opacity: 1,
+            fill: (d) => {
+              var myColor = d3.scaleLinear().domain([
+                d3.min(
+                  yearSlice,
+                  (d) =>
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                ),
+                d3.max(
+                  yearSlice,
+                  (d) =>
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                ),
+              ]);
+              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+              if (
+                isNaN(
+                  +d3.format('.1f')(
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    ) /
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      )
+                  )
+                )
+              ) {
+                return grey_color;
+              } else {
+                return myColor1(
+                  myColor(
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                  )
+                );
+              }
+            },
+            'font-size': heightBars * 0.275 * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados == 0
+              ? ''
+              : `(${d3
+                  .format('.1f')(
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    ) /
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      )
+                  )
+                  .replace('.', ',')
+                  .replace('NaN', 'ND')})`
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.18,
+            dx: -`(1,0)`.toString().length * defaults.value.style.font_size * 0.625 * 0.43,
+          })
+          .styles({
+            opacity: 1,
+            fill: (d) => {
+              var myColor = d3.scaleLinear().domain([
+                d3.min(
+                  yearSlice,
+                  (d) =>
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                ),
+                d3.max(
+                  yearSlice,
+                  (d) =>
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                ),
+              ]);
+              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+              if (
+                isNaN(
+                  +d3.format('.1f')(
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    ) /
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      )
+                  )
+                )
+              ) {
+                return grey_color;
+              } else {
+                return myColor1(
+                  myColor(
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                  )
+                );
+              }
+            },
+            'font-size': heightBars * 0.275 * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) =>
+            d.partidos_jugados == 0
+              ? ''
+              : `(${d3
+                  .format('.1f')(
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    ) /
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      )
+                  )
+                  .replace('.', ',')
+                  .replace('NaN', 'ND')})`
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'campeon',
+            dy: -heightBars * 0.09,
+          })
+          .styles({
+            fill: black_color,
+            'font-size': heightBars * 0.275,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => ' (' + probabilidad(d.name) + '%)')
+      ).call(halo1, defaults.name.style.font_size * 0.25, '#f1f1f1');
+    })
+    }
+     else {
+      rankingSVG
       .append('text')
       .attrs({
         class: 'name',
@@ -3053,8 +3240,8 @@ grupos_1.forEach((grupo, indice_grupo) => {
             'alignment-baseline': defaults.value.style.alignment_baseline,
           })
           .text((d) => ' (' + probabilidad(d.name) + '%)')
-      );
-  } else {
+      ).call(halo1, defaults.name.style.font_size * 0.25, '#f1f1f1');
+  }} else {
     if (grupos > 1) {
       grupos_1.forEach((grupo, indice_grupo) => {
         rankingSVG
@@ -3145,7 +3332,6 @@ grupos_1.forEach((grupo, indice_grupo) => {
           class: 'name',
           x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
           y: (d, i) => y(i) + defaults.name.position.y, // OJO y(d.rank)
-          'clip-path': `url(#ellipse-clip-margin-bottom)`,
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -3218,9 +3404,9 @@ grupos_1.forEach((grupo, indice_grupo) => {
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
             .text((d) => ' (' + probabilidad(d.name) + '%)')
-        )
+        ).call(halo1, defaults.name.style.font_size * 0.25, '#f1f1f1');
 
-        .call((text) =>
+        /* .call((text) =>
           text
             .append('tspan')
             .attrs({
@@ -3234,17 +3420,19 @@ grupos_1.forEach((grupo, indice_grupo) => {
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
             .text((d, i) => (d.partidos_jugados + d.partidos_jugados1 == 0 ? '' : `${i == 0 && d.partidos_jugados + d.partidos_jugados1 == dates.length - 1 ? ' (Campeón)' : ''}`))
-        )
+        ) */
     }
   }
 
   if (localia) {
-    rankingSVG
+    if (grupos > 1) {
+    
+    grupos_1.forEach((grupo, indice_grupo) => {
+      rankingSVG.filter((d) => d.name.split('-')[1] == grupo)
       .append('text')
       .attrs({
         x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-        y: (d, i) => y(i) + defaults.value.position.y, // ojo y(d.rank)
-        'clip-path': `url(#ellipse-clip-margin-bottom)`,
+        y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y,
       })
       .styles({
         fill: 'green',
@@ -4264,6 +4452,1032 @@ grupos_1.forEach((grupo, indice_grupo) => {
           })
           .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
       );
+    })} else {
+      rankingSVG
+      .append('text')
+      .attrs({
+        x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
+        y: (d, i) => y(i) + defaults.value.position.y,
+      })
+      .styles({
+        fill: 'green',
+        'font-size': defaults.value.style.font_size,
+        'font-weight': 600,
+        'text-anchor': defaults.value.style.text_anchor,
+        'alignment-baseline': defaults.value.style.alignment_baseline,
+      })
+      .text('')
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({})
+          .styles({
+            fill: black_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => d.value + (ress_ratio == '16:9' ? '' : ress_ratio == '1:1' ? '\xa0\xa0\xa0' : '\xa0'))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: black_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: black_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            fill: black_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => '\xa0\xa0\xa0' + d.partidos_jugados)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: black_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: black_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => ' ' + d.partidos_ganados)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: empate_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => ' ' + d.partidos_empatados)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: empate_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: empate_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => ' ' + d.partidos_perdidos)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => '\xa0\xa0\xa0' + d.goles)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: +heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: black_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text('-')
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .styles({
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => d.goles_en_contra)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: +heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                )
+                .toString().length *
+              defaults.value.style.font_size *
+              0.625 *
+              0.7,
+          })
+          .styles({
+            opacity: 1,
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'dif',
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color),
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles)
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: -heightBars * 0.08,
+          })
+          .styles({
+            opacity: 1,
+            fill: (d) =>
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              ) > 0
+                ? victoria_color
+                : d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                    ) < 0
+                  ? derrota_color
+                  : empate_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              (d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              ) > 0
+                ? '+'
+                : '') +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            dy: +heightBars * 0.16,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 -
+              (d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              ) > 0
+                ? '+'
+                : ''
+              ).toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.6 +
+              (d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              ) < 0
+                ? '-'
+                : ''
+              ).toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.34,
+          })
+          .styles({
+            opacity: 1,
+            fill: (d) =>
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              ) > 0
+                ? victoria_color
+                : d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                    ) < 0
+                  ? derrota_color
+                  : empate_color,
+            'font-size': defaults.value.style.font_size * 0.625,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text(
+            (d) =>
+              '' +
+              (d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              ) > 0
+                ? '+'
+                : '') +
+              d3.sum(
+                data.filter((e) => e.name == d.name && e.final != true),
+                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+              )
+          )
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'dif',
+            dy: -heightBars * 0.08,
+            dx: (d) =>
+              -d3
+                .sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                )
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7 +
+              d3
+                .max([
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ),
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ),
+                ])
+                .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+          })
+          .styles({
+            fill: 'black',
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'pts1',
+          })
+          .styles({
+            fill: 'black',
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'pj1',
+          })
+          .styles({
+            fill: 'black',
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'pg1',
+          })
+          .styles({
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'pe1',
+          })
+          .styles({
+            fill: empate_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'pp1',
+          })
+          .styles({
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + '\xa0\xa0\xa0'))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'gf1',
+          })
+          .styles({
+            fill: victoria_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles1))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'gf1_guion',
+          })
+          .styles({
+            fill: 'black',
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : '-'))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'gc1',
+          })
+          .styles({
+            fill: derrota_color,
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'dif1',
+          })
+          .styles({
+            fill: (d) => (d.diferencia_de_goles1 > 0 ? victoria_color : d.diferencia_de_goles1 < 0 ? derrota_color : empate_color),
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1))
+      )
+
+      .call((text) =>
+        text
+          .append('tspan')
+          .attrs({
+            class: 'bracket2',
+          })
+          .styles({
+            fill: 'black',
+            'font-size': defaults.value.style.font_size,
+            'font-weight': 600,
+            'text-anchor': defaults.value.style.text_anchor,
+            'alignment-baseline': defaults.value.style.alignment_baseline,
+          })
+          .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
+      );
+    }
   } else {
     // --- Helpers compartidos (fuera del if/else) ---
 
@@ -4367,7 +5581,7 @@ if (grupos > 1) {
       .append('text')
       .attrs({
         x: xPos,
-        y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y,
+        y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y*1.5,
       })
       .styles(commonStyles)
       .call(appendAllTspans);
@@ -4377,7 +5591,7 @@ if (grupos > 1) {
     .append('text')
     .attrs({
       x: xPos,
-      y: (d, i) => y(i) + defaults.value.position.y,
+      y: (d, i) => y(i) + defaults.value.position.y + defaults.value.style.font_size/2,
     })
     .styles(commonStyles)
     .call(appendAllTspans);
@@ -4629,4 +5843,4 @@ array_p.forEach((p, index) => {
 });
 };
 
-render(final_list1, nombre_torneo, clubes, puntos_por_partido, data1, fechas_playoff, probabilidades);
+render(final_list1, nombre_torneo, puntos_por_partido, probabilidades);

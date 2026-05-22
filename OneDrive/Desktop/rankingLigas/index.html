@@ -24,8 +24,24 @@
   🔄 Reload app.js
 </button>
 
+<!-- <script>
+function reloadApp() {
+  const old = document.getElementById('app-module');
+  if (old) old.remove();
+
+  const s = document.createElement('script');
+  s.type = 'module';
+  s.src = 'app.js?v=' + Date.now();
+  s.id = 'app-module';
+  document.head.appendChild(s);
+}
+</script> -->
+
 <script>
 function reloadApp() {
+  // Suma 1 cada vez, empieza en 0
+  window.__appIndex = (window.__appIndex ?? -1) + 1;
+
   const old = document.getElementById('app-module');
   if (old) old.remove();
 
