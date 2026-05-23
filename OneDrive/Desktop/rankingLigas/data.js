@@ -3,9 +3,13 @@ export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/sudamericana2026.csv');
   let nombre_torneo = data1[0].torneo.replace('Torneo ', '');
   let puntos_por_partido = 3;
-    let year_torneo = parseInt(data1[0].torneo.split(' ').slice(-1));
-    year_torneo < 1996 ? (puntos_por_partido = 2) : '';
-    data1[0].torneo == 'Torneo Apertura 1995' ? (puntos_por_partido = 3) : '';
+  let year_torneo = parseInt(data1[0].torneo.split(' ').slice(-1));
+  year_torneo < 1996 ? (puntos_por_partido = 2) : '';
+  data1[0].torneo == 'Torneo Apertura 1995' ? (puntos_por_partido = 3) : '';
+
+  let verEquipo = 'River Plate'
+  let grupoDeVerEquipo = data1.filter(d => d.local == verEquipo || d.visitante == verEquipo)
+  console.log(grupoDeVerEquipo)
 
   console.log(structuredClone(data1));
   data1 = data1.filter((d) => d.local.split('-')[1] == 'H' || d.visitante.split('-')[1] == 'H');
@@ -834,13 +838,13 @@ data1.forEach(d => {
   const ordenados1 = [...sinDuplicados1].sort((a, b) => {
     const getPts = (sim, equipo) => sim[0].find((t) => t.equipo === equipo)?.pts ?? 0;
 
-    const posRiverA = a[0].find((t) => t.equipo === 'River Plate')?.pos;
-    const posRiverB = b[0].find((t) => t.equipo === 'River Plate')?.pos;
+    const posRiverA = a[0].find((t) => t.equipo === verEquipo)?.pos;
+    const posRiverB = b[0].find((t) => t.equipo === verEquipo)?.pos;
 
     if (posRiverA !== posRiverB) return posRiverA - posRiverB;
 
-    const riverA = getPts(a, 'River Plate');
-    const riverB = getPts(b, 'River Plate');
+    const riverA = getPts(a, verEquipo);
+    const riverB = getPts(b, verEquipo);
 
     if (riverA !== riverB) return riverB - riverA;
 
@@ -1105,6 +1109,7 @@ data1.forEach(d => {
           penales: d.penales_local,
           penales_en_contra: d.penales_visitante,
           n_partidos: partidos_n,
+          simulado: d.simulados
         });
         final_list.push({
           dia: d.dia,
@@ -1121,6 +1126,7 @@ data1.forEach(d => {
           goles_en_contra: d.goles_local,
           penales: d.penales_local,
           penales_en_contra: d.penales_visitante,
+          simulado: d.simulados
         });
       });
       let clubes_semana1 = new Set(semana_filter.map((d) => d.local));
@@ -1272,6 +1278,7 @@ data1.forEach(d => {
             goleadas: goleadas,
             goleadas_en_contra: goleadas_en_contra,
             valla_invicta: valla_invicta,
+            simulado: d.simulado
           });
         } else {
           let may_deducted = deducted.filter((e) => e.name == d.name && e.dia == d.dia)[0];
@@ -1400,6 +1407,7 @@ data1.forEach(d => {
             victoria_casa: victoria_casa,
             empate_casa: empate_casa,
             derrota_casa: derrota_casa,
+            simulado: d.simulado
           });
         }
       });
@@ -1519,6 +1527,6 @@ data1.forEach(d => {
   console.log(totalCasosSimulados);
   console.log(totalCasosSimulados[0]);
 
-  window.__appData = { totalCasosSimulados, nombre_torneo, probabilidades };
+  window.__appData = { totalCasosSimulados, nombre_torneo, puntos_por_partido, probabilidades };
   return window.__appData;
 }

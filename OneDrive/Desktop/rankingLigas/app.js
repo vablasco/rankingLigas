@@ -5,22 +5,23 @@ import { colores } from './colores.js';
 const { totalCasosSimulados, nombre_torneo, puntos_por_partido, probabilidades } = window.__appData ?? await procesarDatos();
 
 const index = (window.__appIndex ?? 0) % totalCasosSimulados.length;
+let index1 = 0;
 let final_list1 = totalCasosSimulados[index];
 
-let ress_ratio = '16:9';
+let ress_ratio = '1:1';
 let resulution = 1;
 
-let width = (ress_ratio == '16:9' ? 16 : ress_ratio == '1:1' ? 9 : 9) * 120;
-let height = (ress_ratio == '16:9' ? 9 : ress_ratio == '1:1' ? 9 : 16) * 120;
+let width = 16 * 120;
+let height = 9 * 120;
 
 width = width * resulution;
 height = height * resulution;
 
 let margin = {
-  top: ress_ratio == '16:9' ? height * 0.065 : ress_ratio == '1:1' ? height * 0.065 : height * 0.065,
+  top: height * 0.065,
   right: width * 0.05,
-  bottom: ress_ratio == '16:9' ? height * 0 : ress_ratio == '1:1' ? height * 0 : height * 0.0,
-  left: 100,
+  bottom: height * 0,
+  left: width * 0.05,
 };
 
 let background_color = '#e5e5e5';
@@ -67,24 +68,40 @@ d3.timeFormatDefaultLocale({
 });
 
 let formatEfec = d3.format('.0f');
+const parseDate = (str) => new Date(str);
 
-const render = (data, probabilidades) => {
-  console.log(data)
+  const halo1 = function (text, strokeWidth, color) {
+    text
+      .select(function () {
+        return this.parentNode.insertBefore(this.cloneNode(true), this);
+      })
+      .styles({
+        fill: 'white',
+        stroke: 'white',
+        'stroke-width': strokeWidth / 3.5,
+        'stroke-linejoin': 'round',
+        'stroke-linecap': 'round',
+        opacity: 1,
+      });
+  };
+
+const render = (data, nombre_torneo, puntos_por_partido, probabilidades) => {
+  
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
 
   let grupos = grupos_1.length;
   let top_n = names_1.length;
-  let heightBars = (height - (margin.bottom + margin.top)) / (top_n + 2);
+  let heightBars = /* (height - (margin.bottom + margin.top)) / (top_n + 2); */50;
 
   margin = {
-    top: ress_ratio == '16:9' ? heightBars * 2 : ress_ratio == '1:1' ? heightBars * 1.5 : heightBars * 1.5,
+    top: heightBars * 2,
     right: width * 0.05,
-    bottom: ress_ratio == '16:9' ? height * 0 : ress_ratio == '1:1' ? height * 0 : height * 0.0,
-    left: 100,
+    bottom: height * 0,
+    left: width * 0.05,
   };
 
-  heightBars = (height - (margin.bottom + margin.top)) / (top_n * 1);
+  heightBars = 50
 
   let playoffs = {
     32: 6,
@@ -127,21 +144,6 @@ const render = (data, probabilidades) => {
   let rondas_playoff = playoffs[primera_ronda_playoff];
   let distancia_entre_grupos = 0.5;
 
-  const halo1 = function (text, strokeWidth, color) {
-    text
-      .select(function () {
-        return this.parentNode.insertBefore(this.cloneNode(true), this);
-      })
-      .styles({
-        fill: 'white',
-        stroke: 'white',
-        'stroke-width': strokeWidth / 3.5,
-        'stroke-linejoin': 'round',
-        'stroke-linecap': 'round',
-        opacity: 1,
-      });
-  };
-
   let dates = [...new Set(data.map((d) => d.semana).sort((a, b) => a - b))];
 
   let margin_right = margin.right;
@@ -151,6 +153,7 @@ const render = (data, probabilidades) => {
   let weeks_i = (heightBars * 2) * (dates.length) - ((heightBars) * (((dates.length-1)-fechas_not_played)-1));
 
   width = weeks_i + heightBars * 7
+  height = top_n*heightBars + margin.top
 
   let margin_left = heightBars;
   let weeks_o = heightBars * 2;
@@ -160,7 +163,7 @@ const render = (data, probabilidades) => {
   
   console.log(`[${width}, ${height}]`);
 
-/* d3.select('body svg').remove(); */
+d3.select('body svg').remove();
 
 const svg = d3
   .select('body')
@@ -260,8 +263,8 @@ const svg = d3
     },
     final_infos: {
       position: {
-        x: ress_ratio != '9:16' ? heightBars * 0 : -heightBars * 0.0,
-        y: ress_ratio != '9:16' ? heightBars * 0 : -heightBars * 0.18,
+        x: heightBars * 0,
+        y: heightBars * 0,
       },
       logos: {
         size: heightBars * 0.45,
@@ -1018,9 +1021,12 @@ const svg = d3
       'alignment-baseline': 'central',
     })
     .text((semana) => {
-      let filterr = data.filter((d) => d.semana == semana && d.vs != 'none');
-      let min_day = d3.min(filterr, (d) => d.year);
-      return filterr.find((d) => d.year == min_day).dia_large.split(' ')[0] + ' ' + min_day.slice(2, 4);
+      let filterr = data.filter((d) => d.semana == semana && d.vs != 'none').sort((a, b) => parseDate(a.dia_large) - parseDate(b.dia_large));
+      let first_date = filterr[0].dia_large
+      let last_date = filterr[filterr.length-1].dia_large
+
+      if (first_date==last_date) return filterr[0].dia_large
+      return filterr[0].dia_large + '-' + filterr[filterr.length-1].dia_large.split(' ')[1]
     });
 
   svg
@@ -1133,39 +1139,6 @@ const svg = d3
               .replace('Def.', '')
               .replace('Post.', d)
     );
-
-  if (grupos < 1) {
-    svg
-      .selectAll('.rect')
-      .data(dates)
-      .enter()
-      .append('rect')
-      .attrs({
-        class: 'lines_years',
-        x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
-        y: y(0) - heightBars / 2,
-        width: heightBars * 0.05,
-        height: height,
-        transform: `translate(${margin_left * 2}, 0)`,
-        'clip-path': `url(#ellipse-clip-margin-left)`,
-      })
-      .styles({
-        fill: black_color,
-        opacity: 0.4,
-      });
-  }
-
-  svg
-    .append('clipPath')
-    .attr('id', `ellipse-clip-line`)
-    .append('rect')
-    .attrs({
-      class: 'ellipse_clip_line',
-      x: -margin_left,
-      y: 0,
-      width: 0,
-      height: y(top_n - 1) + heightBars / 2,
-    });
 
   var defs = svg.append('defs');
 
@@ -1620,15 +1593,33 @@ grupos_1.forEach((grupo, indice_grupo) => {
         x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
         y: y(0) - heightBars / 2,
         width: heightBars * 0.05,
+        height: height,
+        transform: `translate(${margin_left * 2}, 0)`,
+        'clip-path': `url(#ellipse-clip-margin-left)`,
+      })
+      .styles({
+        fill: black_color,
+        opacity: 0.4,
+      });
+    /* svg
+      .selectAll('.rect')
+      .data(dates)
+      .enter()
+      .append('rect')
+      .attrs({
+        class: 'lines_years',
+        x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
+        y: y(0) - heightBars / 2,
+        width: heightBars * 0.05,
         height: heightBars * equipos_por_grupos,
         transform: `translate(${margin_left * 2}, 0)`,
       })
       .styles({
         fill: black_color,
         opacity: 0.4,
-      });
+      }); */
 
-    svg
+    /* svg
       .append('rect')
       .attrs({
         class: 'bars_names',
@@ -1639,7 +1630,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
       })
       .styles({
         fill: 'url(#areaGradient0)',
-      });
+      }); */
       /* if (nombre !== 'Defensa y Justicia') return; */
 
     names_1.forEach((nombre) => {
@@ -1781,7 +1772,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
 
             svg
               .append('image')
-              .style('filter', 'url(#dropshadow)')
+              /* .style('filter', 'url(#dropshadow)') */
               .attrs({
                 transform: `translate(${margin_left * 2}, 0)`,
                 class: 'line',
@@ -1789,6 +1780,18 @@ grupos_1.forEach((grupo, indice_grupo) => {
                 y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
                 height: defaults.mini_logo.size1,
                 href: pts1.vs != 'none' ? `./escudos/${team.vs.split('-')[0]}.png` : '',
+              });
+
+              svg
+              .append('image')
+              /* .style('filter', 'url(#dropshadow)') */
+              .attrs({
+                transform: `translate(${margin_left * 2}, 0)`,
+                class: 'line',
+                x: x(wks) + heightBars * 0.2 + (team.goles_fecha == not_played_yet ? (team.l_or_v == 'L' ? heightBars * 0.2 : -heightBars * 0.2) : 0) + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor + hor_not_played_yet + defaults.mini_logo.size1 * 0.35 + (team.l_or_v == 'L' ? -heightBars * 0.95 : 0),
+                y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
+                height: defaults.mini_logo.size1,
+                href: pts1.vs != 'none' ? team.simulado ? `./icons/simulated.png` : '' : '',
               });
 
             svg
@@ -3454,7 +3457,7 @@ if (localia) {
             'text-anchor': defaults.value.style.text_anchor,
             'alignment-baseline': defaults.value.style.alignment_baseline,
           })
-          .text((d) => d.value + (ress_ratio == '16:9' ? '' : ress_ratio == '1:1' ? '\xa0\xa0\xa0' : '\xa0'))
+          .text((d) => d.value + '')
       )
 
       .call((text) =>
@@ -4479,7 +4482,7 @@ if (localia) {
             'text-anchor': defaults.value.style.text_anchor,
             'alignment-baseline': defaults.value.style.alignment_baseline,
           })
-          .text((d) => d.value + (ress_ratio == '16:9' ? '' : ress_ratio == '1:1' ? '\xa0\xa0\xa0' : '\xa0'))
+          .text((d) => d.value + '')
       )
 
       .call((text) =>
@@ -5498,10 +5501,7 @@ const getValorDirecto = (() => {
   };
 })();
 
-const padding =
-  ress_ratio === '16:9' ? '' :
-  ress_ratio === '1:1' ? '\xa0\xa0\xa0' :
-  '\xa0';
+const padding = '';
 
 const commonStyles = {
   fill: black_color,
@@ -5841,6 +5841,25 @@ array_p.forEach((p, index) => {
     renderGroup(yearSlice, 0, p, index);
   }
 });
+
+svg.append('rect').attrs({
+    x: 0,
+    y: 0,
+    width: width,
+    height: height,
+    fill: 'green',
+    opacity: 0.3
+  });
 };
 
-render(final_list1, nombre_torneo, puntos_por_partido, probabilidades);
+/* totalCasosSimulados.forEach(d => {
+  render(d, nombre_torneo, puntos_por_partido, probabilidades);
+}) */
+
+/* render(totalCasosSimulados[index1], nombre_torneo, puntos_por_partido, probabilidades); */
+/* const timer = d3.interval((elapsed) => {
+  render(totalCasosSimulados[index1], nombre_torneo, puntos_por_partido, probabilidades);
+  index1++
+  console.log(index1, totalCasosSimulados.length-1)
+  if (index1 >= totalCasosSimulados.length-1) timer.stop(); // Stop after 5 seconds
+}, 100); */
