@@ -1,27 +1,45 @@
-/* global d3 */
 export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/sudamericana2026.csv');
+
+  /* let torneos = [...new Set(data1.map((d) => d.torneo))]
+  data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
+
   let nombre_torneo = data1[0].torneo.replace('Torneo ', '');
   let puntos_por_partido = 3;
   let year_torneo = parseInt(data1[0].torneo.split(' ').slice(-1));
   year_torneo < 1996 ? (puntos_por_partido = 2) : '';
   data1[0].torneo == 'Torneo Apertura 1995' ? (puntos_por_partido = 3) : '';
 
-  let verEquipo = 'River Plate'
-  let grupoDeVerEquipo = data1.filter(d => d.local == verEquipo || d.visitante == verEquipo)
-  console.log(grupoDeVerEquipo)
+  /* let verEquipo = 'River Plate'
+  let grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1] */
 
-  console.log(structuredClone(data1));
-  data1 = data1.filter((d) => d.local.split('-')[1] == 'H' || d.visitante.split('-')[1] == 'H');
+  /* console.log(structuredClone(data1));
+  data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
   data1.forEach((d) => {
     d.local = d.local.split('-')[0];
     d.visitante = d.visitante.split('-')[0];
   });
-  console.log(structuredClone(data1));
+  console.log(structuredClone(data1)); */
 
-  let competencia = 'libertadores';
+  let competencia = nombre_torneo.split(' ')[0];
+
+  /* console.log(nombre_torneo)
+
+  function clasificados_por_competencia1 () {
+    if (nombre_torneo.toLowerCase().includes('libertadores')) return 2 
+    return 1
+  }
+
+  console.log(clasificados_por_competencia1()) */
+
   const clasificados_por_competencia = {
-    libertadores: 2,
+    Campeonato: 1,
+    Apertura: 8,
+    WorldCup: 2,
+    ClubWorldCup: 2,
+    ELIMINATORIAS: 7,
+    Libertadores: 2,
+    Sudamericana: 2,
     argentina: 8,
     mundial: 2,
   };
@@ -38,8 +56,6 @@ export async function procesarDatos() {
     }
   }) */
 
-  /* let torneos = [...new Set(data1.map((d) => d.torneo))]
-  data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
 
   /*   function detectarGrupos(partidos) {
 
@@ -442,7 +458,13 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   const LAMBDAS = {
     mundial: { local: 1.35, visitante: 1.35 },
     argentina: { local: 1.1, visitante: 0.8 },
-    libertadores: { local: 1.4, visitante: 0.81 },
+    Campeonato: { local: 1.1, visitante: 0.8 },
+    Apertura: { local: 1.1, visitante: 0.8 },
+    WorldCup: { local: 1.35, visitante: 1.35 },
+    ClubWorldCup: { local: 1.35, visitante: 1.35 },
+    ELIMINATORIAS: { local: 1.4, visitante: 0.81 },
+    Libertadores: { local: 1.4, visitante: 0.81 },
+    Sudamericana: { local: 1.4, visitante: 0.81 },
     premierLeague: { local: 1.55, visitante: 1.15 },
     españa: { local: 1.55, visitante: 1.1 },
     bundesliga: { local: 1.65, visitante: 1.2 },
@@ -577,7 +599,7 @@ console.log(generarResultado('bundesliga'))  */
 
       // Calcular posiciones con este escenario y registrar quiénes clasifican
       obtenerGrupos(data1).forEach((d) => {
-        let grupo = partidosSimulados; /* .filter(e => e.local.split('-')[1] == d) */
+        let grupo = partidosSimulados.filter(e => e.local.split('-')[1] == d)
 
         /* const tabla = calcularPosiciones(grupo); */
         const orden = calcularYOrdenarTabla(grupo);
@@ -816,8 +838,8 @@ data1.forEach(d => {
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, 1000);
-  console.table(probabilidades);
+  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, 100);
+  /* console.table(probabilidades)
 
   function eliminarDuplicados(simulaciones) {
     const vistas = new Set();
@@ -860,17 +882,19 @@ data1.forEach(d => {
   console.log(casos1)
   console.log(sinDuplicados1)
   console.log(ordenados1)
-
+ */
   let totalCasosSimulados = [];
 
-  ordenados1.forEach((simulacion) => {
-    console.log(simulacion[1]);
-    data1 = simulacion[1];
+  for (let indexFor = 0; indexFor < 1; indexFor++) {
+
+    /* console.log(ordenados1[indexFor][1]); */
+    
+    /* data1 = ordenados1[indexFor][1];
 
     data1.forEach(d => {
     d.goles_local = d.goles_local.toString()
     d.goles_visitante = d.goles_visitante.toString()
-    })
+    }) */
 
     /* let puntos_por_partido = 3;
     let year_torneo = parseInt(data1[0].torneo.split(' ').slice(-1));
@@ -1447,6 +1471,7 @@ data1.forEach(d => {
         diferencia_de_goles1: final_list1[final_list1.length - 1].diferencia_de_goles1,
         goleadas: final_list1[final_list1.length - 1].goleadas,
         goleadas_en_contra: final_list1[final_list1.length - 1].goleadas_en_contra,
+        simulado: final_list1[final_list1.length - 1].simulado
       });
     });
 
@@ -1486,6 +1511,7 @@ data1.forEach(d => {
       racha_sin_victorias: 0,
       racha_sin_derrotas: 0,
       racha_sin_empates: 0,
+      simulado: false
     });
 
     const filtrado = final_list1.filter((e) => e.vs != 'none');
@@ -1522,7 +1548,7 @@ data1.forEach(d => {
     final_list1 = final_list1.filter((d) => d.name != 'hola');
 
     totalCasosSimulados.push(final_list1);
-  });
+  };
 
   console.log(totalCasosSimulados);
   console.log(totalCasosSimulados[0]);

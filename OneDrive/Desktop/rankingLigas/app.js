@@ -36,21 +36,30 @@ let grey_color = '#616161';
 let black_color = '#202020';
 
 let not_played_yet = 99;
-let not_played_yet_x = 0.4;
+let not_played_yet_x = 0.5;
 let fechas_not_played = 1;
 
 let localia = false;
 let stats_on_top = false;
 let datos_totales = false;
-let competencia = 'libertadores';
+
+let competencia = nombre_torneo.split(' ')[0];
 
 const clasificados_por_competencia = {
-  libertadores: 2,
+  Campeonato: 1,
+  Apertura: 8,
+  WorldCup: 2,
+  ClubWorldCup: 2,
+  ELIMINATORIAS: 7,
+  Libertadores: 2,
+  Sudamericana: 2,
   argentina: 8,
   mundial: 2,
 };
 
 let clasificacion_por_grupo = clasificados_por_competencia[competencia];
+
+console.log(clasificacion_por_grupo)
 
 d3.timeFormatDefaultLocale({
   decimal: ',',
@@ -86,6 +95,8 @@ const parseDate = (str) => new Date(str);
   };
 
 const render = (data, nombre_torneo, puntos_por_partido, probabilidades) => {
+
+  console.log(data)
   
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
@@ -100,8 +111,6 @@ const render = (data, nombre_torneo, puntos_por_partido, probabilidades) => {
     bottom: height * 0,
     left: width * 0.05,
   };
-
-  heightBars = 50
 
   let playoffs = {
     32: 6,
@@ -150,16 +159,18 @@ const render = (data, nombre_torneo, puntos_por_partido, probabilidades) => {
 
   fechas_not_played = d3.max(data, (d) => d.partidos_jugados + d.partidos_jugados1);
   
-  let weeks_i = (heightBars * 2) * (dates.length) - ((heightBars) * (((dates.length-1)-fechas_not_played)-1));
+  let fechas_no_jugadas = ((dates.length-1)-fechas_not_played)-1
+  let weeks = heightBars * 2;
+  let weeks_i = weeks * (dates.length)/*  - ((heightBars) * (((dates.length-1)-fechas_not_played)-1)); */
+  /* let weeks_i = weeks * (dates.length) - ((weeks*not_played_yet_x) * fechas_no_jugadas); */
 
-  width = weeks_i + heightBars * 7
+
+  width = weeks * (dates.length) - ((weeks*not_played_yet_x) * fechas_no_jugadas) + heightBars * 9
   height = top_n*heightBars + margin.top
 
   let margin_left = heightBars;
-  let weeks_o = heightBars * 2;
-  let weeks = weeks_o;
 
-  console.log(weeks, weeks_o, weeks_i, fechas_not_played, ((dates.length-1)-fechas_not_played)-1, not_played_yet_x, dates.length, margin_right)
+  console.log(fechas_no_jugadas, heightBars, weeks, weeks_i, fechas_not_played, ((dates.length-1)-fechas_not_played)-1, not_played_yet_x, dates.length, margin_right)
   
   console.log(`[${width}, ${height}]`);
 
@@ -528,7 +539,7 @@ const svg = d3
     let arr = ['local', 'visitante'];
     let arr_w = [5, 3, 1.75, 1];
 
-    rondas.forEach((pp, ppi) => {
+    /* rondas.forEach((pp, ppi) => {
       svg
         .append('text')
         .attrs({
@@ -544,9 +555,9 @@ const svg = d3
           'alignment-baseline': 'central',
         })
         .text(playoffs_names[primera_ronda_playoff / pp]);
-    });
+    }); */
 
-    arr.forEach((dd) => {
+    /* arr.forEach((dd) => {
       arr_w.forEach((ee, ii) => {
         svg
           .selectAll('.path')
@@ -877,7 +888,7 @@ const svg = d3
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
-    });
+    }); */
 
     /* yearSlice.forEach(d => {
       d.rankInGroup <= 1 && d.fecha == '' ? d.fecha = 'Fecha 1/8' : ''
@@ -974,6 +985,7 @@ const svg = d3
   }
 
   let fechasNotPlayed = (i) => {
+    
     let a = () => {
       if (i > fechas_not_played) {
         return x(i - not_played_yet_x * i);
@@ -1024,9 +1036,15 @@ const svg = d3
       let filterr = data.filter((d) => d.semana == semana && d.vs != 'none').sort((a, b) => parseDate(a.dia_large) - parseDate(b.dia_large));
       let first_date = filterr[0].dia_large
       let last_date = filterr[filterr.length-1].dia_large
+      let mismo_mes = data.filter((d) => d.semana == semana-1 && d.vs != 'none').sort((a, b) => parseDate(a.dia_large) - parseDate(b.dia_large))[0]?.dia_large.split(' ')[0] == first_date.split(' ')[0]
 
-      if (first_date==last_date) return filterr[0].dia_large
-      return filterr[0].dia_large + '-' + filterr[filterr.length-1].dia_large.split(' ')[1]
+      if (!mismo_mes) {
+        if (first_date==last_date) return filterr[0].dia_large
+        return filterr[0].dia_large + '-' + filterr[filterr.length-1].dia_large.split(' ')[1]
+      } else {
+        if (first_date==last_date) return filterr[0].dia_large.split(' ')[1]
+        return filterr[0].dia_large.split(' ')[1] + '-' + filterr[filterr.length-1].dia_large.split(' ')[1]
+      }
     });
 
   svg
@@ -1190,7 +1208,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
   svg.append('text')
     .attrs({
       class: 'name',
-      x: weeks_o,
+      x: weeks,
       y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
     })
     .styles({
@@ -1244,6 +1262,26 @@ grupos_1.forEach((grupo, indice_grupo) => {
       height: heightBars * equipos_por_grupos,
     })
     .style('fill', 'url(#areaGradient0)');
+
+    svg.append('rect')
+    .attrs({
+      class: 'bars_names',
+      x: 0,
+      y: y(offsetGrupo),
+      width: barWidth,
+      height: heightBars / 2,
+    })
+    .style('fill', 'url(#areaGradient1)');
+
+    svg.append('rect')
+    .attrs({
+      class: 'bars_names',
+      x: 0,
+      y: y(offsetGrupo) - heightBars,
+      width: barWidth,
+      height: heightBars / 2,
+    })
+    .style('fill', 'url(#areaGradient2)');
 
   // Líneas de posición por equipo
   names_1
@@ -1383,7 +1421,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
 
                 svg
                   .append('image')
-                  .style('filter', 'url(#dropshadow)')
+                  /* .style('filter', 'url(#dropshadow)') */
                   .attrs({
                     transform: `translate(${margin_left * 2}, 0)`,
                     class: 'line',
@@ -1466,7 +1504,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
 
               svg
                 .append('image')
-                .style('filter', 'url(#dropshadow)')
+                /* .style('filter', 'url(#dropshadow)') */
                 .attrs({
                   transform: `translate(${margin_left * 2}, 0)`,
                   class: 'line',
@@ -1619,13 +1657,13 @@ grupos_1.forEach((grupo, indice_grupo) => {
         opacity: 0.4,
       }); */
 
-    /* svg
+   /*  svg
       .append('rect')
       .attrs({
         class: 'bars_names',
         x: margin_left - 1,
         y: y(0),
-        width: margin_left / 4,
+        width: width,
         height: heightBars * equipos_por_grupos,
       })
       .styles({
@@ -1867,7 +1905,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
 
           svg
             .append('image')
-            .style('filter', 'url(#dropshadow)')
+            /* .style('filter', 'url(#dropshadow)') */
             .attrs({
               transform: `translate(${margin_left * 2}, 0)`,
               class: 'line',
@@ -1989,6 +2027,18 @@ grupos_1.forEach((grupo, indice_grupo) => {
   areaGradient0.append('stop').attr('offset', '0%').attr('stop-color', '#000').attr('stop-opacity', 0.2);
 
   areaGradient0.append('stop').attr('offset', '100%').attr('stop-color', '#000').attr('stop-opacity', 0);
+
+  var areaGradient1 = svg.append('defs').append('linearGradient').attr('id', 'areaGradient1').attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+
+  areaGradient1.append('stop').attr('offset', '0%').attr('stop-color', '#000').attr('stop-opacity', 0.2);
+
+  areaGradient1.append('stop').attr('offset', '100%').attr('stop-color', '#000').attr('stop-opacity', 0);
+
+  var areaGradient2 = svg.append('defs').append('linearGradient').attr('id', 'areaGradient2').attr('x1', '0%').attr('y1', '100%').attr('x2', '0%').attr('y2', '0%');
+
+  areaGradient2.append('stop').attr('offset', '0%').attr('stop-color', '#000').attr('stop-opacity', 0.2);
+
+  areaGradient2.append('stop').attr('offset', '100%').attr('stop-color', '#000').attr('stop-opacity', 0);
 
   if (grupos > 1) {
     grupos_1.forEach((e, index) => {
@@ -5638,6 +5688,15 @@ if (grupos > 1) {
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
+        .append('circle')
+        .attrs({
+          cx: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + (defaults.logo.size1 * 1.1 / 3),
+          cy: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + (defaults.logo.size1 * 1.1 / 3), //ojo d.rank
+          r: defaults.logo.size1 * 0.225,
+        })
+
+      rankingSVG
+        .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
         .attrs({
           x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1 / 3),
@@ -5645,7 +5704,7 @@ if (grupos > 1) {
           href: (d) => `./flags/${getFlag(d.name.split('-')[0])}`,
           height: defaults.logo.size1 * 0.4,
         })
-        .style('filter', 'url(#dropshadow)');
+        /* .style('filter', 'url(#dropshadow)'); */
 
     });
   } else {
@@ -5842,22 +5901,25 @@ array_p.forEach((p, index) => {
   }
 });
 
-svg.append('rect').attrs({
+/* svg.append('rect').attrs({
     x: 0,
     y: 0,
     width: width,
     height: height,
-    fill: 'green',
+    fill: sort_teams1(data.filter(d => d.vs == 'none')).slice(0, 2).map(d => d.name).includes('Racing') ? 'green' : 'red',
     opacity: 0.3
-  });
+  }); */
+
+  /* console.log(sort_teams1(data.filter(d => d.vs == 'none')).slice(0, 2).map(d => d.name).includes('Racing')) */
 };
 
 /* totalCasosSimulados.forEach(d => {
   render(d, nombre_torneo, puntos_por_partido, probabilidades);
 }) */
 
-/* render(totalCasosSimulados[index1], nombre_torneo, puntos_por_partido, probabilidades); */
-/* const timer = d3.interval((elapsed) => {
+render(totalCasosSimulados[index1], nombre_torneo, puntos_por_partido, probabilidades);
+
+/* const timer = d3.interval((e) => {
   render(totalCasosSimulados[index1], nombre_torneo, puntos_por_partido, probabilidades);
   index1++
   console.log(index1, totalCasosSimulados.length-1)

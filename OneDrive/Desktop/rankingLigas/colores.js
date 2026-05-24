@@ -76,7 +76,16 @@ export function colores(name) {
         'Millonarios': ["rayado", "#293378", "#161f5c"],
         'Boston River': ["rayado", "#016634", "#eb3236"],
         'Deportivo Cuenca': ["rayado", "#e6312d", "#9e2b27"],
-        'Caracas': ["rayado", "#ee3124", "#7e221f"],
+        'Argentina': ["rayado", "#9fcdef", "#fff"],
+        'Colombia': ["rayado", "#f6e200", "#c4b300"],
+        'Ecuador': ["rayado", "#002255", "#ffce00"],
+        'Uruguay': ["rayado", "#7fa0d2", "#4b6b9b"],
+        'Brasil': ["linea fina", "#fddc02", "#009c54"],
+        'Bolivia': ["rayado", "#006400", "#003600"],
+        'Venezuela': ["rayado", "#510e26", "#8b1a40"],
+        'Paraguay': ["rayado", "#fff", "#e20815"],
+        'Chile': ["linea", "#fff", "#e30c19"],
+        'Peru': ["linea", "#e41d25", "#fff"],
     }
 
     function colores1(name) {
