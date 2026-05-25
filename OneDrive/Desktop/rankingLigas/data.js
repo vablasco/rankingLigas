@@ -1,5 +1,5 @@
 export async function procesarDatos() {
-  let data1 = await d3.csv('./torneos/sudamericana2026.csv');
+  let data1 = await d3.csv('./torneos/mundial2026.csv');
 
   /* let torneos = [...new Set(data1.map((d) => d.torneo))]
   data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
@@ -41,7 +41,7 @@ export async function procesarDatos() {
     Libertadores: 2,
     Sudamericana: 2,
     argentina: 8,
-    mundial: 2,
+    Mundial: 2,
   };
 
   let clasificacion_por_grupo = clasificados_por_competencia[competencia];
@@ -456,7 +456,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   }
 
   const LAMBDAS = {
-    mundial: { local: 1.35, visitante: 1.35 },
+    Mundial: { local: 1.35, visitante: 1.35 },
     argentina: { local: 1.1, visitante: 0.8 },
     Campeonato: { local: 1.1, visitante: 0.8 },
     Apertura: { local: 1.1, visitante: 0.8 },
@@ -839,9 +839,8 @@ data1.forEach(d => {
   // Convertir conteos a porcentajes
 
   let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, 100);
-  /* console.table(probabilidades)
 
-  function eliminarDuplicados(simulaciones) {
+  /* function eliminarDuplicados(simulaciones) {
     const vistas = new Set();
 
     return simulaciones.filter((sim) => {
@@ -855,9 +854,9 @@ data1.forEach(d => {
     });
   }
 
-  const sinDuplicados1 = eliminarDuplicados(casos1);
+  const sinDuplicados1 = eliminarDuplicados(casos1); */
 
-  const ordenados1 = [...sinDuplicados1].sort((a, b) => {
+  /* const ordenados1 = [...sinDuplicados1].sort((a, b) => {
     const getPts = (sim, equipo) => sim[0].find((t) => t.equipo === equipo)?.pts ?? 0;
 
     const posRiverA = a[0].find((t) => t.equipo === verEquipo)?.pos;
@@ -877,29 +876,21 @@ data1.forEach(d => {
     const difB = riverB - bajoB;
 
     return difB - difA; // ← mayor diferencia primero
-  });
+  }); */
 
-  console.log(casos1)
-  console.log(sinDuplicados1)
-  console.log(ordenados1)
- */
   let totalCasosSimulados = [];
 
   for (let indexFor = 0; indexFor < 1; indexFor++) {
 
     /* console.log(ordenados1[indexFor][1]); */
     
-    /* data1 = ordenados1[indexFor][1];
+    /* data1 = sinDuplicados1[4][1];
 
     data1.forEach(d => {
     d.goles_local = d.goles_local.toString()
     d.goles_visitante = d.goles_visitante.toString()
     }) */
 
-    /* let puntos_por_partido = 3;
-    let year_torneo = parseInt(data1[0].torneo.split(' ').slice(-1));
-    year_torneo < 1996 ? (puntos_por_partido = 2) : '';
-    data1[0].torneo == 'Torneo Apertura 1995' ? (puntos_por_partido = 3) : ''; */
     let fecha_adicional = 'Def.';
 
     function mes(mes) {

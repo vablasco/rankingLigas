@@ -2,8 +2,8 @@ torneo,fecha,dia,local,visitante,goles_local,goles_visitante
 Torneo Libertadores 2026,Fecha 1,Apr 07 2026,DepLaGuaira-C,Fluminense-C,0,0
 Torneo Libertadores 2026,Fecha 1,Apr 07 2026,IndepRivadavia-C,Bolivar-C,1,0
 Torneo Libertadores 2026,Fecha 1,Apr 07 2026,AlwaysReady-G,LDUQuito-G,0,1
-Torneo Libertadores 2026,Fecha 1,Apr 07 2026,BarcelonaEC-D,Cruzeiro-D,0,1
-Torneo Libertadores 2026,Fecha 1,Apr 07 2026,UnivCatolica-D,BocaJuniors-D,1,2
+Torneo Libertadores 2026,Fecha 1,Apr 07 2026,Barcelona-D,Cruzeiro-D,0,1
+Torneo Libertadores 2026,Fecha 1,Apr 07 2026,Universidad Catolica-D,Boca Juniors-D,1,2
 Torneo Libertadores 2026,Fecha 1,Apr 07 2026,DepTolima-B,Universitario-B,0,0
 Torneo Libertadores 2026,Fecha 1,Apr 08 2026,CoquimboUnido-B,Nacional-B,1,1
 Torneo Libertadores 2026,Fecha 1,Apr 08 2026,Mirassol-G,Lanús-G,1,0
@@ -18,11 +18,11 @@ Torneo Libertadores 2026,Fecha 1,Apr 09 2026,SantaFe-E,Peñarol-E,1,1
 Torneo Libertadores 2026,Fecha 2,Apr 14 2026,CerroPorteño-F,Junior-F,1,0
 Torneo Libertadores 2026,Fecha 2,Apr 14 2026,EstudiantesLP-A,Cusco-A,2,1
 Torneo Libertadores 2026,Fecha 2,Apr 14 2026,Nacional-B,DepTolima-B,3,1
-Torneo Libertadores 2026,Fecha 2,Apr 14 2026,BocaJuniors-D,BarcelonaEC-D,3,0
+Torneo Libertadores 2026,Fecha 2,Apr 14 2026,Boca Juniors-D,Barcelona-D,3,0
 Torneo Libertadores 2026,Fecha 2,Apr 14 2026,Bolivar-C,DepLaGuaira-C,1,1
 Torneo Libertadores 2026,Fecha 2,Apr 14 2026,LDUQuito-G,Mirassol-G,2,0
 Torneo Libertadores 2026,Fecha 2,Apr 14 2026,Universitario-B,CoquimboUnido-B,0,2
-Torneo Libertadores 2026,Fecha 2,Apr 15 2026,Cruzeiro-D,UnivCatolica-D,1,2
+Torneo Libertadores 2026,Fecha 2,Apr 15 2026,Cruzeiro-D,Universidad Catolica-D,1,2
 Torneo Libertadores 2026,Fecha 2,Apr 15 2026,Libertad-H,RosarioCentral-H,0,1
 Torneo Libertadores 2026,Fecha 2,Apr 15 2026,Corinthians-E,SantaFe-E,2,0
 Torneo Libertadores 2026,Fecha 2,Apr 15 2026,Fluminense-C,IndepRivadavia-C,1,2
@@ -34,12 +34,12 @@ Torneo Libertadores 2026,Fecha 2,Apr 16 2026,Peñarol-E,Platense-E,1,2
 Torneo Libertadores 2026,Fecha 3,Apr 28 2026,Lanús-G,LDUQuito-G,1,0
 Torneo Libertadores 2026,Fecha 3,Apr 28 2026,Libertad-H,IndepDelValle-H,2,3
 Torneo Libertadores 2026,Fecha 3,Apr 28 2026,UnivCentral-H,RosarioCentral-H,0,3
-Torneo Libertadores 2026,Fecha 3,Apr 28 2026,Cruzeiro-D,BocaJuniors-D,1,0
+Torneo Libertadores 2026,Fecha 3,Apr 28 2026,Cruzeiro-D,Boca Juniors-D,1,0
 Torneo Libertadores 2026,Fecha 3,Apr 28 2026,DepTolima-B,CoquimboUnido-B,3,0
 Torneo Libertadores 2026,Fecha 3,Apr 28 2026,SportingCristal-F,Junior-F,2,0
 Torneo Libertadores 2026,Fecha 3,Apr 29 2026,Mirassol-G,AlwaysReady-G,2,0
 Torneo Libertadores 2026,Fecha 3,Apr 29 2026,Platense-E,SantaFe-E,2,1
-Torneo Libertadores 2026,Fecha 3,Apr 29 2026,BarcelonaEC-D,UnivCatolica-D,1,2
+Torneo Libertadores 2026,Fecha 3,Apr 29 2026,Barcelona-D,Universidad Catolica-D,1,2
 Torneo Libertadores 2026,Fecha 3,Apr 29 2026,CerroPorteño-F,Palmeiras-F,1,1
 Torneo Libertadores 2026,Fecha 3,Apr 29 2026,EstudiantesLP-A,Flamengo-A,1,1
 Torneo Libertadores 2026,Fecha 3,Apr 29 2026,Universitario-B,Nacional-B,4,2
@@ -49,7 +49,7 @@ Torneo Libertadores 2026,Fecha 3,Apr 30 2026,Corinthians-E,Peñarol-E,2,0
 Torneo Libertadores 2026,Fecha 3,Apr 30 2026,IndepMedellin-A,Cusco-A,1,0
 Torneo Libertadores 2026,Fecha 4,May 05 2026,RosarioCentral-H,Libertad-H,1,0
 Torneo Libertadores 2026,Fecha 4,May 05 2026,SportingCristal-F,Palmeiras-F,0,2
-Torneo Libertadores 2026,Fecha 4,May 05 2026,BarcelonaEC-D,BocaJuniors-D,1,0
+Torneo Libertadores 2026,Fecha 4,May 05 2026,Barcelona-D,Boca Juniors-D,1,0
 Torneo Libertadores 2026,Fecha 4,May 05 2026,UnivCentral-H,IndepDelValle-H,2,0
 Torneo Libertadores 2026,Fecha 4,May 05 2026,AlwaysReady-G,Lanús-G,4,0
 Torneo Libertadores 2026,Fecha 4,May 06 2026,Cusco-A,EstudiantesLP-A,1,1
@@ -57,7 +57,7 @@ Torneo Libertadores 2026,Fecha 4,May 06 2026,DepLaGuaira-C,Bolivar-C,1,1
 Torneo Libertadores 2026,Fecha 4,May 06 2026,IndepRivadavia-C,Fluminense-C,1,1
 Torneo Libertadores 2026,Fecha 4,May 06 2026,SantaFe-E,Corinthians-E,1,1
 Torneo Libertadores 2026,Fecha 4,May 06 2026,DepTolima-B,Nacional-B,3,0
-Torneo Libertadores 2026,Fecha 4,May 06 2026,UnivCatolica-D,Cruzeiro-D,0,0
+Torneo Libertadores 2026,Fecha 4,May 06 2026,Universidad Catolica-D,Cruzeiro-D,0,0
 Torneo Libertadores 2026,Fecha 4,May 07 2026,Mirassol-G,LDUQuito-G,2,0
 Torneo Libertadores 2026,Fecha 4,May 07 2026,Platense-E,Peñarol-E,1,1
 Torneo Libertadores 2026,Fecha 4,May 07 2026,CoquimboUnido-B,Universitario-B,2,1
@@ -68,7 +68,7 @@ Torneo Libertadores 2026,Fecha 5,May 19 2026,Fluminense-C,Bolivar-C,99,99
 Torneo Libertadores 2026,Fecha 5,May 19 2026,RosarioCentral-H,UnivCentral-H,99,99
 Torneo Libertadores 2026,Fecha 5,May 19 2026,AlwaysReady-G,Mirassol-G,1,2
 Torneo Libertadores 2026,Fecha 5,May 19 2026,SantaFe-E,Platense-E,99,99
-Torneo Libertadores 2026,Fecha 5,May 19 2026,BocaJuniors-D,Cruzeiro-D,99,99
+Torneo Libertadores 2026,Fecha 5,May 19 2026,Boca Juniors-D,Cruzeiro-D,1,1
 Torneo Libertadores 2026,Fecha 5,May 19 2026,IndepDelValle-H,Libertad-H,99,99
 Torneo Libertadores 2026,Fecha 5,May 20 2026,Nacional-B,Universitario-B,99,99
 Torneo Libertadores 2026,Fecha 5,May 20 2026,Flamengo-A,EstudiantesLP-A,99,99
@@ -78,7 +78,7 @@ Torneo Libertadores 2026,Fecha 5,May 20 2026,Junior-F,SportingCristal-F,99,99
 Torneo Libertadores 2026,Fecha 5,May 20 2026,Cusco-A,IndepMedellin-A,99,99
 Torneo Libertadores 2026,Fecha 5,May 21 2026,DepLaGuaira-C,IndepRivadavia-C,99,99
 Torneo Libertadores 2026,Fecha 5,May 21 2026,Peñarol-E,Corinthians-E,99,99
-Torneo Libertadores 2026,Fecha 5,May 21 2026,UnivCatolica-D,BarcelonaEC-D,99,99
+Torneo Libertadores 2026,Fecha 5,May 21 2026,Universidad Catolica-D,Barcelona-D,2,0
 Torneo Libertadores 2026,Fecha 6,May 26 2026,Lanús-G,Mirassol-G,99,99
 Torneo Libertadores 2026,Fecha 6,May 26 2026,LDUQuito-G,AlwaysReady-G,99,99
 Torneo Libertadores 2026,Fecha 6,May 26 2026,EstudiantesLP-A,IndepMedellin-A,99,99
@@ -93,5 +93,5 @@ Torneo Libertadores 2026,Fecha 6,May 27 2026,Fluminense-C,DepLaGuaira-C,99,99
 Torneo Libertadores 2026,Fecha 6,May 27 2026,Peñarol-E,SantaFe-E,99,99
 Torneo Libertadores 2026,Fecha 6,May 28 2026,CerroPorteño-F,SportingCristal-F,99,99
 Torneo Libertadores 2026,Fecha 6,May 28 2026,Palmeiras-F,Junior-F,99,99
-Torneo Libertadores 2026,Fecha 6,May 28 2026,BocaJuniors-D,UnivCatolica-D,99,99
-Torneo Libertadores 2026,Fecha 6,May 28 2026,Cruzeiro-D,BarcelonaEC-D,99,99
+Torneo Libertadores 2026,Fecha 6,May 28 2026,Boca Juniors-D,Universidad Catolica-D,99,99
+Torneo Libertadores 2026,Fecha 6,May 28 2026,Cruzeiro-D,Barcelona-D,99,99

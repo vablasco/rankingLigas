@@ -42,6 +42,7 @@ let fechas_not_played = 1;
 let localia = false;
 let stats_on_top = false;
 let datos_totales = false;
+let repechaje = true;
 
 let competencia = nombre_torneo.split(' ')[0];
 
@@ -54,7 +55,7 @@ const clasificados_por_competencia = {
   Libertadores: 2,
   Sudamericana: 2,
   argentina: 8,
-  mundial: 2,
+  Mundial: 2,
 };
 
 let clasificacion_por_grupo = clasificados_por_competencia[competencia];
@@ -93,6 +94,35 @@ const parseDate = (str) => new Date(str);
         opacity: 1,
       });
   };
+
+const COUNTRY_TEAMS = {
+        ar: ["Barracas Central", "Racing", "Tigre", "Riestra", "San Lorenzo", "River Plate", "Boca Juniors"],
+        br: ["Vasco Da Gama", "Sao Paulo", "Atletico Mineiro", "Gremio", "Botafogo", "Santos", "Bragantino", "Cruzeiro"],
+        cl: ["OHiggins", "Audax Italiano", "Palestino", "Deportivo Recoleta", "Universidad Catolica"],
+        co: ["Millonarios", "America De Cali"],
+        bo: ["Independiente Petrolero", "Blooming"],
+        ec: ["Deportivo Cuenca", "Macara", "Barcelona"],
+        pe: ["Alianza Atletico", "Cienciano"],
+        uy: ["Boston River", "Montevideo City Torque", 'Juventud'],
+        ve: ["Academia Puerto Cabello", "Caracas", "Carabobo"],
+        py: ["Olimpia"],
+        mx: ["México"],
+        za: ["Sudáfrica"],
+        cz: ["República Checa"],
+        kr: ["Corea del Sur"]
+      };
+
+      const TEAM_COUNTRY = Object.fromEntries(
+        Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) =>
+          teams.map(team => [team, code])
+        )
+      );
+
+      const getFlag = (raw) => {
+        const name = raw.replace(/-[A-Z]$/, "");
+        const code = TEAM_COUNTRY[name];
+        return code ? `${code}.svg` : null;
+      };
 
 const render = (data, nombre_torneo, puntos_por_partido, probabilidades) => {
 
@@ -1232,9 +1262,27 @@ grupos_1.forEach((grupo, indice_grupo) => {
       width: barWidth,
       height: heightBars,
     })
-    .style('fill', (d, i) => i < clasificacion_por_grupo
+    /* .style('fill', (d, i) => i < clasificacion_por_grupo
       ? (i % 2 === 1 ? '#94e694' : '#76c476')
       : (i % 2 === 1 ? '#dddddd' : '#c2c2c2')
+    ); */
+    .style('fill', (d, i) => {
+      if (i < clasificacion_por_grupo) {
+        if (i % 2 === 1) {
+          return '#94e694'
+        } else {
+          return '#76c476'
+        }
+      } else if (repechaje && i == clasificacion_por_grupo) {
+        return '#ffca88'
+      } else {
+        if (i % 2 === 1) {
+          return '#dddddd'
+        } else {
+          return '#c2c2c2'
+        }
+      }
+    }
     );
 
   // Líneas verticales de fechas
@@ -5650,30 +5698,6 @@ if (grupos > 1) {
 
   if (grupos > 1) {
     grupos_1.forEach((grupo, indice_grupo) => {
-      const COUNTRY_TEAMS = {
-        ar: ["Barracas Central", "Racing", "Tigre", "Riestra", "San Lorenzo", "River Plate"],
-        br: ["Vasco Da Gama", "Sao Paulo", "Atletico Mineiro", "Gremio", "Botafogo", "Santos", "Bragantino"],
-        cl: ["OHiggins", "Audax Italiano", "Palestino", "Deportivo Recoleta"],
-        co: ["Millonarios", "America De Cali"],
-        bo: ["Independiente Petrolero", "Blooming"],
-        ec: ["Deportivo Cuenca", "Macara"],
-        pe: ["Alianza Atletico", "Cienciano"],
-        uy: ["Boston River", "Montevideo City Torque", 'Juventud'],
-        ve: ["Academia Puerto Cabello", "Caracas", "Carabobo"],
-        py: ["Olimpia"],
-      };
-
-      const TEAM_COUNTRY = Object.fromEntries(
-        Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) =>
-          teams.map(team => [team, code])
-        )
-      );
-
-      const getFlag = (raw) => {
-        const name = raw.replace(/-[A-Z]$/, "");
-        const code = TEAM_COUNTRY[name];
-        return code ? `${code}.svg` : null;
-      };
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
