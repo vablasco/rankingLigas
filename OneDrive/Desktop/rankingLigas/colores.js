@@ -86,6 +86,14 @@ export function colores(name) {
         'Paraguay': ["rayado", "#fff", "#e20815"],
         'Chile': ["linea", "#fff", "#e30c19"],
         'Peru': ["linea", "#e41d25", "#fff"],
+        'Bélgica': ["linea", "#e41d25", "#fff"],
+        'Estados Unidos': ["linea", "#e41d25", "#fff"],
+        'Francia': ["linea", "#e41d25", "#fff"],
+        'Nigeria': ["linea", "#e41d25", "#fff"],
+        'Alemania': ["linea", "#e41d25", "#fff"],
+        'Algeria': ["linea", "#e41d25", "#fff"],
+        'Países Bajos': ["linea", "#e41d25", "#fff"],
+        'México': ["linea", "#e41d25", "#fff"],
     }
 
     function colores1(name) {

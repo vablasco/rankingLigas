@@ -1,5 +1,5 @@
 export async function procesarDatos() {
-  let data1 = await d3.csv('./torneos/mundial2026.csv');
+  let data1 = await d3.csv('./torneos/data4.csv');
 
   /* let torneos = [...new Set(data1.map((d) => d.torneo))]
   data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
@@ -879,6 +879,7 @@ data1.forEach(d => {
   }); */
 
   let totalCasosSimulados = [];
+  let playoffs = [];
 
   for (let indexFor = 0; indexFor < 1; indexFor++) {
 
@@ -948,7 +949,7 @@ data1.forEach(d => {
       }
     });
 
-    let torneo = data1.filter((d) => d.visitante != 'fifa');
+    let torneo = data1.filter((d) => d.visitante != 'fifa' && !d.fecha.includes('1/'));
 
     let dias = new Set(torneo.map((d) => d.dia).sort((a, b) => a - b));
     dias = new Set([...dias].map((d) => formatDate(d)));
@@ -960,9 +961,10 @@ data1.forEach(d => {
 
     let fechas_torneo2 = new Set(torneo.filter((d) => d.fecha.split(' ')[1] != fecha_adicional && !d.fecha.includes('1/')).map((d) => d.fecha));
     let fechas_def = torneo.filter((d) => d.fecha.split(' ')[1] == fecha_adicional);
-    let fechas_playoff = torneo.filter((d) => d.fecha.includes('1/'));
+    let fechas_playoff = data1.filter((d) => d.fecha.includes('1/'));
 
-    console.log(fechas_playoff);
+    playoffs.push(fechas_playoff);
+    console.log(fechas_playoff)
 
     let fechas_pospuestas = [];
 
@@ -1544,6 +1546,6 @@ data1.forEach(d => {
   console.log(totalCasosSimulados);
   console.log(totalCasosSimulados[0]);
 
-  window.__appData = { totalCasosSimulados, nombre_torneo, puntos_por_partido, probabilidades };
+  window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades };
   return window.__appData;
 }
