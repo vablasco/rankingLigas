@@ -1,8 +1,181 @@
 export async function procesarDatos() {
-  let data1 = await d3.csv('./torneos/data4.csv');
+  let data1 = await d3.csv('./torneos/mundial2026.csv');
+
+  let playoffs = data1.filter((d) => d.fecha.includes('1/'));
+  console.log(playoffs)
 
   /* let torneos = [...new Set(data1.map((d) => d.torneo))]
   data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
+
+  // ============================================
+// 1. CALCULAR TABLA DE POSICIONES POR GRUPO
+// ============================================
+function calcularTablas(partidos) {
+  const grupos = {};
+
+  // Solo partidos de fase de grupos (Fecha 1, 2, 3)
+  partidos
+    .filter(p => ['Fecha 1', 'Fecha 2', 'Fecha 3'].includes(p.fecha))
+    .forEach(p => {
+      const grupo = p.local.split('-')[1];  // "Brasil-A" → "A"
+      if (!grupos[grupo]) grupos[grupo] = {};
+
+      [p.local, p.visitante].forEach(eq => {
+        if (!grupos[grupo][eq]) {
+          grupos[grupo][eq] = { equipo: eq, pts: 0, gf: 0, gc: 0 };
+        }
+      });
+
+      const gl = parseInt(p.goles_local);
+      const gv = parseInt(p.goles_visitante);
+
+      grupos[grupo][p.local].gf += gl;
+      grupos[grupo][p.local].gc += gv;
+      grupos[grupo][p.visitante].gf += gv;
+      grupos[grupo][p.visitante].gc += gl;
+
+      if (gl > gv) {
+        grupos[grupo][p.local].pts += 3;
+      } else if (gl < gv) {
+        grupos[grupo][p.visitante].pts += 3;
+      } else {
+        grupos[grupo][p.local].pts += 1;
+        grupos[grupo][p.visitante].pts += 1;
+      }
+    });
+
+  // Ordenar cada grupo y devolver 1ro y 2do
+  const clasificados = {};
+  Object.entries(grupos).forEach(([grupo, equipos]) => {
+    const sorted = Object.values(equipos).sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      const dgDiff = (b.gf - b.gc) - (a.gf - a.gc);
+      if (dgDiff !== 0) return dgDiff;
+      return b.gf - a.gf;
+    });
+    clasificados[`1${grupo}`] = sorted[0].equipo;  // "1A" → "Brasil-A"
+    clasificados[`2${grupo}`] = sorted[1].equipo;  // "2A" → "México-A"
+  });
+
+  return clasificados;
+}
+
+// ============================================
+// 2. DEFINIR LA LLAVE (solo una vez, es FIFA)
+// ============================================
+const LLAVE_FIFA = [
+  ['1A', '2B'],   // Octavos - Partido 0
+  ['1C', '2D'],   // Octavos - Partido 1
+  ['1E', '2F'],   // Octavos - Partido 2
+  ['1G', '2H'],   // Octavos - Partido 3
+  ['1B', '2A'],   // Octavos - Partido 4
+  ['1D', '2C'],   // Octavos - Partido 5
+  ['1F', '2E'],   // Octavos - Partido 6
+  ['1H', '2G'],   // Octavos - Partido 7
+];
+
+// ============================================
+// 3. BRACKET AUTOMÁTICO (reemplaza tu pirámide)
+// ============================================
+function buildBracket(clasificados) {
+  // Crear octavos con los equipos reales
+  const octavos = LLAVE_FIFA.map(([pos1, pos2], i) => ({
+    match: i,
+    home: clasificados[pos1],
+    away: clasificados[pos2],
+    homeKey: pos1,   // "1A"
+    awayKey: pos2,   // "2B"
+    winner: null,
+  }));
+
+  // Generar las rondas siguientes (vacías, se llenan con resultados)
+  const cuartos = Array.from({ length: 4 }, (_, i) => ({
+    match: i,
+    home: null,     // Ganador octavos[i*2]
+    away: null,     // Ganador octavos[i*2 + 1]
+    sourceHome: i * 2,
+    sourceAway: i * 2 + 1,
+    winner: null,
+  }));
+
+  const semis = Array.from({ length: 2 }, (_, i) => ({
+    match: i,
+    home: null,
+    away: null,
+    sourceHome: i * 2,
+    sourceAway: i * 2 + 1,
+    winner: null,
+  }));
+
+  const final = {
+    match: 0,
+    home: null,
+    away: null,
+    sourceHome: 0,
+    sourceAway: 1,
+    winner: null,
+  };
+
+  return { octavos, cuartos, semis, final };
+}
+
+// ============================================
+// 4. APLICAR RESULTADOS DEL CSV
+// ============================================
+function parseScore(str) {
+  const m = str.trim().match(/^(\d+)(?:\[(\d+)\])?$/);
+  return { goles: parseInt(m[1]), penales: m[2] ? parseInt(m[2]) : null };
+}
+
+function determinarGanador(local, visitante, golLocal, golVisitante) {
+  const h = parseScore(golLocal);
+  const a = parseScore(golVisitante);
+  if (h.goles !== a.goles) return h.goles > a.goles ? local : visitante;
+  return h.penales > a.penales ? local : visitante;
+}
+
+function aplicarResultados(bracket, partidos) {
+  const rondas = {
+    'Fecha 1/8': { datos: bracket.octavos, siguiente: bracket.cuartos },
+    'Fecha 1/4': { datos: bracket.cuartos, siguiente: bracket.semis },
+    'Fecha 1/2': { datos: bracket.semis,   siguiente: [bracket.final] },
+    'Fecha 1/1': { datos: [bracket.final], siguiente: null },
+  };
+
+  Object.entries(rondas).forEach(([fechaKey, { datos, siguiente }]) => {
+    const matches = partidos.filter(p => p.fecha === fechaKey);
+
+    matches.forEach((p, i) => {
+      const ganador = determinarGanador(p.local, p.visitante, p.goles_local, p.goles_visitante);
+
+      datos[i].home = p.local;
+      datos[i].away = p.visitante;
+      datos[i].homeScore = p.goles_local;
+      datos[i].awayScore = p.goles_visitante;
+      datos[i].winner = ganador;
+
+      // Propagar ganador a la siguiente ronda
+      if (siguiente) {
+        const nextMatch = Math.floor(i / 2);
+        const slot = i % 2;  // 0 = home, 1 = away  ← ¡ACÁ ESTÁ TU PIRÁMIDE!
+        if (slot === 0) siguiente[nextMatch].home = ganador;
+        else            siguiente[nextMatch].away = ganador;
+      }
+    });
+  });
+}
+
+// ============================================
+// 5. TODO JUNTO
+// ============================================
+const clasificados = calcularTablas(data1);    // partidos ya parseados
+const bracket = buildBracket(clasificados);
+aplicarResultados(bracket, data1);
+
+console.log(bracket);
+// bracket.final.winner → "Alemania-G" 🏆
+
+  data1 = data1.filter((d) => !d.fecha.includes('1/'));
 
   let nombre_torneo = data1[0].torneo.replace('Torneo ', '');
   let puntos_por_partido = 3;
@@ -572,59 +745,74 @@ console.table(resultado); */
 console.log(generarResultado('ligaArgentina'))  // { goles_local: 0, goles_visitante: 0 }
 console.log(generarResultado('bundesliga'))  */
 
-  let casos = [];
 
-  function calcularProbabilidades(partidos, cantidadClassif = 2, simulaciones = 50_000) {
-    const equipos = obtenerEquipos(partidos);
-    const pendientes = partidos.filter((p) => !p.jugado);
+  function calcularProbabilidades(
+  partidos,
+  cantidadClassif = 2,
+  mejoresTerceros = 0,   // ← NUEVO: 0 = no aplica, 8 = mejores 8 terceros
+  simulaciones = 50_000
+) {
+  const equipos = obtenerEquipos(partidos);
+  const grupos = obtenerGrupos(data1);
 
-    // Contador de veces que clasificó cada equipo
-    const clasificaciones = {};
-    equipos.forEach((e) => (clasificaciones[e] = 0));
+  const clasificaciones = {};
+  equipos.forEach((e) => (clasificaciones[e] = 0));
 
-    for (let sim = 0; sim < simulaciones; sim++) {
-      // Copiar partidos y completar los pendientes con resultado aleatorio
-      const partidosSimulados = partidos.map((p) => {
-        if (p.jugado) return { ...p, simulados: false, id: sim };
-
-        const resultado = generarResultado(competencia);
-        return {
-          ...p,
-          ...resultado,
-          jugado: true,
-          simulados: true,
-          id: sim,
-        };
-      });
-
-      // Calcular posiciones con este escenario y registrar quiénes clasifican
-      obtenerGrupos(data1).forEach((d) => {
-        let grupo = partidosSimulados.filter(e => e.local.split('-')[1] == d)
-
-        /* const tabla = calcularPosiciones(grupo); */
-        const orden = calcularYOrdenarTabla(grupo);
-        /* const orden = ordenarTabla(tabla); */
-        const clasif = orden.slice(0, cantidadClassif);
-
-        clasif.forEach((equipo) => clasificaciones[equipo]++);
-
-        casos1.push([calcularYOrdenarTablaConDatos(grupo), grupo]);
-        /* if (d == 'H') {
-          casos1.push([calcularYOrdenarTablaConDatos(grupo), grupo]);
-        } */
-      });
-    }
-    
-    const resultado = {};
-    equipos.forEach((equipo) => {
-      resultado[equipo] = {
-        clasificaciones: clasificaciones[equipo],
-        probabilidad: Number(/* d3.format(".3~g") */ ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)),
-      };
+  for (let sim = 0; sim < simulaciones; sim++) {
+    const partidosSimulados = partidos.map((p) => {
+      if (p.jugado) return { ...p, simulados: false, id: sim };
+      const resultado = generarResultado(competencia);
+      return { ...p, ...resultado, jugado: true, simulados: true, id: sim };
     });
-    
-    return resultado;
+
+    const terceros = [];
+
+    // PASO 1: Resolver todos los grupos
+    grupos.forEach((d) => {
+      const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
+      const tabla = calcularYOrdenarTablaConDatos(grupo);  // [{equipo, pts, gf, gc, ...}, ...]
+      const orden = tabla.map((t) => t.equipo);
+
+      // Clasificación directa (1ro, 2do)
+      orden.slice(0, cantidadClassif).forEach((eq) => clasificaciones[eq]++);
+
+      // Guardar el tercero con sus datos para comparar después
+      if (mejoresTerceros > 0 && tabla.length > cantidadClassif) {
+        terceros.push(tabla[cantidadClassif]); // el 3ro con sus stats
+      }
+
+      casos1.push([tabla, grupo]);
+    });
+
+    // PASO 2: Comparar terceros entre TODOS los grupos
+    if (mejoresTerceros > 0 && terceros.length > 0) {
+      terceros.sort((a, b) => {
+        // Criterios FIFA para mejores terceros:
+        if (b.pts !== a.pts) return b.pts - a.pts;                     // puntos
+        const dgA = a.gf - a.gc, dgB = b.gf - b.gc;
+        if (dgB !== dgA) return dgB - dgA;                             // dif. de gol
+        if (b.gf !== a.gf) return b.gf - a.gf;                        // goles a favor
+        return 0;                                                       // empate → ambos clasifican
+      });
+
+      terceros
+        .slice(0, mejoresTerceros)
+        .forEach((t) => clasificaciones[t.equipo]++);
+    }
   }
+
+  const resultado = {};
+  equipos.forEach((equipo) => {
+    resultado[equipo] = {
+      clasificaciones: clasificaciones[equipo],
+      probabilidad: Number(
+        ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)
+      ),
+    };
+  });
+
+  return resultado;
+}
   console.log(structuredClone(casos1))
 
   /* console.log(clasificaciones['River Plate-H']); */
@@ -838,7 +1026,8 @@ data1.forEach(d => {
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, 100);
+  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, 1, 100);
+  console.table(probabilidades)
 
   /* function eliminarDuplicados(simulaciones) {
     const vistas = new Set();
@@ -879,7 +1068,6 @@ data1.forEach(d => {
   }); */
 
   let totalCasosSimulados = [];
-  let playoffs = [];
 
   for (let indexFor = 0; indexFor < 1; indexFor++) {
 
@@ -961,10 +1149,10 @@ data1.forEach(d => {
 
     let fechas_torneo2 = new Set(torneo.filter((d) => d.fecha.split(' ')[1] != fecha_adicional && !d.fecha.includes('1/')).map((d) => d.fecha));
     let fechas_def = torneo.filter((d) => d.fecha.split(' ')[1] == fecha_adicional);
-    let fechas_playoff = data1.filter((d) => d.fecha.includes('1/'));
+    /* let fechas_playoff = data1.filter((d) => d.fecha.includes('1/'));
 
     playoffs.push(fechas_playoff);
-    console.log(fechas_playoff)
+    console.log(fechas_playoff) */
 
     let fechas_pospuestas = [];
 
