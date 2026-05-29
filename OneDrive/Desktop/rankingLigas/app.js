@@ -1,6 +1,5 @@
 import { procesarDatos } from './data.js';
 import { colores } from './colores.js';
-/* global d3 */
 
 const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades } = window.__appData ?? await procesarDatos();
 
@@ -42,23 +41,24 @@ let fechas_not_played = 1;
 let localia = false;
 let stats_on_top = false;
 let datos_totales = false;
-let repechaje = 1;
+let repechaje = 0;
+let simular_playoffs = true;
 
 let competencia = nombre_torneo.split(' ')[0];
 
 const clasificados_por_competencia = {
   Campeonato: 1,
   Apertura: 8,
-  WorldCup: 1,
+  WorldCup: 2,
   ClubWorldCup: 2,
   ELIMINATORIAS: 7,
   Libertadores: 2,
   Sudamericana: 2,
   argentina: 8,
-  Mundial: 2 + repechaje,
+  Mundial: 2,
 };
 
-let clasificacion_por_grupo = clasificados_por_competencia[competencia];
+let clasificacion_por_grupo = clasificados_por_competencia[competencia] + repechaje;
 
 console.log(clasificacion_por_grupo)
 
@@ -78,6 +78,15 @@ d3.timeFormatDefaultLocale({
 });
 
 let formatEfec = d3.format('.0f');
+
+function parseScore(str) {
+          const m = str.trim().match(/^(\d+)(?:\[(\d+)\])?$/);
+          return {
+            goles: parseInt(m[1]),
+            penales: m[2] ? parseInt(m[2]) : null,
+          };
+        }
+
 const parseDate = (str) => new Date(str);
 
   const halo1 = function (text, strokeWidth, color) {
@@ -160,6 +169,15 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     1: 'Final',
   };
 
+  /* let playoffs_names = {
+    32: '32avos',
+    16: '16avos',
+    8: 'Octavos',
+    4: 'Cuartos',
+    2: 'Semifinales',
+    1: 'Final',
+  }; */
+
 
   if (grupos == 1) {
     grupos = 0;
@@ -175,20 +193,27 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     }
   }
 
+  console.log(fechas_playoff)
+
   let equipos_por_grupos = top_n / grupos;
-  let width_playoffs = heightBars*5;
+  let width_playoffs = heightBars*8;
   let space_width_playoff = width_playoffs * 0.5;
-  let space_height_playoff = heightBars * 0.75;
+  let space_height_playoff = heightBars * 0.5;
   let primera_ronda_playoff = fechas_playoff.filter(d => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, d => +d.fecha.split('/')[1])).length
+  if (fechas_playoff.length == 0 && simular_playoffs) {
+    primera_ronda_playoff = clasificacion_por_grupo
+  }
   let rondas_playoff = playoffs[primera_ronda_playoff];
   let distancia_entre_grupos = 0.5;
   console.log(primera_ronda_playoff, fechas_playoff.filter(d => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, d => +d.fecha.split('/')[1])).length)
+  let names_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.local || d.visitante))];
 
   let dates = [...new Set(data.map((d) => d.semana).sort((a, b) => a - b))];
 
   let margin_right = margin.right;
 
   fechas_not_played = d3.max(data, (d) => d.partidos_jugados + d.partidos_jugados1);
+  console.log(structuredClone(fechas_not_played))
   
   let fechas_no_jugadas = ((dates.length-1)-fechas_not_played)-1
   let weeks = heightBars * 2;
@@ -203,8 +228,10 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 
   let margin_left = heightBars;
   
-   if (grupos>1) {
+   if (grupos > 1 && names_playoffs_1.length != 0) {
     width = margin_left/2 + weeks_i*2 + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff)
+  } else if (grupos > 1 && simular_playoffs) {
+    width = width + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff*1.5)
   }
 
 
@@ -459,7 +486,7 @@ const svg = d3
     });
 
     array.forEach((d, i) => (d.rank = i));
-    array.forEach((d, i) => (d.rankInGroup = i % 4));
+    array.forEach((d, i) => (d.rankInGroup = i % equipos_por_grupos));
     array.forEach((d) => (d.position = d.rankInGroup + 1 + d.name.split('-')[1]));
     array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
 
@@ -537,7 +564,7 @@ const svg = d3
     '2G': [7, 1],
   }; */
 
-   let positions_playoffs = {
+   /* let positions_playoffs = {
     '1E': [0, 0],
     '3A': [0, 1], //
 
@@ -585,6 +612,51 @@ const svg = d3
     
     '1K': [15, 0],
     '3J': [15, 1],//
+  }; */
+
+   /* let positions_playoffs = {
+    "1A": [0, 0],
+    "2B": [0, 1],
+    "1C": [1, 0],
+    "2D": [1, 1],
+    "1E": [2, 0],
+    "2F": [2, 1],
+    "1G": [3, 0],
+    "2H": [3, 1],
+    "1B": [4, 0],
+    "2A": [4, 1],
+    "1D": [5, 0],
+    "2C": [5, 1],
+    "1F": [6, 0],
+    "2E": [6, 1],
+    "1H": [7, 0],
+    "2G": [7, 1],
+  }; */
+
+  let positions_playoffs = {
+    "1A": [0, 0],
+    "8B": [0, 1],
+
+    "2A": [1, 0],
+    "7B": [1, 1],
+
+    "3A": [2, 0],
+    "6B": [2, 1],
+
+    "4A": [3, 0],
+    "5B": [3, 1],
+
+    "5A": [4, 0],
+    "4B": [4, 1],
+
+    "6A": [5, 0],
+    "3B": [5, 1],
+
+    "7A": [6, 0],
+    "2B": [6, 1],
+
+    "8A": [7, 0],
+    "1B": [7, 1],
   };
 
   /* let positions_playoffs = {
@@ -649,7 +721,6 @@ const svg = d3
 
   console.log(fechas_playoff[0])
 
-  let names_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.local || d.visitante))];
   console.log(names_playoffs_1[0] !== 'undefined')
   /* let clasificados = yearSlice.filter(d => d.rankInGroup < clasificacion_por_grupo && d.final).slice(0, 32)
   console.log(clasificados) */
@@ -680,7 +751,7 @@ const svg = d3
 
   let wks = 0;
 
-  let rondas = [1, 2, 4];
+  let rondas = [1, 2, 4, 8, 16];
   let arr = ['local', 'visitante'];
   let arr_w = [5, 3, 1.75, 1];
   if (grupos > 1 && names_playoffs_1[0] !== 'undefined') {
@@ -775,25 +846,28 @@ const svg = d3
             class: 'line',
           })
           .styles({
-            opacity: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+            opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? 1 : 0;
-          },
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0;
+            },
             fill: 'none',
             stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
           .attr('d', (d) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
               [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
             ])
           );
-         
 
         svg
           .selectAll('.path')
@@ -804,20 +878,24 @@ const svg = d3
             class: 'line',
           })
           .styles({
-            opacity: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+            opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? 1 : 0;
-          },
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0;
+            },
             fill: 'none',
             stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
           .attr('d', (d) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
               [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
               [
@@ -842,20 +920,24 @@ const svg = d3
             class: 'line',
           })
           .styles({
-            opacity: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+            opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? 1 : 0;
-          },
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0;
+            },
             fill: 'none',
             stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
           .attr('d', (d) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff)],
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs + space_width_playoff / 3,
@@ -885,20 +967,24 @@ const svg = d3
             class: 'line',
           })
           .styles({
-            opacity: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+            opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? 1 : 0;
-          },
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0;
+            },
             fill: 'none',
             stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
           .attr('d', (d) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs,
                 yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
@@ -930,20 +1016,24 @@ const svg = d3
             class: 'line',
           })
           .styles({
-            opacity: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+            opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? 1 : 0;
-          },
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0;
+            },
             fill: 'none',
             stroke: (d) => colores(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
           .attr('d', (d) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs,
                 yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1][0]] == 0 ? -space_height_playoff : space_height_playoff),
@@ -1006,13 +1096,17 @@ filter.append("feDropShadow")
         })
         /* .attr("style", d => `outline: 5px solid ${colores(d[dd].split('-')[0])[0]}`) */
         .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+          fill: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+            },
         })
 
         svg
@@ -1029,13 +1123,17 @@ filter.append("feDropShadow")
           height: heightBars,
         })
         .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+          fill: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+            },
         })
 
         svg
@@ -1052,13 +1150,17 @@ filter.append("feDropShadow")
           height: heightBars,
         })
         .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+          fill: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+            },
         })
 
          svg
@@ -1075,13 +1177,17 @@ filter.append("feDropShadow")
           height: heightBars,
         })
         .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
+          fill: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
 
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+            },
         })
 
       svg
@@ -1095,13 +1201,24 @@ filter.append("feDropShadow")
           y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
+          opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
+
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0.5;
+            },
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size,
           'font-weight': defaults.name.style.font_weight,
           'text-anchor': defaults.name.style.text_anchor,
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
-        .text((d) => d[dd]);
+        .text((d) => d[dd].split('-')[0]);
 
       svg
         .selectAll('.image')
@@ -1114,6 +1231,17 @@ filter.append("feDropShadow")
           y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
           height: defaults.logo.size,
           href: (d) => `./escudos/${d[dd].split('-')[0]}.png`,
+          opacity: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
+
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? 1 : 0.5;
+            },
         })
         .style('filter', 'url(#dropshadow)');
 
@@ -1404,7 +1532,26 @@ filter.append("feDropShadow")
     } */
   }
 
-  if (grupos > 1 && names_playoffs_1[0] == 'undefined') {
+  if (grupos > 1 && /* names_playoffs_1[0] == 'undefined' */ simular_playoffs) {
+
+    console.log(rondas_playoff)
+    rondas.forEach((pp, ppi) => {
+      svg
+        .append('text')
+        .attrs({
+          class: 'years',
+          x: width - (width_playoffs * (rondas_playoff - ppi) + space_width_playoff * (rondas_playoff - ppi)) + width_playoffs / 2,
+          y: margin.top * 0.8,
+        })
+        .styles({
+          'font-size': heightBars * 0.4,
+          fill: '#f1f1f1',
+          'font-weight': 600,
+          'text-anchor': 'middle',
+          'alignment-baseline': 'central',
+        })
+        .text(playoffs_names[primera_ronda_playoff / pp]);
+    });
           
           /* svg
           .selectAll('.path')
@@ -1456,12 +1603,12 @@ filter.append("feDropShadow")
             'stroke-linejoin': 'round',
           })
           .attr('d', (d, i) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, 
-                yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)
+                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*2, 
+                yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff)
               ],
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
+              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*1 + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
             ])
           );
 
@@ -1480,13 +1627,13 @@ filter.append("feDropShadow")
             'stroke-linejoin': 'round',
           })
           .attr('d', (d, i) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, 
+                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*1, 
                 yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)
               ],
               [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
+                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*1 + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff - space_width_playoff / 3,
                 yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
@@ -1515,7 +1662,7 @@ filter.append("feDropShadow")
             'stroke-linejoin': 'round',
           })
           .attr('d', (d, i) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
+            d3.line().curve(d3.curveStep)([
               [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0)],
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs + space_width_playoff / 3,
@@ -1581,7 +1728,7 @@ filter.append("feDropShadow")
                         - heightBars / 2;
 
             // 4. Dibujar la curva (4 puntos)
-            return d3.line().curve(d3.curveCardinal.tension(1))([
+            return d3.line().curve(d3.curveStep)([
               [x1, ySemis],    // inicio (sale de semis)
               [x2, ySemis],    // horizontal →
               [x3, yFinal],    // diagonal  ↗ o ↘
@@ -1639,7 +1786,7 @@ filter.append("feDropShadow")
                         - heightBars / 2;
 
             // 4. Dibujar la curva (4 puntos)
-            return d3.line().curve(d3.curveCardinal.tension(1))([
+            return d3.line().curve(d3.curveStep)([
               [x1, ySemis],    // inicio (sale de semis)
               [x2, ySemis],    // horizontal →
               [x3, yFinal],    // diagonal  ↗ o ↘
@@ -1683,8 +1830,6 @@ filter.append("feDropShadow")
           ); */
 
         }
-
-        
           
           svg
             .selectAll('.rect')
@@ -1914,6 +2059,41 @@ filter.append("feDropShadow")
           opacity: 0.7,
         })
         .text((d) => d.name.split("-")[0]);
+
+        svg
+        .selectAll(".text")
+        .data(
+          yearSlice.filter(
+            (d, i) =>
+              (d.rankInGroup >= 0 &&
+                d.rankInGroup <= clasificacion_por_grupo - 1) ||
+              (d.rankInGroup >= equipos_por_grupos &&
+                d.rankInGroup <=
+                  equipos_por_grupos + clasificacion_por_grupo - 1),
+          ).filter(d => keysSet.has(d.position))
+        )
+        .enter()
+        .append("text")
+        .attrs({
+          class: "playoffs_names",
+          x:
+            width -
+            (width_playoffs * rondas_playoff +
+              space_width_playoff * rondas_playoff +
+              space_width_playoff) +
+            space_width_playoff -
+            heightBars * 0.9,
+          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] == 0 ? -space_height_playoff : space_height_playoff),
+        })
+        .styles({
+          fill: defaults.name.style.fill,
+          "font-size": defaults.name.style.font_size,
+          "font-weight": defaults.name.style.font_weight,
+          "text-anchor": defaults.name.style.text_anchor,
+          "alignment-baseline": defaults.name.style.alignment_baseline,
+          opacity: 0.7,
+        })
+        .text((d) => d.rankInGroup+1 + d.name.split("-")[1]);
     }
 
   let fechasNotPlayed = (i) => {
@@ -2116,6 +2296,19 @@ const capas = [
 const barWidth = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
   + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0)
   + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + heightBars * 10;
+
+  svg
+      .append('rect')
+      .attrs({
+        class: 'bars_names',
+        x: barWidth,
+        y: margin.top,
+        width: margin_left/2,
+        height: height,
+      })
+      .styles({
+        fill: (d, i) => (i == 0 ? 'url(#areaGradient0)' : i % 2 == 1 ? 'url(#areaGradient0)' : 'url(#areaGradient0)'),
+      });
 
 const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
 
@@ -2995,6 +3188,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
   areaGradient2.append('stop').attr('offset', '100%').attr('stop-color', '#000').attr('stop-opacity', 0);
 
   if (grupos > 1) {
+
     grupos_1.forEach((e, index) => {
       svg
         .selectAll('.text')
@@ -3697,7 +3891,7 @@ if (localia) {
             'alignment-baseline': defaults.value.style.alignment_baseline,
           })
           .text((d) => ' (' + probabilidad(d.name) + '%)')
-      ).call(halo1, defaults.name.style.font_size * 0.25, '#f1f1f1');
+      ).call(halo1, heightBars * 0.2, '#f1f1f1');
     })
     }
      else {
@@ -4254,7 +4448,7 @@ if (localia) {
             'alignment-baseline': defaults.value.style.alignment_baseline,
           })
           .text((d) => ' (' + probabilidad(d.name) + '%)')
-      ).call(halo1, defaults.name.style.font_size * 0.25, '#f1f1f1');
+      ).call(halo1, heightBars * 0.2, '#f1f1f1');
   }} else {
     if (grupos > 1) {
       grupos_1.forEach((grupo, indice_grupo) => {
@@ -4337,7 +4531,7 @@ if (localia) {
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
               .text((d) => ' (' + probabilidad(d.name) + '%)')
-          ).call(halo1, defaults.value.style.font_size*0.25, '#f1f1f1')
+          ).call(halo1, heightBars * 0.2, '#f1f1f1');
       });
     } else {
       rankingSVG
@@ -4418,7 +4612,7 @@ if (localia) {
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
             .text((d) => ' (' + probabilidad(d.name) + '%)')
-        ).call(halo1, defaults.name.style.font_size * 0.25, '#f1f1f1');
+        ).call(halo1, heightBars * 0.2, '#f1f1f1');
 
         /* .call((text) =>
           text
@@ -6581,7 +6775,7 @@ const appendAllTspans = (selection) =>
       tspan(text, (d) => diffColor(v(d).diff_directo), (d) => sd(d, signedDiff(v(d).diff_directo)));
       tspan(text, null,           (d) => sd(d, ']'));
     })
-    .call(halo1, defaults.value.style.font_size * 0.25, '#f1f1f1');
+    .call(halo1, heightBars * 0.2, '#f1f1f1');
 
 // --- Renderizado ---
 

@@ -1,11 +1,13 @@
 export async function procesarDatos() {
-  let data1 = await d3.csv('./torneos/mundial2026.csv');
+  let data1 = await d3.csv('./torneos/data3.csv');
+
+  let repechaje = 0
 
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
   console.log(playoffs)
 
   /* let torneos = [...new Set(data1.map((d) => d.torneo))]
-  data1 = data1.filter(d => d.torneo == 'Torneo Apertura 2008') */
+  data1 = data1.filter(d => d.torneo == 'Torneo Metropolitano 1977') */
 
   // ============================================
 // 1. CALCULAR TABLA DE POSICIONES POR GRUPO
@@ -1026,7 +1028,7 @@ data1.forEach(d => {
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, 1, 100);
+  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 100);
   console.table(probabilidades)
 
   /* function eliminarDuplicados(simulaciones) {
