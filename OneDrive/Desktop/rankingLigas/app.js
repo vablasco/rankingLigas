@@ -42,7 +42,7 @@ let localia = false;
 let stats_on_top = false;
 let datos_totales = false;
 let repechaje = 0;
-let simular_playoffs = true;
+let simular_playoffs = false;
 
 let competencia = nombre_torneo.split(' ')[0];
 
@@ -614,7 +614,7 @@ const svg = d3
     '3J': [15, 1],//
   }; */
 
-   /* let positions_playoffs = {
+   let positions_playoffs = {
     "1A": [0, 0],
     "2B": [0, 1],
     "1C": [1, 0],
@@ -631,9 +631,9 @@ const svg = d3
     "2E": [6, 1],
     "1H": [7, 0],
     "2G": [7, 1],
-  }; */
+  };
 
-  let positions_playoffs = {
+  /* let positions_playoffs = {
     "1A": [0, 0],
     "8B": [0, 1],
 
@@ -657,7 +657,7 @@ const svg = d3
 
     "8A": [7, 0],
     "1B": [7, 1],
-  };
+  }; */
 
   /* let positions_playoffs = {
       '1A': [0, 0],
@@ -772,6 +772,20 @@ const svg = d3
           'alignment-baseline': 'central',
         })
         .text(playoffs_names[primera_ronda_playoff / pp]);
+
+      /* svg
+        .append('rect')
+        .attrs({
+          class: 'years',
+          x: width - (width_playoffs * (rondas_playoff - ppi) + space_width_playoff * (rondas_playoff - ppi)) + width_playoffs / 2 - width_playoffs/2,
+          y: margin.top,
+          height: height,
+          width: width_playoffs,
+        })
+        .styles({
+          fill: 'grey',
+          opacity: 0.1
+        }) */
     });
 
 
@@ -1252,14 +1266,14 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + heightBars * 1.2 + width_playoffs * 0.5,
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs*0.875,
           y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size * 1.5,
           'font-weight': defaults.name.style.font_weight,
-          'text-anchor': defaults.name.style.text_anchor,
+          'text-anchor': 'middle',
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
@@ -1304,14 +1318,14 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs + heightBars * 1.2 + width_playoffs * 0.5,
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs + width_playoffs*0.875,
           y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size * 1.5,
           'font-weight': defaults.name.style.font_weight,
-          'text-anchor': defaults.name.style.text_anchor,
+          'text-anchor': 'middle',
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
@@ -1356,14 +1370,14 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2 + heightBars * 1.2 + width_playoffs * 0.5,
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2 + width_playoffs*0.875,
           y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size * 1.5,
           'font-weight': defaults.name.style.font_weight,
-          'text-anchor': defaults.name.style.text_anchor,
+          'text-anchor': 'middle',
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
@@ -1408,14 +1422,14 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3 + heightBars * 1.2 + width_playoffs * 0.5,
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3 + width_playoffs*0.875,
           y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size * 1.5,
           'font-weight': defaults.name.style.font_weight,
-          'text-anchor': defaults.name.style.text_anchor,
+          'text-anchor': 'middle',
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
