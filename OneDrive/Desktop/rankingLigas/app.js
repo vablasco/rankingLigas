@@ -229,7 +229,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   let margin_left = heightBars;
   
    if (grupos > 1 && names_playoffs_1.length != 0) {
-    width = margin_left/2 + weeks_i*2 + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff)
+    width = width + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff)
   } else if (grupos > 1 && simular_playoffs) {
     width = width + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff*1.5)
   }
@@ -1094,7 +1094,42 @@ filter.append("feDropShadow")
   .attr("opacity", 0.15)
   .attr("pointer-events", "none"); // para que no interfiera con eventos */
 
+  /* svg
+        .selectAll('.rect')
+        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
+        .enter()
+        .append('rect')
+        .attrs({
+          class: 'playoffs_names',
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
+          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(1) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - 10/2,
+          width: width,
+          height: 10,
+        })
+        .styles({
+          fill: 'grey'
+        }) */
+
     arr.forEach((dd) => {
+
+      /* svg
+        .selectAll('.rect')
+        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
+        .enter()
+        .append('rect')
+        .style('filter', 'url(#dropshadow)')
+        .attrs({
+          class: 'playoffs_names',
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars/2 - 10/2,
+          width: width_playoffs,
+          height: 10,
+
+        })
+        .styles({
+          fill: 'red'
+        }) */
+
       svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
@@ -1150,6 +1185,32 @@ filter.append("feDropShadow")
             },
         })
 
+        /* svg
+        .selectAll('.rect')
+        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
+        .enter()
+        .append('rect')
+        .attrs({
+          class: 'playoffs_names',
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 - 20 / 2,
+          width: space_width_playoff * 3 + width_playoffs * 0.5,
+          height: 20,
+        })
+        .styles({
+          fill: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
+
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+            },
+        }) */
+
         svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
@@ -1176,6 +1237,32 @@ filter.append("feDropShadow")
               return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
             },
         })
+
+        /* svg
+        .selectAll('.rect')
+        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`).slice(0, primera_ronda_playoff))
+        .enter()
+        .append('rect')
+        .attrs({
+          class: 'playoffs_names',
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 - 20 / 2,
+          width: space_width_playoff * 4 + width_playoffs * 1.5,
+          height: 20,
+        })
+        .styles({
+          fill: function(d) {
+              const local = parseScore(d.goles_local);
+              const visitante = parseScore(d.goles_visitante);
+
+              const ganoLocal =
+                local.goles > visitante.goles ||
+                (local.goles === visitante.goles && local.penales > visitante.penales);
+
+              const esLocal = dd === 'local';
+              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+            },
+        }) */
 
          svg
         .selectAll('.rect')

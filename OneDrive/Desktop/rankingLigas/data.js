@@ -1,5 +1,5 @@
 export async function procesarDatos() {
-  let data1 = await d3.csv('./torneos/data3.csv');
+  let data1 = await d3.csv('./torneos/data4.csv');
 
   let repechaje = 0
 
