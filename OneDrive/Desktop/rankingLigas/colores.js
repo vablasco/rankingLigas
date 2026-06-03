@@ -92,8 +92,14 @@ export function colores(name) {
         'Nigeria': ["linea", "#e41d25", "#fff"],
         'Alemania': ["linea", "#e41d25", "#fff"],
         'Algeria': ["linea", "#e41d25", "#fff"],
-        'Países Bajos': ["linea", "#e41d25", "#fff"],
         'México': ["linea", "#e41d25", "#fff"],
+        'España': ["linea", "#ff0028", "#ffb70b"],
+        'Suiza': ["linea", "#da291c", "#fff"],
+        'Suecia': ["linea", "#015794", "#ffd600"],
+        'Arabia Saudita': ["linea", "#09784e", "#fff"],
+        'Países Bajos': ["linea", "#f36c21", "#fff"],
+        'Japón': ["linea", "#fff", "#e30016"],
+        'Noruega': ["linea", "#dc1430", "#172b63"],
     }
 
     function colores1(name) {

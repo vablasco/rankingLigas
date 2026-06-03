@@ -2,6 +2,9 @@ export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/mundial2026.csv');
 
   let repechaje = 0
+  if (data1[0].torneo == 'Mundial 2026') {
+    repechaje = 8
+  }
 
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
   console.log(playoffs)
@@ -484,123 +487,6 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     return ordenados;
   }
 
-  function calcularYOrdenarTablaConDatos(partidos) {
-    // --- 1. Construir tabla general desde partidos ---
-    const tabla = {};
-
-    partidos.forEach((p) => {
-      if (!p.jugado) return;
-
-      [p.local, p.visitante].forEach((equipo) => {
-        if (!tabla[equipo]) {
-          tabla[equipo] = { pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, diff: 0, rojas: 0, amarillas: 0 };
-        }
-      });
-
-      const gl = p.goles_local;
-      const gv = p.goles_visitante;
-
-      tabla[p.local].pj++;
-      tabla[p.visitante].pj++;
-      tabla[p.local].gf += gl;
-      tabla[p.local].gc += gv;
-      tabla[p.local].diff += gl - gv;
-      tabla[p.visitante].gf += gv;
-      tabla[p.visitante].gc += gl;
-      tabla[p.visitante].diff += gv - gl;
-
-      if (gl > gv) {
-        tabla[p.local].pts += 3;
-        tabla[p.local].pg++;
-        tabla[p.visitante].pp++;
-      } else if (gl === gv) {
-        tabla[p.local].pts += 1;
-        tabla[p.visitante].pts += 1;
-        tabla[p.local].pe++;
-        tabla[p.visitante].pe++;
-      } else {
-        tabla[p.visitante].pts += 3;
-        tabla[p.visitante].pg++;
-        tabla[p.local].pp++;
-      }
-    });
-
-    // --- 2. Stats de enfrentamientos directos entre un subconjunto ---
-    function statsDirectos(equiposEnDisputa) {
-      const stats = {};
-      equiposEnDisputa.forEach((e) => {
-        stats[e] = { pts: 0, diff: 0, gf: 0 };
-      });
-
-      partidos.forEach((p) => {
-        if (!p.jugado) return;
-        if (!equiposEnDisputa.includes(p.local) || !equiposEnDisputa.includes(p.visitante)) return;
-
-        const gl = p.goles_local;
-        const gv = p.goles_visitante;
-
-        if (gl > gv) {
-          stats[p.local].pts += 3;
-        } else if (gl === gv) {
-          stats[p.local].pts += 1;
-          stats[p.visitante].pts += 1;
-        } else {
-          stats[p.visitante].pts += 3;
-        }
-
-        stats[p.local].gf += gl;
-        stats[p.local].diff += gl - gv;
-        stats[p.visitante].gf += gv;
-        stats[p.visitante].diff += gv - gl;
-      });
-
-      return stats;
-    }
-
-    // --- 3. Comparador con todos los criterios ---
-    function comparar(a, b, empatados) {
-      const sa = tabla[a];
-      const sb = tabla[b];
-
-      // 1º Enfrentamientos directos entre los empatados
-      const directos = statsDirectos(empatados);
-      const da = directos[a];
-      const db = directos[b];
-
-      if (db.pts !== da.pts) return db.pts - da.pts;
-      if (db.diff !== da.diff) return db.diff - da.diff;
-      if (db.gf !== da.gf) return db.gf - da.gf;
-
-      // 2º Diferencia de goles general
-      if (sb.diff !== sa.diff) return sb.diff - sa.diff;
-
-      // 3º Goles a favor general
-      if (sb.gf !== sa.gf) return sb.gf - sa.gf;
-
-      // 4º Menor tarjetas rojas
-      if (sa.rojas !== sb.rojas) return sa.rojas - sb.rojas;
-
-      // 5º Menor tarjetas amarillas
-      if (sa.amarillas !== sb.amarillas) return sa.amarillas - sb.amarillas;
-
-      // 6º Sorteo
-      return Math.random() - 0.5;
-    }
-
-    // --- 4. Ordenar con grupos de empatados ---
-    const equipos = Object.keys(tabla);
-
-    const ordenados = equipos.sort((a, b) => {
-      if (tabla[b].pts !== tabla[a].pts) return tabla[b].pts - tabla[a].pts;
-
-      const empatados = equipos.filter((e) => tabla[e].pts === tabla[a].pts);
-      return comparar(a, b, empatados);
-    });
-    // --- 5. Resultado final ---
-    /* return ordenados.flatMap((equipo) => [equipo, tabla[equipo].pts]); */
-    return ordenados.map((equipo, i) => ({ pos: i + 1, equipo, pts: tabla[equipo].pts }));
-  }
-
   function obtenerEquipos(partidos) {
     const set = new Set();
     partidos.forEach((p) => {
@@ -632,18 +518,46 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
 
   const LAMBDAS = {
     Mundial: { local: 1.35, visitante: 1.35 },
-    argentina: { local: 1.1, visitante: 0.8 },
-    Campeonato: { local: 1.1, visitante: 0.8 },
-    Apertura: { local: 1.1, visitante: 0.8 },
-    WorldCup: { local: 1.35, visitante: 1.35 },
-    ClubWorldCup: { local: 1.35, visitante: 1.35 },
-    ELIMINATORIAS: { local: 1.4, visitante: 0.81 },
-    Libertadores: { local: 1.4, visitante: 0.81 },
-    Sudamericana: { local: 1.4, visitante: 0.81 },
-    premierLeague: { local: 1.55, visitante: 1.15 },
-    españa: { local: 1.55, visitante: 1.1 },
-    bundesliga: { local: 1.65, visitante: 1.2 },
   };
+
+  /* function generarResultado(liga = 'argentina', override = null) {
+    const config = override ?? LAMBDAS[liga];
+    return {
+      goles_local: poisson(config.local),
+      goles_visitante: poisson(config.visitante),
+    };
+  } */
+
+    function generarResultado(liga = 'argentina', override = null, equipoLocal = null, equipoVisitante = null) {
+  const config = override ?? LAMBDAS[liga];
+  let lambdaL = config.local;
+  let lambdaV = config.visitante;
+
+  // Ajuste por ranking FIFA (solo cuando se pasan equipos)
+  if (equipoLocal && equipoVisitante) {
+    const rankL = rankingFIFA2026[equipoLocal.replace(/-[A-L]$/, "")] || 50;
+    const rankV = rankingFIFA2026[equipoVisitante.replace(/-[A-L]$/, "")] || 50;
+
+    // diff > 0 → local es mejor | diff < 0 → visitante es mejor
+    const diff = rankV - rankL;
+
+    // k controla cuánto pesa el ranking (ajustá a gusto)
+    // 0.008 = leve | 0.012 = moderado | 0.018 = agresivo
+    const k = 0.012;
+    const ajuste = k * diff;
+
+    // Se suma/resta simétrico → el total de goles esperados se mantiene igual
+    lambdaL = Math.max(0.4, Math.min(2.8, lambdaL + ajuste / 2));
+    lambdaV = Math.max(0.4, Math.min(2.8, lambdaV - ajuste / 2));
+  }
+
+  return {
+    goles_local: poisson(lambdaL),
+    goles_visitante: poisson(lambdaV),
+  };
+}
+
+console.log(generarResultado)
 
   /* function calcularLambdas(data) {
   let sumLocal = 0, sumVisitante = 0, n = 0;
@@ -670,13 +584,13 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   // Uso:
   /* const lambdas = calcularLambdas(data1); */
 
-  function generarResultado(liga = 'argentina', override = null) {
+  /* function generarResultado(liga = 'argentina', override = null) {
     const config = override ?? LAMBDAS[liga];
     return {
       goles_local: poisson(config.local),
       goles_visitante: poisson(config.visitante),
     };
-  }
+  } */
 
   /* function simular(liga = 'ligaArgentina', n = 50000) {
   const conteo = {};
@@ -748,10 +662,239 @@ console.log(generarResultado('ligaArgentina'))  // { goles_local: 0, goles_visit
 console.log(generarResultado('bundesliga'))  */
 
 
-  function calcularProbabilidades(
+const rankingFIFA2026 = {
+  // Grupo A
+  "México": 15,
+  "Sudáfrica": 60,
+  "Corea del Sur": 25,
+  "República Checa": 41,
+
+  // Grupo B
+  "Canadá": 30,
+  "Bosnia y Herzegovina": 65,
+  "Qatar": 55,
+  "Suiza": 19,
+
+  // Grupo C
+  "Brasil": 6,
+  "Marruecos": 8,
+  "Haití": 83,
+  "Escocia": 43,
+
+  // Grupo D
+  "Estados Unidos": 16,
+  "Paraguay": 40,
+  "Australia": 27,
+  "Turquía": 22,
+
+  // Grupo E
+  "Alemania": 10,
+  "Curazao": 82,
+  "Costa de Marfil": 34,
+  "Ecuador": 23,
+
+  // Grupo F
+  "Países Bajos": 7,
+  "Japón": 18,
+  "Suecia": 38,
+  "Túnez": 44,
+
+  // Grupo G
+  "Bélgica": 9,
+  "Egipto": 29,
+  "Irán": 21,
+  "Nueva Zelanda": 85,
+
+  // Grupo H
+  "España": 2,
+  "Cabo Verde": 68,
+  "Arabia Saudita": 61,
+  "Uruguay": 17,
+
+  // Grupo I
+  "Francia": 1,
+  "Senegal": 14,
+  "Irak": 57,
+  "Noruega": 31,
+
+  // Grupo J
+  "Argentina": 3,
+  "Argelia": 28,
+  "Austria": 24,
+  "Jordania": 64,
+
+  // Grupo K
+  "Portugal": 5,
+  "RD de Congo": 46,
+  "Uzbekistán": 50,
+  "Colombia": 13,
+
+  // Grupo L
+  "Inglaterra": 4,
+  "Croacia": 11,
+  "Ghana": 74,
+  "Panamá": 33
+};
+
+function calcularYOrdenarTablaConDatos(partidos) {
+  // --- 1. Construir tabla general desde partidos ---
+  const tabla = {};
+
+  Object.keys(tabla).forEach((equipoConGrupo) => {
+    const nombre = equipoConGrupo.replace(/-[A-L]$/, "");
+    tabla[equipoConGrupo].rankingFIFA = rankingFIFA2026[nombre] || 999;
+});
+
+  partidos.forEach((p) => {
+    if (!p.jugado) return;
+
+    [p.local, p.visitante].forEach((equipo) => {
+      if (!tabla[equipo]) {
+        tabla[equipo] = {
+          pts: 0, pj: 0, pg: 0, pe: 0, pp: 0,
+          gf: 0, gc: 0, diff: 0,
+          fairPlay: 0,    // puntos disciplinarios (menor = mejor)
+          rankingFIFA: 0   // se puede inyectar desde fuera
+        };
+      }
+    });
+
+    const gl = p.goles_local;
+    const gv = p.goles_visitante;
+
+    tabla[p.local].pj++;
+    tabla[p.visitante].pj++;
+    tabla[p.local].gf += gl;
+    tabla[p.local].gc += gv;
+    tabla[p.local].diff += gl - gv;
+    tabla[p.visitante].gf += gv;
+    tabla[p.visitante].gc += gl;
+    tabla[p.visitante].diff += gv - gl;
+
+    if (gl > gv) {
+      tabla[p.local].pts += 3;
+      tabla[p.local].pg++;
+      tabla[p.visitante].pp++;
+    } else if (gl === gv) {
+      tabla[p.local].pts += 1;
+      tabla[p.visitante].pts += 1;
+      tabla[p.local].pe++;
+      tabla[p.visitante].pe++;
+    } else {
+      tabla[p.visitante].pts += 3;
+      tabla[p.visitante].pg++;
+      tabla[p.local].pp++;
+    }
+
+    // --- Fair Play: acumular puntos disciplinarios ---
+    // Cada partido puede tener arrays de tarjetas por equipo
+    // amarillas, dbl_amarillas, rojas_directas, amarilla_y_roja
+    if (p.tarjetas) {
+      ['local', 'visitante'].forEach((lado) => {
+        const t = p.tarjetas[lado];
+        if (!t) return;
+        const equipo = p[lado];
+        tabla[equipo].fairPlay += (t.amarillas || 0) * 1;           // -1 c/u
+        tabla[equipo].fairPlay += (t.dbl_amarillas || 0) * 3;       // -3 c/u
+        tabla[equipo].fairPlay += (t.rojas_directas || 0) * 4;      // -4 c/u
+        tabla[equipo].fairPlay += (t.amarilla_y_roja || 0) * 5;     // -5 c/u
+      });
+    }
+  });
+
+  // --- 2. Stats de enfrentamientos directos entre un subconjunto ---
+  function statsDirectos(equiposEnDisputa) {
+    const stats = {};
+    equiposEnDisputa.forEach((e) => {
+      stats[e] = { pts: 0, diff: 0, gf: 0 };
+    });
+
+    partidos.forEach((p) => {
+      if (!p.jugado) return;
+      if (!equiposEnDisputa.includes(p.local) || !equiposEnDisputa.includes(p.visitante)) return;
+
+      const gl = p.goles_local;
+      const gv = p.goles_visitante;
+
+      if (gl > gv) {
+        stats[p.local].pts += 3;
+      } else if (gl === gv) {
+        stats[p.local].pts += 1;
+        stats[p.visitante].pts += 1;
+      } else {
+        stats[p.visitante].pts += 3;
+      }
+
+      stats[p.local].gf += gl;
+      stats[p.local].diff += gl - gv;
+      stats[p.visitante].gf += gv;
+      stats[p.visitante].diff += gv - gl;
+    });
+
+    return stats;
+  }
+
+  // --- 3. Comparador FIFA 2026 (par a par, con contexto de empatados) ---
+  function comparar(a, b, empatados) {
+    const sa = tabla[a];
+    const sb = tabla[b];
+
+    // 1º–3º Enfrentamientos directos entre TODOS los empatados
+    const directos = statsDirectos(empatados);
+    const da = directos[a];
+    const db = directos[b];
+
+    if (da.pts !== db.pts) return db.pts - da.pts;
+    if (da.diff !== db.diff) return db.diff - da.diff;
+    if (da.gf !== db.gf) return db.gf - da.gf;
+
+    // 4º Diferencia de goles general
+    if (sa.diff !== sb.diff) return sb.diff - sa.diff;
+
+    // 5º Goles a favor general
+    if (sa.gf !== sb.gf) return sb.gf - sa.gf;
+
+    // 6º Fair Play (menor = mejor, así que el que tenga menos va primero)
+    if (sa.fairPlay !== sb.fairPlay) return sa.fairPlay - sb.fairPlay;
+
+    // 7º Ranking FIFA (menor número = mejor posición en el ranking)
+    if (sa.rankingFIFA !== sb.rankingFIFA) return sa.rankingFIFA - sb.rankingFIFA;
+
+    return 0;
+  }
+
+  // --- 4. Ordenar con grupos de empatados ---
+  const equipos = Object.keys(tabla);
+
+  const ordenados = equipos.sort((a, b) => {
+    if (tabla[b].pts !== tabla[a].pts) return tabla[b].pts - tabla[a].pts;
+
+    const empatados = equipos.filter((e) => tabla[e].pts === tabla[a].pts);
+    return comparar(a, b, empatados);
+  });
+
+  // --- 5. Resultado final con todos los datos para comparar terceros ---
+  return ordenados.map((equipo, i) => ({
+    pos: i + 1,
+    equipo,
+    pts: tabla[equipo].pts,
+    pj: tabla[equipo].pj,
+    pg: tabla[equipo].pg,
+    pe: tabla[equipo].pe,
+    pp: tabla[equipo].pp,
+    gf: tabla[equipo].gf,
+    gc: tabla[equipo].gc,
+    diff: tabla[equipo].diff,
+    fairPlay: tabla[equipo].fairPlay,
+    rankingFIFA: tabla[equipo].rankingFIFA
+  }));
+}
+
+
+function calcularProbabilidades(
   partidos,
   cantidadClassif = 2,
-  mejoresTerceros = 0,   // ← NUEVO: 0 = no aplica, 8 = mejores 8 terceros
+  mejoresTerceros = 8,    // Mundial 2026: 8 mejores terceros
   simulaciones = 50_000
 ) {
   const equipos = obtenerEquipos(partidos);
@@ -763,7 +906,7 @@ console.log(generarResultado('bundesliga'))  */
   for (let sim = 0; sim < simulaciones; sim++) {
     const partidosSimulados = partidos.map((p) => {
       if (p.jugado) return { ...p, simulados: false, id: sim };
-      const resultado = generarResultado(competencia);
+      const resultado = generarResultado(competencia, null, p.local, p.visitante);
       return { ...p, ...resultado, jugado: true, simulados: true, id: sim };
     });
 
@@ -772,30 +915,32 @@ console.log(generarResultado('bundesliga'))  */
     // PASO 1: Resolver todos los grupos
     grupos.forEach((d) => {
       const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
-      const tabla = calcularYOrdenarTablaConDatos(grupo);  // [{equipo, pts, gf, gc, ...}, ...]
+      const tabla = calcularYOrdenarTablaConDatos(grupo);
       const orden = tabla.map((t) => t.equipo);
 
       // Clasificación directa (1ro, 2do)
       orden.slice(0, cantidadClassif).forEach((eq) => clasificaciones[eq]++);
 
-      // Guardar el tercero con sus datos para comparar después
+      // Guardar el tercero con todos sus datos para comparar después
       if (mejoresTerceros > 0 && tabla.length > cantidadClassif) {
-        terceros.push(tabla[cantidadClassif]); // el 3ro con sus stats
+        terceros.push(tabla[cantidadClassif]); // el 3ro con sus stats completos
       }
 
       casos1.push([tabla, grupo]);
     });
 
-    // PASO 2: Comparar terceros entre TODOS los grupos
+    // PASO 2: Comparar terceros entre TODOS los grupos (criterios FIFA 2026)
     if (mejoresTerceros > 0 && terceros.length > 0) {
       terceros.sort((a, b) => {
-        // Criterios FIFA para mejores terceros:
-        if (b.pts !== a.pts) return b.pts - a.pts;                     // puntos
-        const dgA = a.gf - a.gc, dgB = b.gf - b.gc;
-        if (dgB !== dgA) return dgB - dgA;                             // dif. de gol
-        if (b.gf !== a.gf) return b.gf - a.gf;                        // goles a favor
-        return 0;                                                       // empate → ambos clasifican
-      });
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      if (b.diff !== a.diff) return b.diff - a.diff;
+      if (b.gf !== a.gf) return b.gf - a.gf;
+      if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+      // ← ESTE es el que falta:
+      const rankA = rankingFIFA2026[a.equipo.replace(/-[A-L]$/, "")] || 999;
+      const rankB = rankingFIFA2026[b.equipo.replace(/-[A-L]$/, "")] || 999;
+      return rankA - rankB;
+    });
 
       terceros
         .slice(0, mejoresTerceros)
@@ -815,6 +960,7 @@ console.log(generarResultado('bundesliga'))  */
 
   return resultado;
 }
+  
   console.log(structuredClone(casos1))
 
   /* console.log(clasificaciones['River Plate-H']); */
@@ -1028,7 +1174,7 @@ data1.forEach(d => {
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 100);
+  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 10000);
   console.table(probabilidades)
 
   /* function eliminarDuplicados(simulaciones) {

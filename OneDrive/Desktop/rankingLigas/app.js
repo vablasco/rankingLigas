@@ -166,7 +166,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 
   let playoffs_names = {
     32: '32avos',
-    16: '16avos',
+    16: 'Dieciseisavos',
     8: 'Octavos',
     4: 'Cuartos',
     2: 'Semifinales',
@@ -444,6 +444,7 @@ const svg = d3
     cacheStats.set(key, stats);
     return stats;
   }
+    /*
 
   let sort_teams1 = (array, { usarDirecto = true } = {}) => {
     array = removeDuplicates(array);
@@ -495,9 +496,9 @@ const svg = d3
     array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
 
     return array;
-  };
+  }; */
 
-  let mejores_terceros_sort = (array) => {
+  /* let mejores_terceros_sort = (array) => {
 
     array.sort((a, b) => {
 
@@ -509,7 +510,188 @@ const svg = d3
     });
 
     return array;
-  };
+  }; */
+
+  const rankingFIFA2026 = {
+  // Grupo A
+  "México": 15,
+  "Sudáfrica": 60,
+  "Corea del Sur": 25,
+  "República Checa": 41,
+
+  // Grupo B
+  "Canadá": 30,
+  "Bosnia y Herzegovina": 65,
+  "Qatar": 55,
+  "Suiza": 19,
+
+  // Grupo C
+  "Brasil": 6,
+  "Marruecos": 8,
+  "Haití": 83,
+  "Escocia": 43,
+
+  // Grupo D
+  "Estados Unidos": 16,
+  "Paraguay": 40,
+  "Australia": 27,
+  "Turquía": 22,
+
+  // Grupo E
+  "Alemania": 10,
+  "Curazao": 82,
+  "Costa de Marfil": 34,
+  "Ecuador": 23,
+
+  // Grupo F
+  "Países Bajos": 7,
+  "Japón": 18,
+  "Suecia": 38,
+  "Túnez": 44,
+
+  // Grupo G
+  "Bélgica": 9,
+  "Egipto": 29,
+  "Irán": 21,
+  "Nueva Zelanda": 85,
+
+  // Grupo H
+  "España": 2,
+  "Cabo Verde": 68,
+  "Arabia Saudita": 61,
+  "Uruguay": 17,
+
+  // Grupo I
+  "Francia": 1,
+  "Senegal": 14,
+  "Irak": 57,
+  "Noruega": 31,
+
+  // Grupo J
+  "Argentina": 3,
+  "Argelia": 28,
+  "Austria": 24,
+  "Jordania": 64,
+
+  // Grupo K
+  "Portugal": 5,
+  "RD de Congo": 46,
+  "Uzbekistán": 50,
+  "Colombia": 13,
+
+  // Grupo L
+  "Inglaterra": 4,
+  "Croacia": 11,
+  "Ghana": 74,
+  "Panamá": 33
+};
+
+/* const stripes = [
+  { color: "#002395", size: 1 }, // azul
+  { color: "#ffffff", size: 1 }, // blanco
+  { color: "#ED2939", size: 1 }  // rojo
+];
+
+stripes.forEach(s => {
+  const h = (s.size / totalParts) * innerH;
+  svg.append("rect")
+    .attr("x", 0).attr("y", 0)
+    .attr("width", 100).attr("height", h)
+    .attr("fill", s.color);
+  y += h;
+}); */
+
+  let sort_teams1 = (array, { usarDirecto = true } = {}) => {
+  array = removeDuplicates(array);
+
+  const grupoEmpatadosCache = new Map();
+
+  function getEmpatados(grupo, pts) {
+    const key = `${grupo}|${pts}`;
+    if (!grupoEmpatadosCache.has(key)) {
+      grupoEmpatadosCache.set(
+        key,
+        array.filter((e) => e.name.split('-')[1] === grupo && e.value === pts).map((e) => e.name)
+      );
+    }
+    return grupoEmpatadosCache.get(key);
+  }
+
+  function getRankingFIFA(name) {
+    const nombre = name.replace(/-[A-L]$/, "");
+    return rankingFIFA2026[nombre] || 999;
+  }
+
+  array.sort((a, b) => {
+    const ga = a.name.split('-')[1];
+    const gb = b.name.split('-')[1];
+
+    // Separar por grupo
+    if (gb < ga) return 1;
+    if (gb > ga) return -1;
+
+    // 0. Puntos generales
+    if (b.value !== a.value) return b.value - a.value;
+
+    // 1º–3º Enfrentamientos directos
+    if (usarDirecto) {
+      const empatados = getEmpatados(ga, a.value);
+      const sd = statsDirectos(empatados, array[0].semana);
+      const sdA = sd[a.name];
+      const sdB = sd[b.name];
+
+      if (sdB.pts_directo !== sdA.pts_directo) return sdB.pts_directo - sdA.pts_directo;
+      if (sdB.diff_directo !== sdA.diff_directo) return sdB.diff_directo - sdA.diff_directo;
+      if (sdB.gf_directo !== sdA.gf_directo) return sdB.gf_directo - sdA.gf_directo;
+    }
+
+    // 4º Diferencia de goles general
+    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+
+    // 5º Goles a favor general
+    if (b.goles !== a.goles) return b.goles - a.goles;
+
+    // 6º Fair Play (menor = mejor)
+    if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+
+    // 7º Ranking FIFA (menor = mejor)
+    return getRankingFIFA(a.name) - getRankingFIFA(b.name);
+  });
+
+  array.forEach((d, i) => (d.rank = i));
+  array.forEach((d, i) => (d.rankInGroup = i % equipos_por_grupos));
+  array.forEach((d) => (d.position = d.rankInGroup + 1 + d.name.split('-')[1]));
+  array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
+
+  return array;
+};
+
+let mejores_terceros_sort = (array) => {
+
+  function getRankingFIFA(name) {
+    const nombre = name.replace(/-[A-L]$/, "");
+    return rankingFIFA2026[nombre] || 999;
+  }
+
+  array.sort((a, b) => {
+    // 1º Puntos
+    if (b.value !== a.value) return b.value - a.value;
+
+    // 2º Diferencia de goles general
+    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+
+    // 3º Goles a favor general
+    if (b.goles !== a.goles) return b.goles - a.goles;
+
+    // 4º Fair Play (menor = mejor)
+    if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+
+    // 5º Ranking FIFA (menor = mejor)
+    return getRankingFIFA(a.name) - getRankingFIFA(b.name);
+  });
+
+  return array;
+};
 
   let yearSlice = sort_teams1(data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)));
 
@@ -2628,7 +2810,7 @@ filter.append("feDropShadow")
             .data(d3.range(primera_ronda_playoff*2))
             .enter()
             .append('rect')
-            .style('filter', 'url(#dropshadow)')
+            /* .style('filter', 'url(#dropshadow)') */
             .attrs({
               class: 'playoffs_names',
               x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
@@ -2636,8 +2818,15 @@ filter.append("feDropShadow")
               width: width_playoffs,
               height: heightBars,
             })
+            .attr("style", d => `outline: 1px solid grey`) 
             .styles({
-              fill: '#d4d4d4'
+              fill: (d, i) => {
+                if (i % 2 === 1) {
+                  return '#dddddd'
+                } else {
+                  return '#c2c2c2'
+                }
+              }
             })
             
             svg
@@ -2645,7 +2834,7 @@ filter.append("feDropShadow")
             .data(d3.range(primera_ronda_playoff*2))
             .enter()
             .append('rect')
-            .style('filter', 'url(#dropshadow)')
+            /* .style('filter', 'url(#dropshadow)') */
             .attrs({
               class: 'playoffs_names',
               x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs * 1,
@@ -2654,8 +2843,9 @@ filter.append("feDropShadow")
               width: width_playoffs,
               height: heightBars,
             })
+            .attr("style", d => `outline: 1px solid grey`) 
             .styles({
-              fill: '#d4d4d4'
+              fill: '#dddddd'
             })
 
             svg
@@ -2663,7 +2853,7 @@ filter.append("feDropShadow")
             .data(d3.range(primera_ronda_playoff*2))
             .enter()
             .append('rect')
-            .style('filter', 'url(#dropshadow)')
+            /* .style('filter', 'url(#dropshadow)') */
             .attrs({
               class: 'playoffs_names',
               x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2,
@@ -2671,8 +2861,9 @@ filter.append("feDropShadow")
               width: width_playoffs,
               height: heightBars,
             })
+            .attr("style", d => `outline: 1px solid grey`) 
             .styles({
-              fill: '#d4d4d4'
+              fill: '#dddddd'
             })
 
             svg
@@ -2680,7 +2871,7 @@ filter.append("feDropShadow")
             .data(d3.range(primera_ronda_playoff*2))
             .enter()
             .append('rect')
-            .style('filter', 'url(#dropshadow)')
+           /*  .style('filter', 'url(#dropshadow)') */
             .attrs({
               class: 'playoffs_names',
               x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3,
@@ -2688,8 +2879,9 @@ filter.append("feDropShadow")
               width: width_playoffs,
               height: heightBars,
             })
+            .attr("style", d => `outline: 1px solid grey`) 
             .styles({
-              fill: '#d4d4d4'
+              fill: '#dddddd'
             })
 
             svg
@@ -2697,7 +2889,7 @@ filter.append("feDropShadow")
             .data(d3.range(primera_ronda_playoff*2))
             .enter()
             .append('rect')
-            .style('filter', 'url(#dropshadow)')
+            /* .style('filter', 'url(#dropshadow)') */
             .attrs({
               class: 'playoffs_names',
               x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 5 + width_playoffs * 4,
@@ -2705,8 +2897,9 @@ filter.append("feDropShadow")
               width: width_playoffs,
               height: heightBars,
             })
+            .attr("style", d => `outline: 1px solid grey`) 
             .styles({
-              fill: '#d4d4d4'
+              fill: '#dddddd'
             })
             
     arr.forEach((dd) => {
@@ -2807,9 +3000,9 @@ filter.append("feDropShadow")
               space_width_playoff) +
             space_width_playoff +
             heightBars * 0.5 -
-            defaults.logo.size / 2,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
-          height: defaults.logo.size,
+            defaults.logo.size*0.8 / 2,
+          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size*0.8 / 2,
+          height: defaults.logo.size*0.8,
           href: (d) => `./escudos/${d.name.split("-")[0]}.png`,
         })
         .styles({
@@ -3076,6 +3269,66 @@ filter.append("feDropShadow")
   feMerge.append('feMergeNode').attr('in', 'offsetBlur');
   feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
+  const FLAG_COLORS = {
+  // ─── CONMEBOL ───────────────────────────────────────────────────
+  'Argentina':              ['#74ACDF', '#FFFFFF', '#74ACDF'],
+  'Brasil':                 ['#009739', '#FEDD00', '#009739'],
+  'Colombia':               ['#FCD116', '#FCD116', '#003893', '#CE1126'],
+  'Ecuador':                ['#FFD100', '#FFD100', '#0033A0', '#CE1126'],
+  'Paraguay':               ['#D52B1E', '#FFFFFF', '#0038A8'],
+  'Uruguay':                ['#001489', '#FFFFFF', '#001489'],
+  // ─── CONCACAF ──────────────────────────────────────────────────
+  'Estados Unidos':         ['#B31942', '#FFFFFF', '#0A3161'],
+  'México':                 ['#006341', '#FFFFFF', '#CE1126'],
+  'Canadá':                 ['#FF0000', '#FFFFFF', '#FF0000'],
+  'Panamá':                 ['#FFFFFF', '#D21034', '#005DA6', '#FFFFFF'],
+  'Haití':                  ['#00209F', '#D21034'],
+  'Curazao':                ['#002B7F', '#002B7F', '#F9E814'],
+  // ─── UEFA ─────────────────────────────────────────────────────
+  'Francia':                ['#002395', '#FFFFFF', '#ED2939'],
+  'Inglaterra':             ['#FFFFFF', '#CE1124', '#FFFFFF'],
+  'Alemania':               ['#000000', '#DD0000', '#FFCC00'],
+  'España':                 ['#AA151B', '#F1BF00', '#AA151B'],
+  'Países Bajos':           ['#AE1C28', '#FFFFFF', '#21468B'],
+  'Portugal':               ['#006600', '#006600', '#FF0000', '#FF0000', '#FF0000'],
+  'Bélgica':                ['#000000', '#FDDA24', '#EF3340'],
+  'Croacia':                ['#FF0000', '#FFFFFF', '#171796'],
+  'Austria':                ['#ED2939', '#FFFFFF', '#ED2939'],
+  'Suiza':                  ['#FF0000', '#FFFFFF', '#FF0000'],
+  'Suecia':                 ['#006AA7', '#FECC02', '#006AA7'],
+  'Noruega':                ['#EF2B2D', '#FFFFFF', '#002868'],
+  'Dinamarca':              ['#C8102E', '#FFFFFF', '#C8102E'],
+  'Escocia':                ['#003399', '#FFFFFF', '#003399'],
+  'Turquía':                ['#E30A17', '#FFFFFF', '#E30A17'],
+  'Bosnia y Herzegovina':   ['#002395', '#FECE00', '#002395'],
+  'República Checa':        ['#FFFFFF', '#11457E', '#D7141A'],
+  // ─── AFC ──────────────────────────────────────────────────────
+  'Japón':                  ['#FFFFFF', '#BC002D', '#FFFFFF'],
+  'Corea del Sur':          ['#FFFFFF', '#CD2E3A', '#0047A0'],
+  'Australia':              ['#002868', '#FFCD00', '#002868'],
+  'Arabia Saudita':         ['#006C35', '#FFFFFF', '#006C35'],
+  'Irán':                   ['#239F40', '#FFFFFF', '#DA0000'],
+  'Irak':                   ['#CE1126', '#FFFFFF', '#000000'],
+  'Qatar':                  ['#8A1538', '#FFFFFF', '#8A1538'],
+  'Jordania':               ['#000000', '#FFFFFF', '#007A3D'],
+  'Uzbekistán':             ['#0099B5', '#FFFFFF', '#1EB53A'],
+  // ─── CAF ──────────────────────────────────────────────────────
+  'Marruecos':              ['#C1272D', '#006233', '#C1272D'],
+  'Senegal':                ['#00853F', '#FDEF42', '#E31B23'],
+  'Nigeria':                ['#008751', '#FFFFFF', '#008751'],
+  'Egipto':                 ['#CE1126', '#FFFFFF', '#000000'],
+  'Costa de Marfil':        ['#FF8200', '#FFFFFF', '#009A44'],
+  'Sudáfrica':              ['#007749', '#FFB81C', '#000000', '#FFFFFF', '#002395', '#DE3831'],
+  'RD de Congo':            ['#007FFF', '#F7D618', '#CE1021'],
+  'Ghana':                  ['#EF3340', '#FCD116', '#006B3F'],
+  'Argelia':                ['#006233', '#FFFFFF', '#D21034'],
+  'Túnez':                  ['#E70013', '#FFFFFF', '#E70013'],
+  'Cabo Verde':             ['#003893', '#003893', '#FFFFFF', '#CE1126', '#FFFFFF'],
+  // ─── OFC ──────────────────────────────────────────────────────
+  'Nueva Zelanda':          ['#00247D', '#CC142B', '#FFFFFF'],
+};
+
+
   if (grupos > 1) {
     const strokeWidthBase = (heightBars * 0.35) / 7;
 const capas = [
@@ -3160,11 +3413,12 @@ grupos_1.forEach((grupo, indice_grupo) => {
         } else {
           return '#76c476'
         }
-      } else if (i < clasificacion_por_grupo) {
+      } else if (i < clasificacion_por_grupo && mejores_terceros.includes(d.position[1])) {
+        console.log(mejores_terceros)
         if (i % 2 === 1) {
-          return '#fff9c1'
+          return '#d8ffb8'
         } else {
-          return '#fff7aa'
+          return '#e3ffb5'
         }
       } else {
         if (i % 2 === 1) {
@@ -3246,7 +3500,7 @@ grupos_1.forEach((grupo, indice_grupo) => {
 
       const pathD = pathLine(points);
 
-      capas.forEach(({ colorIdx, width }) => {
+      /* capas.forEach(({ colorIdx, width }) => {
         svg.append('path')
           .attrs({
             transform: `translate(${margin_left * 2}, 0)`,
@@ -3259,9 +3513,61 @@ grupos_1.forEach((grupo, indice_grupo) => {
             'stroke-linejoin': 'round',
           })
           .attr('d', pathD);
-      });
+      }); */
+      function drawFlagPath(svg, pathD, club, totalWidth = 6, transform = '', className = 'line') {
+  const colors = FLAG_COLORS[club];
+  if (!colors) {
+    console.warn(`No se encontraron colores de bandera para: ${club}`);
+    return;
+  }
+  const stripeWidth = totalWidth / colors.length;
+  colors.forEach((color, i) => {
+    // Calcular offset vertical: centrado respecto al medio
+    // Para 3 colores: offsets = [-stripeWidth, 0, +stripeWidth]
+    const middleIndex = (colors.length - 1) / 2;
+    const offset = (i - middleIndex) * stripeWidth;
+    svg.append('path')
+      .attr('d', pathD)
+      .attr('transform', transform ? `${transform} translate(0, ${offset})` : `translate(0, ${offset})`)
+      .attr('class', className)
+      .style('fill', 'none')
+      .style('stroke', color)
+      .style('stroke-width', stripeWidth)
+      .style('stroke-linejoin', 'round')
+      .style('stroke-linecap', 'round');
+  });
+}
+/* 
+      const totalWidth = 20;
+const stripeWidth = totalWidth / 3;
+const colors = ['#002395', '#FFFFFF']; // ej: Francia
+
+colors.forEach((color, i) => {
+  // Offset: -1, 0, +1 (multiplicado por stripeWidth)
+  const offset = (i - 1) * stripeWidth;
+
+  svg.append('path')
+    .attr('d', pathD)
+    .attr('transform', `translate(${margin_left * 2}, ${offset})`)
+    .attr('class', 'line')
+    .style('fill', 'none')
+    .style('stroke', color)
+    .style('stroke-width', stripeWidth)
+    .style('stroke-linejoin', 'round');
+}); */
+
+drawFlagPath(
+        svg,
+        pathD,
+        club,
+        15,
+        `translate(${margin_left * 2}, 0)`,
+        'line'
+      );
     });
 });
+
+
 
     grupos_1.forEach((grupo, indice_grupo) => {
       names_1
