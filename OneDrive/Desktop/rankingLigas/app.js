@@ -200,6 +200,9 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 
   let equipos_por_grupos = top_n / grupos;
   let width_playoffs = heightBars * 8;
+  if (simular_playoffs) {
+    width_playoffs = heightBars * 6;
+  }
   let space_width_playoff = width_playoffs * 0.5;
   let space_height_playoff = heightBars * 0.5;
   let primera_ronda_playoff = fechas_playoff.filter((d) => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, (d) => +d.fecha.split('/')[1])).length;
@@ -373,7 +376,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
         x: -32.5,
       },
       size: heightBars * 0.5,
-      size1: heightBars * 0.3,
+      size1: heightBars * 0.35,
     },
     yearText: {
       position: {
@@ -2846,7 +2849,6 @@ stripes.forEach(s => {
       .data(d3.range(primera_ronda_playoff * 2))
       .enter()
       .append('rect')
-      /* .style('filter', 'url(#dropshadow)') */
       .attrs({
         class: 'playoffs_names',
         x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs * 1,
@@ -2864,7 +2866,6 @@ stripes.forEach(s => {
       .data(d3.range(primera_ronda_playoff * 2))
       .enter()
       .append('rect')
-      /* .style('filter', 'url(#dropshadow)') */
       .attrs({
         class: 'playoffs_names',
         x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2,
@@ -2882,7 +2883,6 @@ stripes.forEach(s => {
       .data(d3.range(primera_ronda_playoff * 2))
       .enter()
       .append('rect')
-      /*  .style('filter', 'url(#dropshadow)') */
       .attrs({
         class: 'playoffs_names',
         x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3,
@@ -3225,14 +3225,11 @@ stripes.forEach(s => {
     );
 
   svg
-    /* .selectAll('.text')
-    .data(dates)
-    .enter() */
     .append('text')
     .attrs({
       class: 'years',
-      x: (d, i) => fechasNotPlayed(dates.length) + defaults.logo.size / 2,
-      y: margin.top * 0.8,
+      x: (d, i) => fechasNotPlayed(fechas_not_played) + defaults.logo.size / 2,
+      y: margin.top * 0.75,
       transform: `translate(${margin_left * 2}, 0)`,
       'clip-path': `url(#ellipse-clip-margin-left)`,
     })
@@ -3243,14 +3240,32 @@ stripes.forEach(s => {
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Seleccion RankingFIFA Probabilidad #2 3°');
+    .text('Selección - RankingFIFA - Efec. - Goles Prom. - Probabilidad Claificacón - Posición esperada');
+
+    svg
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) => fechasNotPlayed(fechas_not_played) + defaults.logo.size / 2,
+      y: margin.top * 0.85,
+      transform: `translate(${margin_left * 2}, 0)`,
+      'clip-path': `url(#ellipse-clip-margin-left)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.2,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('Puntos - Partidos: Jugados / Ganados / Empatados / Perdidos - Goles: A Favor / En Contra / Diferencia');
 
   var defs = svg.append('defs');
 
   var filter = defs.append('filter').attr('id', 'dropshadow');
 
-  filter.append('feGaussianBlur').attr('in', 'SourceAlpha').attr('stdDeviation', 2).attr('result', 'blur');
-  filter.append('feOffset').attr('in', 'blur').attr('dx', 2).attr('dy', 2).attr('result', 'offsetBlur');
+  filter.append('feGaussianBlur').attr('in', 'SourceAlpha').attr('stdDeviation', 1).attr('result', 'blur');
+  filter.append('feOffset').attr('in', 'blur').attr('dx', 1).attr('dy', 1).attr('result', 'offsetBlur');
   filter.append('feFlood').attr('in', 'offsetBlur').attr('flood-color', '#000').attr('flood-opacity', 1).attr('result', 'offsetColor');
   filter.append('feComposite').attr('in', 'offsetColor').attr('in2', 'offsetBlur').attr('operator', 'in').attr('result', 'offsetBlur');
 
@@ -3635,11 +3650,11 @@ stripes.forEach(s => {
               .attr('transform', transform)
               .attr('class', className + ' flag-shadow')
               .style('fill', 'none')
-              .style('stroke', 'rgba(0, 0, 0, 0.2)')
-              .style('stroke-width', totalWidth + 4) // un poco más ancho que la bandera
-              .style('stroke-linejoin', 'round')
-              .style('stroke-linecap', 'round')
-              .style('filter', 'blur(3px)');
+              .style('stroke', 'rgba(0, 0, 0, 1)')
+              .style('stroke-width', totalWidth + 2) // un poco más ancho que la bandera
+              /* .style('stroke-linejoin', 'round')
+              .style('stroke-linecap', 'round') */
+              .style('filter', 'blur(1px)');
 
             // ── FRANJAS ─────────────────────────────────────────
             colors.forEach((color, i) => {
@@ -3649,7 +3664,7 @@ stripes.forEach(s => {
               const offsetPts = offsetPoints(points, offset);
               const pathD = pathLine(offsetPts);
 
-              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round')/* .style('stroke-linecap', 'round') */;
             });
           }
 
@@ -3754,11 +3769,18 @@ stripes.forEach(s => {
 
                 svg
                   .append('image')
-                  /* .style('filter', 'url(#dropshadow)') */
+                  .style('filter', 'url(#dropshadow)')
                   .attrs({
                     transform: `translate(${margin_left * 2}, 0)`,
                     class: 'line',
-                    x: x(wks) + heightBars * 0.2 + (team.goles_fecha == not_played_yet ? (team.l_or_v == 'V' ? heightBars * 0.2 : -heightBars * 0.2) : 0) + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor + hor_not_played_yet + defaults.mini_logo.size1 * 0.35 + (team.l_or_v == 'V' ? -heightBars * 0.95 : 0),
+                    x: d => {
+                      const dir = team.l_or_v == 'V' ? -1 : 1;
+                      let val = x(wks) + dir * heightBars * 0.3 - defaults.mini_logo.size1 / 2;
+                      if (team.goles_fecha != not_played_yet) {
+                        val += dir * team.goles_en_contra_fecha.toString().length * heightBars * 0.2;
+                      }
+                      return val;
+                    },
                     y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
                     height: defaults.mini_logo.size1,
                     href: pts1.vs != 'none' ? `./escudos/${team.vs.split('-')[0]}.png` : '',
@@ -4081,26 +4103,40 @@ stripes.forEach(s => {
       }
 
       function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
-        const colors = FLAG_COLORS1[club];
-        if (!colors) {
-          console.warn(`No se encontraron colores de bandera para: ${club}`);
-          return;
-        }
-        const stripeWidth = totalWidth / colors.length;
+            const colors = FLAG_COLORS1[club];
+            if (!colors) {
+              console.warn(`No se encontraron colores de bandera para: ${club}`);
+              return;
+            }
+            const stripeWidth = totalWidth / colors.length;
 
-        colors.forEach((color, i) => {
-          const middleIndex = (colors.length - 1) / 2;
-          const offset = (i - middleIndex) * stripeWidth;
+            // ── SOMBRA ──────────────────────────────────────────
+            const shadowPath = pathLine(points);
+            svg
+              .append('path')
+              .attr('d', shadowPath)
+              .attr('transform', transform)
+              .attr('class', className + ' flag-shadow')
+              .style('fill', 'none')
+              .style('stroke', 'rgba(0, 0, 0, 1)')
+              .style('stroke-width', totalWidth + 2) // un poco más ancho que la bandera
+              .style('stroke-linejoin', 'round')
+              .style('stroke-linecap', 'round')
+              .style('filter', 'blur(1px)')/* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
 
-          // Generar puntos desplazados perpendicularmente
-          const offsetPts = offsetPoints(points, offset);
-          const pathD = pathLine(offsetPts);
+            // ── FRANJAS ─────────────────────────────────────────
+            colors.forEach((color, i) => {
+              const middleIndex = (colors.length - 1) / 2;
+              const offset = (i - middleIndex) * stripeWidth;
 
-          svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
-        });
-      }
+              const offsetPts = offsetPoints(points, offset);
+              const pathD = pathLine(offsetPts);
 
-      drawFlagPath(svg, points, club, 15, `translate(${margin_left * 2}, 0)`, 'line');
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth).style('stroke-linejoin', 'round').style('stroke-linecap', 'round')/* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
+            });
+          }
+
+          drawFlagPath(svg, points, club, 15, `translate(${margin_left * 2}, 0)`, 'line');
     });
 
     names_1.forEach((nombre) => {
@@ -4201,7 +4237,14 @@ stripes.forEach(s => {
               .attrs({
                 transform: `translate(${margin_left * 2}, 0)`,
                 class: 'line',
-                x: x(wks) + heightBars * 0.2 + (team.goles_fecha == not_played_yet ? (team.l_or_v == 'V' ? heightBars * 0.2 : -heightBars * 0.2) : 0) + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor + hor_not_played_yet + defaults.mini_logo.size1 * 0.35 + (team.l_or_v == 'V' ? -heightBars * 0.95 : 0),
+                x: d => {
+                    const dir = team.l_or_v == 'V' ? -1 : 1;
+                    let val = x(wks) + dir * heightBars * 0.3 - defaults.mini_logo.size1 / 2;
+                    if (team.goles_fecha != not_played_yet) {
+                      val += dir * team.goles_en_contra_fecha.toString().length * heightBars * 0.2;
+                    }
+                    return val;
+                  },
                 y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
                 height: defaults.mini_logo.size1,
                 href: pts1.vs != 'none' ? `./escudos/${team.vs.split('-')[0]}.png` : '',
@@ -8113,6 +8156,7 @@ stripes.forEach(s => {
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
+        .style('filter', 'url(#dropshadow)')
         .attrs({
           class: 'logo',
           x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 1.1) / 2,
