@@ -1,7 +1,7 @@
 import { procesarDatos } from './data.js';
 import { colores } from './colores.js';
 
-const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades } = window.__appData ?? await procesarDatos();
+const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades } = window.__appData ?? (await procesarDatos());
 
 const index = (window.__appIndex ?? 0) % totalCasosSimulados.length;
 let index1 = 0;
@@ -47,7 +47,7 @@ let simular_playoffs = true;
 let competencia = nombre_torneo.split(' ')[0];
 
 if (nombre_torneo == 'Mundial 2026') {
-  repechaje = 1
+  repechaje = 1;
 }
 
 const clasificados_por_competencia = {
@@ -64,7 +64,7 @@ const clasificados_por_competencia = {
 
 let clasificacion_por_grupo = clasificados_por_competencia[competencia] + repechaje;
 
-console.log(clasificacion_por_grupo)
+console.log(clasificacion_por_grupo);
 
 d3.timeFormatDefaultLocale({
   decimal: ',',
@@ -84,69 +84,69 @@ d3.timeFormatDefaultLocale({
 let formatEfec = d3.format('.0f');
 
 function parseScore(str) {
-          const m = str.trim().match(/^(\d+)(?:\[(\d+)\])?$/);
-          return {
-            goles: parseInt(m[1]),
-            penales: m[2] ? parseInt(m[2]) : null,
-          };
-        }
+  const m = str.trim().match(/^(\d+)(?:\[(\d+)\])?$/);
+  return {
+    goles: parseInt(m[1]),
+    penales: m[2] ? parseInt(m[2]) : null,
+  };
+}
+
+function getColorByProbability(percent) {
+  const hue = (percent / 100) * 120;
+  return `hsl(${hue}, 85%, 45%)`;
+}
 
 const parseDate = (str) => new Date(str);
 
-  const halo1 = function (text, strokeWidth, color) {
-    text
-      .select(function () {
-        return this.parentNode.insertBefore(this.cloneNode(true), this);
-      })
-      .styles({
-        fill: 'white',
-        stroke: 'white',
-        'stroke-width': strokeWidth / 3.5,
-        'stroke-linejoin': 'round',
-        'stroke-linecap': 'round',
-        opacity: 1,
-      });
-  };
+const halo1 = function (text, strokeWidth, color) {
+  text
+    .select(function () {
+      return this.parentNode.insertBefore(this.cloneNode(true), this);
+    })
+    .styles({
+      fill: 'white',
+      stroke: 'white',
+      'stroke-width': strokeWidth / 3.5,
+      'stroke-linejoin': 'round',
+      'stroke-linecap': 'round',
+      opacity: 1,
+    });
+};
 
 const COUNTRY_TEAMS = {
-        ar: ["Barracas Central", "Racing", "Tigre", "Riestra", "San Lorenzo", "River Plate", "Boca Juniors"],
-        br: ["Vasco Da Gama", "Sao Paulo", "Atletico Mineiro", "Gremio", "Botafogo", "Santos", "Bragantino", "Cruzeiro"],
-        cl: ["OHiggins", "Audax Italiano", "Palestino", "Deportivo Recoleta", "Universidad Catolica"],
-        co: ["Millonarios", "America De Cali"],
-        bo: ["Independiente Petrolero", "Blooming"],
-        ec: ["Deportivo Cuenca", "Macara", "Barcelona"],
-        pe: ["Alianza Atletico", "Cienciano"],
-        uy: ["Boston River", "Montevideo City Torque", 'Juventud'],
-        ve: ["Academia Puerto Cabello", "Caracas", "Carabobo"],
-        py: ["Olimpia"],
-        mx: ["México"],
-        za: ["Sudáfrica"],
-        cz: ["República Checa"],
-        kr: ["Corea del Sur"]
-      };
+  ar: ['Barracas Central', 'Racing', 'Tigre', 'Riestra', 'San Lorenzo', 'River Plate', 'Boca Juniors'],
+  br: ['Vasco Da Gama', 'Sao Paulo', 'Atletico Mineiro', 'Gremio', 'Botafogo', 'Santos', 'Bragantino', 'Cruzeiro'],
+  cl: ['OHiggins', 'Audax Italiano', 'Palestino', 'Deportivo Recoleta', 'Universidad Catolica'],
+  co: ['Millonarios', 'America De Cali'],
+  bo: ['Independiente Petrolero', 'Blooming'],
+  ec: ['Deportivo Cuenca', 'Macara', 'Barcelona'],
+  pe: ['Alianza Atletico', 'Cienciano'],
+  uy: ['Boston River', 'Montevideo City Torque', 'Juventud'],
+  ve: ['Academia Puerto Cabello', 'Caracas', 'Carabobo'],
+  py: ['Olimpia'],
+  mx: ['México'],
+  za: ['Sudáfrica'],
+  cz: ['República Checa'],
+  kr: ['Corea del Sur'],
+};
 
-      const TEAM_COUNTRY = Object.fromEntries(
-        Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) =>
-          teams.map(team => [team, code])
-        )
-      );
+const TEAM_COUNTRY = Object.fromEntries(Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) => teams.map((team) => [team, code])));
 
-      const getFlag = (raw) => {
-        const name = raw.replace(/-[A-Z]$/, "");
-        const code = TEAM_COUNTRY[name];
-        return code ? `${code}.svg` : null;
-      };
+const getFlag = (raw) => {
+  const name = raw.replace(/-[A-Z]$/, '');
+  const code = TEAM_COUNTRY[name];
+  return code ? `${code}.svg` : null;
+};
 
 const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabilidades) => {
+  console.log(data, fechas_playoff);
 
-  console.log(data, fechas_playoff)
-  
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
 
   let grupos = grupos_1.length;
   let top_n = names_1.length;
-  let heightBars = /* (height - (margin.bottom + margin.top)) / (top_n + 2); */50;
+  let heightBars = /* (height - (margin.bottom + margin.top)) / (top_n + 2); */ 50;
 
   margin = {
     top: heightBars * 2,
@@ -182,7 +182,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     1: 'Final',
   }; */
 
-
   if (grupos == 1) {
     grupos = 0;
   }
@@ -191,25 +190,25 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     if (!Object.keys(probabilidades).includes(name)) {
       return [''];
     } else if (Object.keys(probabilidades).includes(name)) {
-      return probabilidades[name].probabilidad;
+      return probabilidades[name];
     } else {
       return [''];
     }
   }
 
-  console.log(fechas_playoff)
+  console.log(fechas_playoff);
 
   let equipos_por_grupos = top_n / grupos;
-  let width_playoffs = heightBars*8;
+  let width_playoffs = heightBars * 8;
   let space_width_playoff = width_playoffs * 0.5;
   let space_height_playoff = heightBars * 0.5;
-  let primera_ronda_playoff = fechas_playoff.filter(d => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, d => +d.fecha.split('/')[1])).length
+  let primera_ronda_playoff = fechas_playoff.filter((d) => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, (d) => +d.fecha.split('/')[1])).length;
   if (fechas_playoff.length == 0 && simular_playoffs) {
-    primera_ronda_playoff = clasificacion_por_grupo
+    primera_ronda_playoff = clasificacion_por_grupo;
   }
   let rondas_playoff = playoffs[primera_ronda_playoff];
   let distancia_entre_grupos = 0.5;
-  console.log(primera_ronda_playoff, fechas_playoff.filter(d => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, d => +d.fecha.split('/')[1])).length)
+  console.log(primera_ronda_playoff, fechas_playoff.filter((d) => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, (d) => +d.fecha.split('/')[1])).length);
   let names_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.local || d.visitante))];
 
   let dates = [...new Set(data.map((d) => d.semana).sort((a, b) => a - b))];
@@ -217,38 +216,33 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   let margin_right = margin.right;
 
   fechas_not_played = d3.max(data, (d) => d.partidos_jugados + d.partidos_jugados1);
-  console.log(structuredClone(fechas_not_played))
-  
-  let fechas_no_jugadas = ((dates.length-1)-fechas_not_played)-1
+  console.log(structuredClone(fechas_not_played));
+
+  let fechas_no_jugadas = dates.length - 1 - fechas_not_played - 1;
   let weeks = heightBars * 2;
-  let weeks_i = weeks * (dates.length)/*  - ((heightBars) * (((dates.length-1)-fechas_not_played)-1)); */
+  let weeks_i = weeks * dates.length; /*  - ((heightBars) * (((dates.length-1)-fechas_not_played)-1)); */
   /* let weeks_i = weeks * (dates.length) - ((weeks*not_played_yet_x) * fechas_no_jugadas); */
 
+  width = weeks * dates.length - weeks * not_played_yet_x * fechas_no_jugadas + heightBars * 9;
+  height = top_n * heightBars + margin.top;
 
-  width = weeks * (dates.length) - ((weeks*not_played_yet_x) * fechas_no_jugadas) + heightBars * 9
-  height = top_n*heightBars + margin.top
-
-  height = grupos > 1 ? height + grupos * (heightBars / 2) : height
+  height = grupos > 1 ? height + grupos * (heightBars / 2) : height;
 
   let margin_left = heightBars;
-  
-   if (grupos > 1 && names_playoffs_1.length != 0) {
-    width = width + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff)
+
+  if (grupos > 1 && names_playoffs_1.length != 0) {
+    width = width + (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff);
   } else if (grupos > 1 && simular_playoffs) {
-    width = width + (width_playoffs*rondas_playoff+space_width_playoff*rondas_playoff+space_width_playoff*1.5)
+    width = width + (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff * 1.5);
   }
 
+  console.log(fechas_no_jugadas, heightBars, weeks, weeks_i, fechas_not_played, dates.length - 1 - fechas_not_played - 1, not_played_yet_x, dates.length, margin_right);
 
-  console.log(fechas_no_jugadas, heightBars, weeks, weeks_i, fechas_not_played, ((dates.length-1)-fechas_not_played)-1, not_played_yet_x, dates.length, margin_right)
-  
   console.log(`[${width}, ${height}]`);
 
-d3.select('body svg').remove();
+  d3.select('body svg').remove();
 
-const svg = d3
-  .select('body')
-  .append('svg')
-  .attrs({
+  const svg = d3.select('body').append('svg').attrs({
     width: width,
     height: height,
   });
@@ -429,13 +423,13 @@ const svg = d3
       rivales.forEach((rival) => {
         const matches = dataRelevante.filter((d) => d.name === nombre && d.vs === rival);
         matches.forEach((match) => {
-          stats[nombre].pts_directo  += match.pts_fecha ?? 0;
-          stats[nombre].pj_directo   += 1;
-          stats[nombre].pg_directo   += match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0;
-          stats[nombre].pe_directo   += match.goles_fecha === match.goles_en_contra_fecha ? 1 : 0;
-          stats[nombre].pp_directo   += match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0;
-          stats[nombre].gf_directo   += match.goles_fecha ?? 0;
-          stats[nombre].gc_directo   += match.goles_en_contra_fecha ?? 0;
+          stats[nombre].pts_directo += match.pts_fecha ?? 0;
+          stats[nombre].pj_directo += 1;
+          stats[nombre].pg_directo += match.goles_fecha > match.goles_en_contra_fecha ? 1 : 0;
+          stats[nombre].pe_directo += match.goles_fecha === match.goles_en_contra_fecha ? 1 : 0;
+          stats[nombre].pp_directo += match.goles_fecha < match.goles_en_contra_fecha ? 1 : 0;
+          stats[nombre].gf_directo += match.goles_fecha ?? 0;
+          stats[nombre].gc_directo += match.goles_en_contra_fecha ?? 0;
           stats[nombre].diff_directo += (match.goles_fecha ?? 0) - (match.goles_en_contra_fecha ?? 0);
         });
       });
@@ -444,7 +438,7 @@ const svg = d3
     cacheStats.set(key, stats);
     return stats;
   }
-    /*
+  /*
 
   let sort_teams1 = (array, { usarDirecto = true } = {}) => {
     array = removeDuplicates(array);
@@ -513,80 +507,140 @@ const svg = d3
   }; */
 
   const rankingFIFA2026 = {
-  // Grupo A
-  "México": 15,
-  "Sudáfrica": 60,
-  "Corea del Sur": 25,
-  "República Checa": 41,
+    // Grupo A
+    México: 15,
+    Sudáfrica: 60,
+    'Corea del Sur': 25,
+    'República Checa': 41,
 
-  // Grupo B
-  "Canadá": 30,
-  "Bosnia y Herzegovina": 65,
-  "Qatar": 55,
-  "Suiza": 19,
+    // Grupo B
+    Canadá: 30,
+    'Bosnia y Herzegovina': 65,
+    Qatar: 55,
+    Suiza: 19,
 
-  // Grupo C
-  "Brasil": 6,
-  "Marruecos": 8,
-  "Haití": 83,
-  "Escocia": 43,
+    // Grupo C
+    Brasil: 6,
+    Marruecos: 8,
+    Haití: 83,
+    Escocia: 43,
 
-  // Grupo D
-  "Estados Unidos": 16,
-  "Paraguay": 40,
-  "Australia": 27,
-  "Turquía": 22,
+    // Grupo D
+    'Estados Unidos': 16,
+    Paraguay: 40,
+    Australia: 27,
+    Turquía: 22,
 
-  // Grupo E
-  "Alemania": 10,
-  "Curazao": 82,
-  "Costa de Marfil": 34,
-  "Ecuador": 23,
+    // Grupo E
+    Alemania: 10,
+    Curazao: 82,
+    'Costa de Marfil': 34,
+    Ecuador: 23,
 
-  // Grupo F
-  "Países Bajos": 7,
-  "Japón": 18,
-  "Suecia": 38,
-  "Túnez": 44,
+    // Grupo F
+    'Países Bajos': 7,
+    Japón: 18,
+    Suecia: 38,
+    Túnez: 44,
 
-  // Grupo G
-  "Bélgica": 9,
-  "Egipto": 29,
-  "Irán": 21,
-  "Nueva Zelanda": 85,
+    // Grupo G
+    Bélgica: 9,
+    Egipto: 29,
+    Irán: 21,
+    'Nueva Zelanda': 85,
 
-  // Grupo H
-  "España": 2,
-  "Cabo Verde": 68,
-  "Arabia Saudita": 61,
-  "Uruguay": 17,
+    // Grupo H
+    España: 2,
+    'Cabo Verde': 68,
+    'Arabia Saudita': 61,
+    Uruguay: 17,
 
-  // Grupo I
-  "Francia": 1,
-  "Senegal": 14,
-  "Irak": 57,
-  "Noruega": 31,
+    // Grupo I
+    Francia: 1,
+    Senegal: 14,
+    Irak: 57,
+    Noruega: 31,
 
-  // Grupo J
-  "Argentina": 3,
-  "Argelia": 28,
-  "Austria": 24,
-  "Jordania": 64,
+    // Grupo J
+    Argentina: 3,
+    Argelia: 28,
+    Austria: 24,
+    Jordania: 64,
 
-  // Grupo K
-  "Portugal": 5,
-  "RD de Congo": 46,
-  "Uzbekistán": 50,
-  "Colombia": 13,
+    // Grupo K
+    Portugal: 5,
+    'RD de Congo': 46,
+    Uzbekistán: 50,
+    Colombia: 13,
 
-  // Grupo L
-  "Inglaterra": 4,
-  "Croacia": 11,
-  "Ghana": 74,
-  "Panamá": 33
-};
+    // Grupo L
+    Inglaterra: 4,
+    Croacia: 11,
+    Ghana: 74,
+    Panamá: 33,
+  };
 
-/* const stripes = [
+  function countryToCode(name) {
+    const map = {
+      México: 'mx',
+      Sudáfrica: 'za',
+      'Corea del Sur': 'kr',
+      'República Checa': 'cz',
+      Canadá: 'ca',
+      'Bosnia y Herzegovina': 'ba',
+      Qatar: 'qa',
+      Suiza: 'ch',
+      Brasil: 'br',
+      Marruecos: 'ma',
+      Haití: 'ht',
+      Escocia: 'gb-sct',
+      'Estados Unidos': 'us',
+      Paraguay: 'py',
+      Australia: 'au',
+      Turquía: 'tr',
+      Alemania: 'de',
+      Curazao: 'cw',
+      'Costa de Marfil': 'ci',
+      Ecuador: 'ec',
+      'Países Bajos': 'nl',
+      Japón: 'jp',
+      Suecia: 'se',
+      Túnez: 'tn',
+      Bélgica: 'be',
+      Egipto: 'eg',
+      Irán: 'ir',
+      'Nueva Zelanda': 'nz',
+      España: 'es',
+      'Cabo Verde': 'cv',
+      'Arabia Saudita': 'sa',
+      Uruguay: 'uy',
+      Francia: 'fr',
+      Senegal: 'sn',
+      Irak: 'iq',
+      Noruega: 'no',
+      Argentina: 'ar',
+      Argelia: 'dz',
+      Austria: 'at',
+      Jordania: 'jo',
+      Portugal: 'pt',
+      'RD de Congo': 'cd',
+      Uzbekistán: 'uz',
+      Colombia: 'co',
+      Inglaterra: 'gb-eng',
+      Croacia: 'hr',
+      Ghana: 'gh',
+      Panamá: 'pa',
+    };
+
+    return map[name] || null;
+  }
+
+  function getRankingFIFA1(name) {
+    const nombre = name.replace(/-[A-L]$/, '');
+    return rankingFIFA2026[nombre] || 999;
+  }
+
+  /* const stripes = [
   { color: "#002395", size: 1 }, // azul
   { color: "#ffffff", size: 1 }, // blanco
   { color: "#ED2939", size: 1 }  // rojo
@@ -602,96 +656,95 @@ stripes.forEach(s => {
 }); */
 
   let sort_teams1 = (array, { usarDirecto = true } = {}) => {
-  array = removeDuplicates(array);
+    array = removeDuplicates(array);
 
-  const grupoEmpatadosCache = new Map();
+    const grupoEmpatadosCache = new Map();
 
-  function getEmpatados(grupo, pts) {
-    const key = `${grupo}|${pts}`;
-    if (!grupoEmpatadosCache.has(key)) {
-      grupoEmpatadosCache.set(
-        key,
-        array.filter((e) => e.name.split('-')[1] === grupo && e.value === pts).map((e) => e.name)
-      );
-    }
-    return grupoEmpatadosCache.get(key);
-  }
-
-  function getRankingFIFA(name) {
-    const nombre = name.replace(/-[A-L]$/, "");
-    return rankingFIFA2026[nombre] || 999;
-  }
-
-  array.sort((a, b) => {
-    const ga = a.name.split('-')[1];
-    const gb = b.name.split('-')[1];
-
-    // Separar por grupo
-    if (gb < ga) return 1;
-    if (gb > ga) return -1;
-
-    // 0. Puntos generales
-    if (b.value !== a.value) return b.value - a.value;
-
-    // 1º–3º Enfrentamientos directos
-    if (usarDirecto) {
-      const empatados = getEmpatados(ga, a.value);
-      const sd = statsDirectos(empatados, array[0].semana);
-      const sdA = sd[a.name];
-      const sdB = sd[b.name];
-
-      if (sdB.pts_directo !== sdA.pts_directo) return sdB.pts_directo - sdA.pts_directo;
-      if (sdB.diff_directo !== sdA.diff_directo) return sdB.diff_directo - sdA.diff_directo;
-      if (sdB.gf_directo !== sdA.gf_directo) return sdB.gf_directo - sdA.gf_directo;
+    function getEmpatados(grupo, pts) {
+      const key = `${grupo}|${pts}`;
+      if (!grupoEmpatadosCache.has(key)) {
+        grupoEmpatadosCache.set(
+          key,
+          array.filter((e) => e.name.split('-')[1] === grupo && e.value === pts).map((e) => e.name)
+        );
+      }
+      return grupoEmpatadosCache.get(key);
     }
 
-    // 4º Diferencia de goles general
-    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+    function getRankingFIFA(name) {
+      const nombre = name.replace(/-[A-L]$/, '');
+      return rankingFIFA2026[nombre] || 999;
+    }
 
-    // 5º Goles a favor general
-    if (b.goles !== a.goles) return b.goles - a.goles;
+    array.sort((a, b) => {
+      const ga = a.name.split('-')[1];
+      const gb = b.name.split('-')[1];
 
-    // 6º Fair Play (menor = mejor)
-    if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+      // Separar por grupo
+      if (gb < ga) return 1;
+      if (gb > ga) return -1;
 
-    // 7º Ranking FIFA (menor = mejor)
-    return getRankingFIFA(a.name) - getRankingFIFA(b.name);
-  });
+      // 0. Puntos generales
+      if (b.value !== a.value) return b.value - a.value;
 
-  array.forEach((d, i) => (d.rank = i));
-  array.forEach((d, i) => (d.rankInGroup = i % equipos_por_grupos));
-  array.forEach((d) => (d.position = d.rankInGroup + 1 + d.name.split('-')[1]));
-  array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
+      // 1º–3º Enfrentamientos directos
+      if (usarDirecto) {
+        const empatados = getEmpatados(ga, a.value);
+        const sd = statsDirectos(empatados, array[0].semana);
+        const sdA = sd[a.name];
+        const sdB = sd[b.name];
 
-  return array;
-};
+        if (sdB.pts_directo !== sdA.pts_directo) return sdB.pts_directo - sdA.pts_directo;
+        if (sdB.diff_directo !== sdA.diff_directo) return sdB.diff_directo - sdA.diff_directo;
+        if (sdB.gf_directo !== sdA.gf_directo) return sdB.gf_directo - sdA.gf_directo;
+      }
 
-let mejores_terceros_sort = (array) => {
+      // 4º Diferencia de goles general
+      if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
 
-  function getRankingFIFA(name) {
-    const nombre = name.replace(/-[A-L]$/, "");
-    return rankingFIFA2026[nombre] || 999;
-  }
+      // 5º Goles a favor general
+      if (b.goles !== a.goles) return b.goles - a.goles;
 
-  array.sort((a, b) => {
-    // 1º Puntos
-    if (b.value !== a.value) return b.value - a.value;
+      // 6º Fair Play (menor = mejor)
+      if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
 
-    // 2º Diferencia de goles general
-    if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+      // 7º Ranking FIFA (menor = mejor)
+      return getRankingFIFA(a.name) - getRankingFIFA(b.name);
+    });
 
-    // 3º Goles a favor general
-    if (b.goles !== a.goles) return b.goles - a.goles;
+    array.forEach((d, i) => (d.rank = i));
+    array.forEach((d, i) => (d.rankInGroup = i % equipos_por_grupos));
+    array.forEach((d) => (d.position = d.rankInGroup + 1 + d.name.split('-')[1]));
+    array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
 
-    // 4º Fair Play (menor = mejor)
-    if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+    return array;
+  };
 
-    // 5º Ranking FIFA (menor = mejor)
-    return getRankingFIFA(a.name) - getRankingFIFA(b.name);
-  });
+  let mejores_terceros_sort = (array) => {
+    function getRankingFIFA(name) {
+      const nombre = name.replace(/-[A-L]$/, '');
+      return rankingFIFA2026[nombre] || 999;
+    }
 
-  return array;
-};
+    array.sort((a, b) => {
+      // 1º Puntos
+      if (b.value !== a.value) return b.value - a.value;
+
+      // 2º Diferencia de goles general
+      if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
+
+      // 3º Goles a favor general
+      if (b.goles !== a.goles) return b.goles - a.goles;
+
+      // 4º Fair Play (menor = mejor)
+      if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+
+      // 5º Ranking FIFA (menor = mejor)
+      return getRankingFIFA(a.name) - getRankingFIFA(b.name);
+    });
+
+    return array;
+  };
 
   let yearSlice = sort_teams1(data.filter((d) => d.semana == dates[dates.length - 1] && !isNaN(d.value)));
 
@@ -700,10 +753,12 @@ let mejores_terceros_sort = (array) => {
   let y = d3
     .scaleLinear()
     .domain([top_n, 0])
-    .range([height - grupos * heightBars/2 + heightBars / 2, margin.top + heightBars / 2]);
+    .range([height - (grupos * heightBars) / 2 + heightBars / 2, margin.top + heightBars / 2]);
 
-  let mejores_terceros = mejores_terceros_sort(yearSlice.filter(d => d.rankInGroup == 2)).slice(0, 8).map(d => d.position[1])
-  console.log(mejores_terceros)
+  let mejores_terceros = mejores_terceros_sort(yearSlice.filter((d) => d.rankInGroup == 2))
+    .slice(0, 8)
+    .map((d) => d.position[1]);
+  console.log(mejores_terceros);
 
   svg
     .append('clipPath')
@@ -748,7 +803,7 @@ let mejores_terceros_sort = (array) => {
       });
   }
 
-   /* function mejor_tercero(grupos) {
+  /* function mejor_tercero(grupos) {
     if (mejores_terceros.includes('3L')) {
       return '3L'
     }
@@ -756,663 +811,666 @@ let mejores_terceros_sort = (array) => {
  */
 
   /**
- * mejor_tercero(grupos)
- *
- * Dado un array de 8 strings con las letras de los grupos cuyos terceros
- * clasificaron (ej: ["B","C","D","E","F","G","H","L"]),
- * devuelve un objeto indicando qué tercero va a cada partido.
- *
- * Fuente: Annex C del Reglamento oficial FIFA World Cup 2026 (495 combinaciones)
- *
- * Columnas de la tabla (orden):
- *   [0] P79 → 1A vs 3?
- *   [1] P85 → 1B vs 3?
- *   [2] P81 → 1D vs 3?
- *   [3] P74 → 1E vs 3?
- *   [4] P82 → 1G vs 3?
- *   [5] P77 → 1I vs 3?
- *   [6] P87 → 1K vs 3?
- *   [7] P80 → 1L vs 3?
- */
-const TABLA = {
-  "EFGHIJKL": ["3E","3J","3I","3F","3H","3G","3L","3K"],
-  "DFGHIJKL": ["3H","3G","3I","3D","3J","3F","3L","3K"],
-  "DEGHIJKL": ["3E","3J","3I","3D","3H","3G","3L","3K"],
-  "DEFHIJKL": ["3E","3J","3I","3D","3H","3F","3L","3K"],
-  "DEFGIJKL": ["3E","3G","3I","3D","3J","3F","3L","3K"],
-  "DEFGHJKL": ["3E","3G","3J","3D","3H","3F","3L","3K"],
-  "DEFGHIKL": ["3E","3G","3I","3D","3H","3F","3L","3K"],
-  "DEFGHIJL": ["3E","3G","3J","3D","3H","3F","3L","3I"],
-  "DEFGHIJK": ["3E","3G","3J","3D","3H","3F","3I","3K"],
-  "CFGHIJKL": ["3H","3G","3I","3C","3J","3F","3L","3K"],
-  "CEGHIJKL": ["3E","3J","3I","3C","3H","3G","3L","3K"],
-  "CEFHIJKL": ["3E","3J","3I","3C","3H","3F","3L","3K"],
-  "CEFGIJKL": ["3E","3G","3I","3C","3J","3F","3L","3K"],
-  "CEFGHJKL": ["3E","3G","3J","3C","3H","3F","3L","3K"],
-  "CEFGHIKL": ["3E","3G","3I","3C","3H","3F","3L","3K"],
-  "CEFGHIJL": ["3E","3G","3J","3C","3H","3F","3L","3I"],
-  "CEFGHIJK": ["3E","3G","3J","3C","3H","3F","3I","3K"],
-  "CDGHIJKL": ["3H","3G","3I","3C","3J","3D","3L","3K"],
-  "CDFHIJKL": ["3C","3J","3I","3D","3H","3F","3L","3K"],
-  "CDFGIJKL": ["3C","3G","3I","3D","3J","3F","3L","3K"],
-  "CDFGHJKL": ["3C","3G","3J","3D","3H","3F","3L","3K"],
-  "CDFGHIKL": ["3C","3G","3I","3D","3H","3F","3L","3K"],
-  "CDFGHIJL": ["3C","3G","3J","3D","3H","3F","3L","3I"],
-  "CDFGHIJK": ["3C","3G","3J","3D","3H","3F","3I","3K"],
-  "CDEHIJKL": ["3E","3J","3I","3C","3H","3D","3L","3K"],
-  "CDEGIJKL": ["3E","3G","3I","3C","3J","3D","3L","3K"],
-  "CDEGHJKL": ["3E","3G","3J","3C","3H","3D","3L","3K"],
-  "CDEGHIKL": ["3E","3G","3I","3C","3H","3D","3L","3K"],
-  "CDEGHIJL": ["3E","3G","3J","3C","3H","3D","3L","3I"],
-  "CDEGHIJK": ["3E","3G","3J","3C","3H","3D","3I","3K"],
-  "CDEFIJKL": ["3C","3J","3E","3D","3I","3F","3L","3K"],
-  "CDEFHJKL": ["3C","3J","3E","3D","3H","3F","3L","3K"],
-  "CDEFHIKL": ["3C","3E","3I","3D","3H","3F","3L","3K"],
-  "CDEFHIJL": ["3C","3J","3E","3D","3H","3F","3L","3I"],
-  "CDEFHIJK": ["3C","3J","3E","3D","3H","3F","3I","3K"],
-  "CDEFGJKL": ["3C","3G","3E","3D","3J","3F","3L","3K"],
-  "CDEFGIKL": ["3C","3G","3E","3D","3I","3F","3L","3K"],
-  "CDEFGIJL": ["3C","3G","3E","3D","3J","3F","3L","3I"],
-  "CDEFGIJK": ["3C","3G","3E","3D","3J","3F","3I","3K"],
-  "CDEFGHKL": ["3C","3G","3E","3D","3H","3F","3L","3K"],
-  "CDEFGHJL": ["3C","3G","3J","3D","3H","3F","3L","3E"],
-  "CDEFGHJK": ["3C","3G","3J","3D","3H","3F","3E","3K"],
-  "CDEFGHIL": ["3C","3G","3E","3D","3H","3F","3L","3I"],
-  "CDEFGHIK": ["3C","3G","3E","3D","3H","3F","3I","3K"],
-  "CDEFGHIJ": ["3C","3G","3J","3D","3H","3F","3E","3I"],
-  "BFGHIJKL": ["3H","3J","3B","3F","3I","3G","3L","3K"],
-  "BEGHIJKL": ["3E","3J","3I","3B","3H","3G","3L","3K"],
-  "BEFHIJKL": ["3E","3J","3B","3F","3I","3H","3L","3K"],
-  "BEFGIJKL": ["3E","3J","3B","3F","3I","3G","3L","3K"],
-  "BEFGHJKL": ["3E","3J","3B","3F","3H","3G","3L","3K"],
-  "BEFGHIKL": ["3E","3G","3B","3F","3I","3H","3L","3K"],
-  "BEFGHIJL": ["3E","3J","3B","3F","3H","3G","3L","3I"],
-  "BEFGHIJK": ["3E","3J","3B","3F","3H","3G","3I","3K"],
-  "BDGHIJKL": ["3H","3J","3B","3D","3I","3G","3L","3K"],
-  "BDFHIJKL": ["3H","3J","3B","3D","3I","3F","3L","3K"],
-  "BDFGIJKL": ["3I","3G","3B","3D","3J","3F","3L","3K"],
-  "BDFGHJKL": ["3H","3G","3B","3D","3J","3F","3L","3K"],
-  "BDFGHIKL": ["3H","3G","3B","3D","3I","3F","3L","3K"],
-  "BDFGHIJL": ["3H","3G","3B","3D","3J","3F","3L","3I"],
-  "BDFGHIJK": ["3H","3G","3B","3D","3J","3F","3I","3K"],
-  "BDEHIJKL": ["3E","3J","3B","3D","3I","3H","3L","3K"],
-  "BDEGIJKL": ["3E","3J","3B","3D","3I","3G","3L","3K"],
-  "BDEGHJKL": ["3E","3J","3B","3D","3H","3G","3L","3K"],
-  "BDEGHIKL": ["3E","3G","3B","3D","3I","3H","3L","3K"],
-  "BDEGHIJL": ["3E","3J","3B","3D","3H","3G","3L","3I"],
-  "BDEGHIJK": ["3E","3J","3B","3D","3H","3G","3I","3K"],
-  "BDEFIJKL": ["3E","3J","3B","3D","3I","3F","3L","3K"],
-  "BDEFHJKL": ["3E","3J","3B","3D","3H","3F","3L","3K"],
-  "BDEFHIKL": ["3E","3I","3B","3D","3H","3F","3L","3K"],
-  "BDEFHIJL": ["3E","3J","3B","3D","3H","3F","3L","3I"],
-  "BDEFHIJK": ["3E","3J","3B","3D","3H","3F","3I","3K"],
-  "BDEFGJKL": ["3E","3G","3B","3D","3J","3F","3L","3K"],
-  "BDEFGIKL": ["3E","3G","3B","3D","3I","3F","3L","3K"],
-  "BDEFGIJL": ["3E","3G","3B","3D","3J","3F","3L","3I"],
-  "BDEFGIJK": ["3E","3G","3B","3D","3J","3F","3I","3K"],
-  "BDEFGHKL": ["3E","3G","3B","3D","3H","3F","3L","3K"],
-  "BDEFGHJL": ["3H","3G","3B","3D","3J","3F","3L","3E"],
-  "BDEFGHJK": ["3H","3G","3B","3D","3J","3F","3E","3K"],
-  "BDEFGHIL": ["3E","3G","3B","3D","3H","3F","3L","3I"],
-  "BDEFGHIK": ["3E","3G","3B","3D","3H","3F","3I","3K"],
-  "BDEFGHIJ": ["3H","3G","3B","3D","3J","3F","3E","3I"],
-  "BCGHIJKL": ["3H","3J","3B","3C","3I","3G","3L","3K"],
-  "BCFHIJKL": ["3H","3J","3B","3C","3I","3F","3L","3K"],
-  "BCFGIJKL": ["3I","3G","3B","3C","3J","3F","3L","3K"],
-  "BCFGHJKL": ["3H","3G","3B","3C","3J","3F","3L","3K"],
-  "BCFGHIKL": ["3H","3G","3B","3C","3I","3F","3L","3K"],
-  "BCFGHIJL": ["3H","3G","3B","3C","3J","3F","3L","3I"],
-  "BCFGHIJK": ["3H","3G","3B","3C","3J","3F","3I","3K"],
-  "BCEHIJKL": ["3E","3J","3B","3C","3I","3H","3L","3K"],
-  "BCEGIJKL": ["3E","3J","3B","3C","3I","3G","3L","3K"],
-  "BCEGHJKL": ["3E","3J","3B","3C","3H","3G","3L","3K"],
-  "BCEGHIKL": ["3E","3G","3B","3C","3I","3H","3L","3K"],
-  "BCEGHIJL": ["3E","3J","3B","3C","3H","3G","3L","3I"],
-  "BCEGHIJK": ["3E","3J","3B","3C","3H","3G","3I","3K"],
-  "BCEFIJKL": ["3E","3J","3B","3C","3I","3F","3L","3K"],
-  "BCEFHJKL": ["3E","3J","3B","3C","3H","3F","3L","3K"],
-  "BCEFHIKL": ["3E","3I","3B","3C","3H","3F","3L","3K"],
-  "BCEFHIJL": ["3E","3J","3B","3C","3H","3F","3L","3I"],
-  "BCEFHIJK": ["3E","3J","3B","3C","3H","3F","3I","3K"],
-  "BCEFGJKL": ["3E","3G","3B","3C","3J","3F","3L","3K"],
-  "BCEFGIKL": ["3E","3G","3B","3C","3I","3F","3L","3K"],
-  "BCEFGIJL": ["3E","3G","3B","3C","3J","3F","3L","3I"],
-  "BCEFGIJK": ["3E","3G","3B","3C","3J","3F","3I","3K"],
-  "BCEFGHKL": ["3E","3G","3B","3C","3H","3F","3L","3K"],
-  "BCEFGHJL": ["3H","3G","3B","3C","3J","3F","3L","3E"],
-  "BCEFGHJK": ["3H","3G","3B","3C","3J","3F","3E","3K"],
-  "BCEFGHIL": ["3E","3G","3B","3C","3H","3F","3L","3I"],
-  "BCEFGHIK": ["3E","3G","3B","3C","3H","3F","3I","3K"],
-  "BCEFGHIJ": ["3H","3G","3B","3C","3J","3F","3E","3I"],
-  "BCDHIJKL": ["3H","3J","3B","3C","3I","3D","3L","3K"],
-  "BCDGIJKL": ["3I","3G","3B","3C","3J","3D","3L","3K"],
-  "BCDGHJKL": ["3H","3G","3B","3C","3J","3D","3L","3K"],
-  "BCDGHIKL": ["3H","3G","3B","3C","3I","3D","3L","3K"],
-  "BCDGHIJL": ["3H","3G","3B","3C","3J","3D","3L","3I"],
-  "BCDGHIJK": ["3H","3G","3B","3C","3J","3D","3I","3K"],
-  "BCDFIJKL": ["3C","3J","3B","3D","3I","3F","3L","3K"],
-  "BCDFHJKL": ["3C","3J","3B","3D","3H","3F","3L","3K"],
-  "BCDFHIKL": ["3C","3I","3B","3D","3H","3F","3L","3K"],
-  "BCDFHIJL": ["3C","3J","3B","3D","3H","3F","3L","3I"],
-  "BCDFHIJK": ["3C","3J","3B","3D","3H","3F","3I","3K"],
-  "BCDFGJKL": ["3C","3G","3B","3D","3J","3F","3L","3K"],
-  "BCDFGIKL": ["3C","3G","3B","3D","3I","3F","3L","3K"],
-  "BCDFGIJL": ["3C","3G","3B","3D","3J","3F","3L","3I"],
-  "BCDFGIJK": ["3C","3G","3B","3D","3J","3F","3I","3K"],
-  "BCDFGHKL": ["3C","3G","3B","3D","3H","3F","3L","3K"],
-  "BCDFGHJL": ["3C","3G","3B","3D","3H","3F","3L","3J"],
-  "BCDFGHJK": ["3H","3G","3B","3C","3J","3F","3D","3K"],
-  "BCDFGHIL": ["3C","3G","3B","3D","3H","3F","3L","3I"],
-  "BCDFGHIK": ["3C","3G","3B","3D","3H","3F","3I","3K"],
-  "BCDFGHIJ": ["3H","3G","3B","3C","3J","3F","3D","3I"],
-  "BCDEIJKL": ["3E","3J","3B","3C","3I","3D","3L","3K"],
-  "BCDEHJKL": ["3E","3J","3B","3C","3H","3D","3L","3K"],
-  "BCDEHIKL": ["3E","3I","3B","3C","3H","3D","3L","3K"],
-  "BCDEHIJL": ["3E","3J","3B","3C","3H","3D","3L","3I"],
-  "BCDEHIJK": ["3E","3J","3B","3C","3H","3D","3I","3K"],
-  "BCDEGJKL": ["3E","3G","3B","3C","3J","3D","3L","3K"],
-  "BCDEGIKL": ["3E","3G","3B","3C","3I","3D","3L","3K"],
-  "BCDEGIJL": ["3E","3G","3B","3C","3J","3D","3L","3I"],
-  "BCDEGIJK": ["3E","3G","3B","3C","3J","3D","3I","3K"],
-  "BCDEGHKL": ["3E","3G","3B","3C","3H","3D","3L","3K"],
-  "BCDEGHJL": ["3H","3G","3B","3C","3J","3D","3L","3E"],
-  "BCDEGHJK": ["3H","3G","3B","3C","3J","3D","3E","3K"],
-  "BCDEGHIL": ["3E","3G","3B","3C","3H","3D","3L","3I"],
-  "BCDEGHIK": ["3E","3G","3B","3C","3H","3D","3I","3K"],
-  "BCDEGHIJ": ["3H","3G","3B","3C","3J","3D","3E","3I"],
-  "BCDEFJKL": ["3C","3J","3B","3D","3E","3F","3L","3K"],
-  "BCDEFIKL": ["3C","3E","3B","3D","3I","3F","3L","3K"],
-  "BCDEFIJL": ["3C","3J","3B","3D","3E","3F","3L","3I"],
-  "BCDEFIJK": ["3C","3J","3B","3D","3E","3F","3I","3K"],
-  "BCDEFHKL": ["3C","3E","3B","3D","3H","3F","3L","3K"],
-  "BCDEFHJL": ["3C","3J","3B","3D","3H","3F","3L","3E"],
-  "BCDEFHJK": ["3C","3J","3B","3D","3H","3F","3E","3K"],
-  "BCDEFHIL": ["3C","3E","3B","3D","3H","3F","3L","3I"],
-  "BCDEFHIK": ["3C","3E","3B","3D","3H","3F","3I","3K"],
-  "BCDEFHIJ": ["3C","3J","3B","3D","3H","3F","3E","3I"],
-  "BCDEFGKL": ["3C","3G","3B","3D","3E","3F","3L","3K"],
-  "BCDEFGJL": ["3C","3G","3B","3D","3J","3F","3L","3E"],
-  "BCDEFGJK": ["3C","3G","3B","3D","3J","3F","3E","3K"],
-  "BCDEFGIL": ["3C","3G","3B","3D","3E","3F","3L","3I"],
-  "BCDEFGIK": ["3C","3G","3B","3D","3E","3F","3I","3K"],
-  "BCDEFGIJ": ["3C","3G","3B","3D","3J","3F","3E","3I"],
-  "BCDEFGHL": ["3C","3G","3B","3D","3H","3F","3L","3E"],
-  "BCDEFGHK": ["3C","3G","3B","3D","3H","3F","3E","3K"],
-  "BCDEFGHJ": ["3H","3G","3B","3C","3J","3F","3D","3E"],
-  "BCDEFGHI": ["3C","3G","3B","3D","3H","3F","3E","3I"],
-  "AFGHIJKL": ["3H","3J","3I","3F","3A","3G","3L","3K"],
-  "AEGHIJKL": ["3E","3J","3I","3A","3H","3G","3L","3K"],
-  "AEFHIJKL": ["3E","3J","3I","3F","3A","3H","3L","3K"],
-  "AEFGIJKL": ["3E","3J","3I","3F","3A","3G","3L","3K"],
-  "AEFGHJKL": ["3E","3G","3J","3F","3A","3H","3L","3K"],
-  "AEFGHIKL": ["3E","3G","3I","3F","3A","3H","3L","3K"],
-  "AEFGHIJL": ["3E","3G","3J","3F","3A","3H","3L","3I"],
-  "AEFGHIJK": ["3E","3G","3J","3F","3A","3H","3I","3K"],
-  "ADGHIJKL": ["3H","3J","3I","3D","3A","3G","3L","3K"],
-  "ADFHIJKL": ["3H","3J","3I","3D","3A","3F","3L","3K"],
-  "ADFGIJKL": ["3I","3G","3J","3D","3A","3F","3L","3K"],
-  "ADFGHJKL": ["3H","3G","3J","3D","3A","3F","3L","3K"],
-  "ADFGHIKL": ["3H","3G","3I","3D","3A","3F","3L","3K"],
-  "ADFGHIJL": ["3H","3G","3J","3D","3A","3F","3L","3I"],
-  "ADFGHIJK": ["3H","3G","3J","3D","3A","3F","3I","3K"],
-  "ADEHIJKL": ["3E","3J","3I","3D","3A","3H","3L","3K"],
-  "ADEGIJKL": ["3E","3J","3I","3D","3A","3G","3L","3K"],
-  "ADEGHJKL": ["3E","3G","3J","3D","3A","3H","3L","3K"],
-  "ADEGHIKL": ["3E","3G","3I","3D","3A","3H","3L","3K"],
-  "ADEGHIJL": ["3E","3G","3J","3D","3A","3H","3L","3I"],
-  "ADEGHIJK": ["3E","3G","3J","3D","3A","3H","3I","3K"],
-  "ADEFIJKL": ["3E","3J","3I","3D","3A","3F","3L","3K"],
-  "ADEFHJKL": ["3H","3J","3E","3D","3A","3F","3L","3K"],
-  "ADEFHIKL": ["3H","3E","3I","3D","3A","3F","3L","3K"],
-  "ADEFHIJL": ["3H","3J","3E","3D","3A","3F","3L","3I"],
-  "ADEFHIJK": ["3H","3J","3E","3D","3A","3F","3I","3K"],
-  "ADEFGJKL": ["3E","3G","3J","3D","3A","3F","3L","3K"],
-  "ADEFGIKL": ["3E","3G","3I","3D","3A","3F","3L","3K"],
-  "ADEFGIJL": ["3E","3G","3J","3D","3A","3F","3L","3I"],
-  "ADEFGIJK": ["3E","3G","3J","3D","3A","3F","3I","3K"],
-  "ADEFGHKL": ["3H","3G","3E","3D","3A","3F","3L","3K"],
-  "ADEFGHJL": ["3H","3G","3J","3D","3A","3F","3L","3E"],
-  "ADEFGHJK": ["3H","3G","3J","3D","3A","3F","3E","3K"],
-  "ADEFGHIL": ["3H","3G","3E","3D","3A","3F","3L","3I"],
-  "ADEFGHIK": ["3H","3G","3E","3D","3A","3F","3I","3K"],
-  "ADEFGHIJ": ["3H","3G","3J","3D","3A","3F","3E","3I"],
-  "ACGHIJKL": ["3H","3J","3I","3C","3A","3G","3L","3K"],
-  "ACFHIJKL": ["3H","3J","3I","3C","3A","3F","3L","3K"],
-  "ACFGIJKL": ["3I","3G","3J","3C","3A","3F","3L","3K"],
-  "ACFGHJKL": ["3H","3G","3J","3C","3A","3F","3L","3K"],
-  "ACFGHIKL": ["3H","3G","3I","3C","3A","3F","3L","3K"],
-  "ACFGHIJL": ["3H","3G","3J","3C","3A","3F","3L","3I"],
-  "ACFGHIJK": ["3H","3G","3J","3C","3A","3F","3I","3K"],
-  "ACEHIJKL": ["3E","3J","3I","3C","3A","3H","3L","3K"],
-  "ACEGIJKL": ["3E","3J","3I","3C","3A","3G","3L","3K"],
-  "ACEGHJKL": ["3E","3G","3J","3C","3A","3H","3L","3K"],
-  "ACEGHIKL": ["3E","3G","3I","3C","3A","3H","3L","3K"],
-  "ACEGHIJL": ["3E","3G","3J","3C","3A","3H","3L","3I"],
-  "ACEGHIJK": ["3E","3G","3J","3C","3A","3H","3I","3K"],
-  "ACEFIJKL": ["3E","3J","3I","3C","3A","3F","3L","3K"],
-  "ACEFHJKL": ["3H","3J","3E","3C","3A","3F","3L","3K"],
-  "ACEFHIKL": ["3H","3E","3I","3C","3A","3F","3L","3K"],
-  "ACEFHIJL": ["3H","3J","3E","3C","3A","3F","3L","3I"],
-  "ACEFHIJK": ["3H","3J","3E","3C","3A","3F","3I","3K"],
-  "ACEFGJKL": ["3E","3G","3J","3C","3A","3F","3L","3K"],
-  "ACEFGIKL": ["3E","3G","3I","3C","3A","3F","3L","3K"],
-  "ACEFGIJL": ["3E","3G","3J","3C","3A","3F","3L","3I"],
-  "ACEFGIJK": ["3E","3G","3J","3C","3A","3F","3I","3K"],
-  "ACEFGHKL": ["3H","3G","3E","3C","3A","3F","3L","3K"],
-  "ACEFGHJL": ["3H","3G","3J","3C","3A","3F","3L","3E"],
-  "ACEFGHJK": ["3H","3G","3J","3C","3A","3F","3E","3K"],
-  "ACEFGHIL": ["3H","3G","3E","3C","3A","3F","3L","3I"],
-  "ACEFGHIK": ["3H","3G","3E","3C","3A","3F","3I","3K"],
-  "ACEFGHIJ": ["3H","3G","3J","3C","3A","3F","3E","3I"],
-  "ACDHIJKL": ["3H","3J","3I","3C","3A","3D","3L","3K"],
-  "ACDGIJKL": ["3I","3G","3J","3C","3A","3D","3L","3K"],
-  "ACDGHJKL": ["3H","3G","3J","3C","3A","3D","3L","3K"],
-  "ACDGHIKL": ["3H","3G","3I","3C","3A","3D","3L","3K"],
-  "ACDGHIJL": ["3H","3G","3J","3C","3A","3D","3L","3I"],
-  "ACDGHIJK": ["3H","3G","3J","3C","3A","3D","3I","3K"],
-  "ACDFIJKL": ["3C","3J","3I","3D","3A","3F","3L","3K"],
-  "ACDFHJKL": ["3H","3J","3F","3C","3A","3D","3L","3K"],
-  "ACDFHIKL": ["3H","3F","3I","3C","3A","3D","3L","3K"],
-  "ACDFHIJL": ["3H","3J","3F","3C","3A","3D","3L","3I"],
-  "ACDFHIJK": ["3H","3J","3F","3C","3A","3D","3I","3K"],
-  "ACDFGJKL": ["3C","3G","3J","3D","3A","3F","3L","3K"],
-  "ACDFGIKL": ["3C","3G","3I","3D","3A","3F","3L","3K"],
-  "ACDFGIJL": ["3C","3G","3J","3D","3A","3F","3L","3I"],
-  "ACDFGIJK": ["3C","3G","3J","3D","3A","3F","3I","3K"],
-  "ACDFGHKL": ["3H","3G","3F","3C","3A","3D","3L","3K"],
-  "ACDFGHJL": ["3C","3G","3J","3D","3A","3F","3L","3H"],
-  "ACDFGHJK": ["3H","3G","3J","3C","3A","3F","3D","3K"],
-  "ACDFGHIL": ["3H","3G","3F","3C","3A","3D","3L","3I"],
-  "ACDFGHIK": ["3H","3G","3F","3C","3A","3D","3I","3K"],
-  "ACDFGHIJ": ["3H","3G","3J","3C","3A","3F","3D","3I"],
-  "ACDEIJKL": ["3E","3J","3I","3C","3A","3D","3L","3K"],
-  "ACDEHJKL": ["3H","3J","3E","3C","3A","3D","3L","3K"],
-  "ACDEHIKL": ["3H","3E","3I","3C","3A","3D","3L","3K"],
-  "ACDEHIJL": ["3H","3J","3E","3C","3A","3D","3L","3I"],
-  "ACDEHIJK": ["3H","3J","3E","3C","3A","3D","3I","3K"],
-  "ACDEGJKL": ["3E","3G","3J","3C","3A","3D","3L","3K"],
-  "ACDEGIKL": ["3E","3G","3I","3C","3A","3D","3L","3K"],
-  "ACDEGIJL": ["3E","3G","3J","3C","3A","3D","3L","3I"],
-  "ACDEGIJK": ["3E","3G","3J","3C","3A","3D","3I","3K"],
-  "ACDEGHKL": ["3H","3G","3E","3C","3A","3D","3L","3K"],
-  "ACDEGHJL": ["3H","3G","3J","3C","3A","3D","3L","3E"],
-  "ACDEGHJK": ["3H","3G","3J","3C","3A","3D","3E","3K"],
-  "ACDEGHIL": ["3H","3G","3E","3C","3A","3D","3L","3I"],
-  "ACDEGHIK": ["3H","3G","3E","3C","3A","3D","3I","3K"],
-  "ACDEGHIJ": ["3H","3G","3J","3C","3A","3D","3E","3I"],
-  "ACDEFJKL": ["3C","3J","3E","3D","3A","3F","3L","3K"],
-  "ACDEFIKL": ["3C","3E","3I","3D","3A","3F","3L","3K"],
-  "ACDEFIJL": ["3C","3J","3E","3D","3A","3F","3L","3I"],
-  "ACDEFIJK": ["3C","3J","3E","3D","3A","3F","3I","3K"],
-  "ACDEFHKL": ["3H","3E","3F","3C","3A","3D","3L","3K"],
-  "ACDEFHJL": ["3H","3J","3F","3C","3A","3D","3L","3E"],
-  "ACDEFHJK": ["3H","3J","3E","3C","3A","3F","3D","3K"],
-  "ACDEFHIL": ["3H","3E","3F","3C","3A","3D","3L","3I"],
-  "ACDEFHIK": ["3H","3E","3F","3C","3A","3D","3I","3K"],
-  "ACDEFHIJ": ["3H","3J","3E","3C","3A","3F","3D","3I"],
-  "ACDEFGKL": ["3C","3G","3E","3D","3A","3F","3L","3K"],
-  "ACDEFGJL": ["3C","3G","3J","3D","3A","3F","3L","3E"],
-  "ACDEFGJK": ["3C","3G","3J","3D","3A","3F","3E","3K"],
-  "ACDEFGIL": ["3C","3G","3E","3D","3A","3F","3L","3I"],
-  "ACDEFGIK": ["3C","3G","3E","3D","3A","3F","3I","3K"],
-  "ACDEFGIJ": ["3C","3G","3J","3D","3A","3F","3E","3I"],
-  "ACDEFGHL": ["3H","3G","3F","3C","3A","3D","3L","3E"],
-  "ACDEFGHK": ["3H","3G","3E","3C","3A","3F","3D","3K"],
-  "ACDEFGHJ": ["3H","3G","3J","3C","3A","3F","3D","3E"],
-  "ACDEFGHI": ["3H","3G","3E","3C","3A","3F","3D","3I"],
-  "ABGHIJKL": ["3H","3J","3B","3A","3I","3G","3L","3K"],
-  "ABFHIJKL": ["3H","3J","3B","3A","3I","3F","3L","3K"],
-  "ABFGIJKL": ["3I","3J","3B","3F","3A","3G","3L","3K"],
-  "ABFGHJKL": ["3H","3J","3B","3F","3A","3G","3L","3K"],
-  "ABFGHIKL": ["3H","3G","3B","3A","3I","3F","3L","3K"],
-  "ABFGHIJL": ["3H","3J","3B","3F","3A","3G","3L","3I"],
-  "ABFGHIJK": ["3H","3J","3B","3F","3A","3G","3I","3K"],
-  "ABEHIJKL": ["3E","3J","3B","3A","3I","3H","3L","3K"],
-  "ABEGIJKL": ["3E","3J","3B","3A","3I","3G","3L","3K"],
-  "ABEGHJKL": ["3E","3J","3B","3A","3H","3G","3L","3K"],
-  "ABEGHIKL": ["3E","3G","3B","3A","3I","3H","3L","3K"],
-  "ABEGHIJL": ["3E","3J","3B","3A","3H","3G","3L","3I"],
-  "ABEGHIJK": ["3E","3J","3B","3A","3H","3G","3I","3K"],
-  "ABEFIJKL": ["3E","3J","3B","3A","3I","3F","3L","3K"],
-  "ABEFHJKL": ["3E","3J","3B","3F","3A","3H","3L","3K"],
-  "ABEFHIKL": ["3E","3I","3B","3F","3A","3H","3L","3K"],
-  "ABEFHIJL": ["3E","3J","3B","3F","3A","3H","3L","3I"],
-  "ABEFHIJK": ["3E","3J","3B","3F","3A","3H","3I","3K"],
-  "ABEFGJKL": ["3E","3J","3B","3F","3A","3G","3L","3K"],
-  "ABEFGIKL": ["3E","3G","3B","3A","3I","3F","3L","3K"],
-  "ABEFGIJL": ["3E","3J","3B","3F","3A","3G","3L","3I"],
-  "ABEFGIJK": ["3E","3J","3B","3F","3A","3G","3I","3K"],
-  "ABEFGHKL": ["3E","3G","3B","3F","3A","3H","3L","3K"],
-  "ABEFGHJL": ["3H","3J","3B","3F","3A","3G","3L","3E"],
-  "ABEFGHJK": ["3H","3J","3B","3F","3A","3G","3E","3K"],
-  "ABEFGHIL": ["3E","3G","3B","3F","3A","3H","3L","3I"],
-  "ABEFGHIK": ["3E","3G","3B","3F","3A","3H","3I","3K"],
-  "ABEFGHIJ": ["3H","3J","3B","3F","3A","3G","3E","3I"],
-  "ABDHIJKL": ["3I","3J","3B","3D","3A","3H","3L","3K"],
-  "ABDGIJKL": ["3I","3J","3B","3D","3A","3G","3L","3K"],
-  "ABDGHJKL": ["3H","3J","3B","3D","3A","3G","3L","3K"],
-  "ABDGHIKL": ["3I","3G","3B","3D","3A","3H","3L","3K"],
-  "ABDGHIJL": ["3H","3J","3B","3D","3A","3G","3L","3I"],
-  "ABDGHIJK": ["3H","3J","3B","3D","3A","3G","3I","3K"],
-  "ABDFIJKL": ["3I","3J","3B","3D","3A","3F","3L","3K"],
-  "ABDFHJKL": ["3H","3J","3B","3D","3A","3F","3L","3K"],
-  "ABDFHIKL": ["3H","3I","3B","3D","3A","3F","3L","3K"],
-  "ABDFHIJL": ["3H","3J","3B","3D","3A","3F","3L","3I"],
-  "ABDFHIJK": ["3H","3J","3B","3D","3A","3F","3I","3K"],
-  "ABDFGJKL": ["3F","3J","3B","3D","3A","3G","3L","3K"],
-  "ABDFGIKL": ["3I","3G","3B","3D","3A","3F","3L","3K"],
-  "ABDFGIJL": ["3F","3J","3B","3D","3A","3G","3L","3I"],
-  "ABDFGIJK": ["3F","3J","3B","3D","3A","3G","3I","3K"],
-  "ABDFGHKL": ["3H","3G","3B","3D","3A","3F","3L","3K"],
-  "ABDFGHJL": ["3H","3G","3B","3D","3A","3F","3L","3J"],
-  "ABDFGHJK": ["3H","3G","3B","3D","3A","3F","3J","3K"],
-  "ABDFGHIL": ["3H","3G","3B","3D","3A","3F","3L","3I"],
-  "ABDFGHIK": ["3H","3G","3B","3D","3A","3F","3I","3K"],
-  "ABDFGHIJ": ["3H","3G","3B","3D","3A","3F","3I","3J"],
-  "ABDEIJKL": ["3E","3J","3B","3A","3I","3D","3L","3K"],
-  "ABDEHJKL": ["3E","3J","3B","3D","3A","3H","3L","3K"],
-  "ABDEHIKL": ["3E","3I","3B","3D","3A","3H","3L","3K"],
-  "ABDEHIJL": ["3E","3J","3B","3D","3A","3H","3L","3I"],
-  "ABDEHIJK": ["3E","3J","3B","3D","3A","3H","3I","3K"],
-  "ABDEGJKL": ["3E","3J","3B","3D","3A","3G","3L","3K"],
-  "ABDEGIKL": ["3E","3G","3B","3A","3I","3D","3L","3K"],
-  "ABDEGIJL": ["3E","3J","3B","3D","3A","3G","3L","3I"],
-  "ABDEGIJK": ["3E","3J","3B","3D","3A","3G","3I","3K"],
-  "ABDEGHKL": ["3E","3G","3B","3D","3A","3H","3L","3K"],
-  "ABDEGHJL": ["3H","3J","3B","3D","3A","3G","3L","3E"],
-  "ABDEGHJK": ["3H","3J","3B","3D","3A","3G","3E","3K"],
-  "ABDEGHIL": ["3E","3G","3B","3D","3A","3H","3L","3I"],
-  "ABDEGHIK": ["3E","3G","3B","3D","3A","3H","3I","3K"],
-  "ABDEGHIJ": ["3H","3J","3B","3D","3A","3G","3E","3I"],
-  "ABDEFJKL": ["3E","3J","3B","3D","3A","3F","3L","3K"],
-  "ABDEFIKL": ["3E","3I","3B","3D","3A","3F","3L","3K"],
-  "ABDEFIJL": ["3E","3J","3B","3D","3A","3F","3L","3I"],
-  "ABDEFIJK": ["3E","3J","3B","3D","3A","3F","3I","3K"],
-  "ABDEFHKL": ["3H","3E","3B","3D","3A","3F","3L","3K"],
-  "ABDEFHJL": ["3H","3J","3B","3D","3A","3F","3L","3E"],
-  "ABDEFHJK": ["3H","3J","3B","3D","3A","3F","3E","3K"],
-  "ABDEFHIL": ["3H","3E","3B","3D","3A","3F","3L","3I"],
-  "ABDEFHIK": ["3H","3E","3B","3D","3A","3F","3I","3K"],
-  "ABDEFHIJ": ["3H","3J","3B","3D","3A","3F","3E","3I"],
-  "ABDEFGKL": ["3E","3G","3B","3D","3A","3F","3L","3K"],
-  "ABDEFGJL": ["3E","3G","3B","3D","3A","3F","3L","3J"],
-  "ABDEFGJK": ["3E","3G","3B","3D","3A","3F","3J","3K"],
-  "ABDEFGIL": ["3E","3G","3B","3D","3A","3F","3L","3I"],
-  "ABDEFGIK": ["3E","3G","3B","3D","3A","3F","3I","3K"],
-  "ABDEFGIJ": ["3E","3G","3B","3D","3A","3F","3I","3J"],
-  "ABDEFGHL": ["3H","3G","3B","3D","3A","3F","3L","3E"],
-  "ABDEFGHK": ["3H","3G","3B","3D","3A","3F","3E","3K"],
-  "ABDEFGHJ": ["3H","3G","3B","3D","3A","3F","3E","3J"],
-  "ABDEFGHI": ["3H","3G","3B","3D","3A","3F","3E","3I"],
-  "ABCHIJKL": ["3I","3J","3B","3C","3A","3H","3L","3K"],
-  "ABCGIJKL": ["3I","3J","3B","3C","3A","3G","3L","3K"],
-  "ABCGHJKL": ["3H","3J","3B","3C","3A","3G","3L","3K"],
-  "ABCGHIKL": ["3I","3G","3B","3C","3A","3H","3L","3K"],
-  "ABCGHIJL": ["3H","3J","3B","3C","3A","3G","3L","3I"],
-  "ABCGHIJK": ["3H","3J","3B","3C","3A","3G","3I","3K"],
-  "ABCFIJKL": ["3I","3J","3B","3C","3A","3F","3L","3K"],
-  "ABCFHJKL": ["3H","3J","3B","3C","3A","3F","3L","3K"],
-  "ABCFHIKL": ["3H","3I","3B","3C","3A","3F","3L","3K"],
-  "ABCFHIJL": ["3H","3J","3B","3C","3A","3F","3L","3I"],
-  "ABCFHIJK": ["3H","3J","3B","3C","3A","3F","3I","3K"],
-  "ABCFGJKL": ["3C","3J","3B","3F","3A","3G","3L","3K"],
-  "ABCFGIKL": ["3I","3G","3B","3C","3A","3F","3L","3K"],
-  "ABCFGIJL": ["3C","3J","3B","3F","3A","3G","3L","3I"],
-  "ABCFGIJK": ["3C","3J","3B","3F","3A","3G","3I","3K"],
-  "ABCFGHKL": ["3H","3G","3B","3C","3A","3F","3L","3K"],
-  "ABCFGHJL": ["3H","3G","3B","3C","3A","3F","3L","3J"],
-  "ABCFGHJK": ["3H","3G","3B","3C","3A","3F","3J","3K"],
-  "ABCFGHIL": ["3H","3G","3B","3C","3A","3F","3L","3I"],
-  "ABCFGHIK": ["3H","3G","3B","3C","3A","3F","3I","3K"],
-  "ABCFGHIJ": ["3H","3G","3B","3C","3A","3F","3I","3J"],
-  "ABCEIJKL": ["3E","3J","3B","3A","3I","3C","3L","3K"],
-  "ABCEHJKL": ["3E","3J","3B","3C","3A","3H","3L","3K"],
-  "ABCEHIKL": ["3E","3I","3B","3C","3A","3H","3L","3K"],
-  "ABCEHIJL": ["3E","3J","3B","3C","3A","3H","3L","3I"],
-  "ABCEHIJK": ["3E","3J","3B","3C","3A","3H","3I","3K"],
-  "ABCEGJKL": ["3E","3J","3B","3C","3A","3G","3L","3K"],
-  "ABCEGIKL": ["3E","3G","3B","3A","3I","3C","3L","3K"],
-  "ABCEGIJL": ["3E","3J","3B","3C","3A","3G","3L","3I"],
-  "ABCEGIJK": ["3E","3J","3B","3C","3A","3G","3I","3K"],
-  "ABCEGHKL": ["3E","3G","3B","3C","3A","3H","3L","3K"],
-  "ABCEGHJL": ["3H","3J","3B","3C","3A","3G","3L","3E"],
-  "ABCEGHJK": ["3H","3J","3B","3C","3A","3G","3E","3K"],
-  "ABCEGHIL": ["3E","3G","3B","3C","3A","3H","3L","3I"],
-  "ABCEGHIK": ["3E","3G","3B","3C","3A","3H","3I","3K"],
-  "ABCEGHIJ": ["3H","3J","3B","3C","3A","3G","3E","3I"],
-  "ABCEFJKL": ["3E","3J","3B","3C","3A","3F","3L","3K"],
-  "ABCEFIKL": ["3E","3I","3B","3C","3A","3F","3L","3K"],
-  "ABCEFIJL": ["3E","3J","3B","3C","3A","3F","3L","3I"],
-  "ABCEFIJK": ["3E","3J","3B","3C","3A","3F","3I","3K"],
-  "ABCEFHKL": ["3H","3E","3B","3C","3A","3F","3L","3K"],
-  "ABCEFHJL": ["3H","3J","3B","3C","3A","3F","3L","3E"],
-  "ABCEFHJK": ["3H","3J","3B","3C","3A","3F","3E","3K"],
-  "ABCEFHIL": ["3H","3E","3B","3C","3A","3F","3L","3I"],
-  "ABCEFHIK": ["3H","3E","3B","3C","3A","3F","3I","3K"],
-  "ABCEFHIJ": ["3H","3J","3B","3C","3A","3F","3E","3I"],
-  "ABCEFGKL": ["3E","3G","3B","3C","3A","3F","3L","3K"],
-  "ABCEFGJL": ["3E","3G","3B","3C","3A","3F","3L","3J"],
-  "ABCEFGJK": ["3E","3G","3B","3C","3A","3F","3J","3K"],
-  "ABCEFGIL": ["3E","3G","3B","3C","3A","3F","3L","3I"],
-  "ABCEFGIK": ["3E","3G","3B","3C","3A","3F","3I","3K"],
-  "ABCEFGIJ": ["3E","3G","3B","3C","3A","3F","3I","3J"],
-  "ABCEFGHL": ["3H","3G","3B","3C","3A","3F","3L","3E"],
-  "ABCEFGHK": ["3H","3G","3B","3C","3A","3F","3E","3K"],
-  "ABCEFGHJ": ["3H","3G","3B","3C","3A","3F","3E","3J"],
-  "ABCEFGHI": ["3H","3G","3B","3C","3A","3F","3E","3I"],
-  "ABCDIJKL": ["3I","3J","3B","3C","3A","3D","3L","3K"],
-  "ABCDHJKL": ["3H","3J","3B","3C","3A","3D","3L","3K"],
-  "ABCDHIKL": ["3H","3I","3B","3C","3A","3D","3L","3K"],
-  "ABCDHIJL": ["3H","3J","3B","3C","3A","3D","3L","3I"],
-  "ABCDHIJK": ["3H","3J","3B","3C","3A","3D","3I","3K"],
-  "ABCDGJKL": ["3C","3J","3B","3D","3A","3G","3L","3K"],
-  "ABCDGIKL": ["3I","3G","3B","3C","3A","3D","3L","3K"],
-  "ABCDGIJL": ["3C","3J","3B","3D","3A","3G","3L","3I"],
-  "ABCDGIJK": ["3C","3J","3B","3D","3A","3G","3I","3K"],
-  "ABCDGHKL": ["3H","3G","3B","3C","3A","3D","3L","3K"],
-  "ABCDGHJL": ["3H","3G","3B","3C","3A","3D","3L","3J"],
-  "ABCDGHJK": ["3H","3G","3B","3C","3A","3D","3J","3K"],
-  "ABCDGHIL": ["3H","3G","3B","3C","3A","3D","3L","3I"],
-  "ABCDGHIK": ["3H","3G","3B","3C","3A","3D","3I","3K"],
-  "ABCDGHIJ": ["3H","3G","3B","3C","3A","3D","3I","3J"],
-  "ABCDFJKL": ["3C","3J","3B","3D","3A","3F","3L","3K"],
-  "ABCDFIKL": ["3C","3I","3B","3D","3A","3F","3L","3K"],
-  "ABCDFIJL": ["3C","3J","3B","3D","3A","3F","3L","3I"],
-  "ABCDFIJK": ["3C","3J","3B","3D","3A","3F","3I","3K"],
-  "ABCDFHKL": ["3H","3F","3B","3C","3A","3D","3L","3K"],
-  "ABCDFHJL": ["3C","3J","3B","3D","3A","3F","3L","3H"],
-  "ABCDFHJK": ["3H","3J","3B","3C","3A","3F","3D","3K"],
-  "ABCDFHIL": ["3H","3F","3B","3C","3A","3D","3L","3I"],
-  "ABCDFHIK": ["3H","3F","3B","3C","3A","3D","3I","3K"],
-  "ABCDFHIJ": ["3H","3J","3B","3C","3A","3F","3D","3I"],
-  "ABCDFGKL": ["3C","3G","3B","3D","3A","3F","3L","3K"],
-  "ABCDFGJL": ["3C","3G","3B","3D","3A","3F","3L","3J"],
-  "ABCDFGJK": ["3C","3G","3B","3D","3A","3F","3J","3K"],
-  "ABCDFGIL": ["3C","3G","3B","3D","3A","3F","3L","3I"],
-  "ABCDFGIK": ["3C","3G","3B","3D","3A","3F","3I","3K"],
-  "ABCDFGIJ": ["3C","3G","3B","3D","3A","3F","3I","3J"],
-  "ABCDFGHL": ["3C","3G","3B","3D","3A","3F","3L","3H"],
-  "ABCDFGHK": ["3H","3G","3B","3C","3A","3F","3D","3K"],
-  "ABCDFGHJ": ["3H","3G","3B","3C","3A","3F","3D","3J"],
-  "ABCDFGHI": ["3H","3G","3B","3C","3A","3F","3D","3I"],
-  "ABCDEJKL": ["3E","3J","3B","3C","3A","3D","3L","3K"],
-  "ABCDEIKL": ["3E","3I","3B","3C","3A","3D","3L","3K"],
-  "ABCDEIJL": ["3E","3J","3B","3C","3A","3D","3L","3I"],
-  "ABCDEIJK": ["3E","3J","3B","3C","3A","3D","3I","3K"],
-  "ABCDEHKL": ["3H","3E","3B","3C","3A","3D","3L","3K"],
-  "ABCDEHJL": ["3H","3J","3B","3C","3A","3D","3L","3E"],
-  "ABCDEHJK": ["3H","3J","3B","3C","3A","3D","3E","3K"],
-  "ABCDEHIL": ["3H","3E","3B","3C","3A","3D","3L","3I"],
-  "ABCDEHIK": ["3H","3E","3B","3C","3A","3D","3I","3K"],
-  "ABCDEHIJ": ["3H","3J","3B","3C","3A","3D","3E","3I"],
-  "ABCDEGKL": ["3E","3G","3B","3C","3A","3D","3L","3K"],
-  "ABCDEGJL": ["3E","3G","3B","3C","3A","3D","3L","3J"],
-  "ABCDEGJK": ["3E","3G","3B","3C","3A","3D","3J","3K"],
-  "ABCDEGIL": ["3E","3G","3B","3C","3A","3D","3L","3I"],
-  "ABCDEGIK": ["3E","3G","3B","3C","3A","3D","3I","3K"],
-  "ABCDEGIJ": ["3E","3G","3B","3C","3A","3D","3I","3J"],
-  "ABCDEGHL": ["3H","3G","3B","3C","3A","3D","3L","3E"],
-  "ABCDEGHK": ["3H","3G","3B","3C","3A","3D","3E","3K"],
-  "ABCDEGHJ": ["3H","3G","3B","3C","3A","3D","3E","3J"],
-  "ABCDEGHI": ["3H","3G","3B","3C","3A","3D","3E","3I"],
-  "ABCDEFKL": ["3C","3E","3B","3D","3A","3F","3L","3K"],
-  "ABCDEFJL": ["3C","3J","3B","3D","3A","3F","3L","3E"],
-  "ABCDEFJK": ["3C","3J","3B","3D","3A","3F","3E","3K"],
-  "ABCDEFIL": ["3C","3E","3B","3D","3A","3F","3L","3I"],
-  "ABCDEFIK": ["3C","3E","3B","3D","3A","3F","3I","3K"],
-  "ABCDEFIJ": ["3C","3J","3B","3D","3A","3F","3E","3I"],
-  "ABCDEFHL": ["3H","3F","3B","3C","3A","3D","3L","3E"],
-  "ABCDEFHK": ["3H","3E","3B","3C","3A","3F","3D","3K"],
-  "ABCDEFHJ": ["3H","3J","3B","3C","3A","3F","3D","3E"],
-  "ABCDEFHI": ["3H","3E","3B","3C","3A","3F","3D","3I"],
-  "ABCDEFGL": ["3C","3G","3B","3D","3A","3F","3L","3E"],
-  "ABCDEFGK": ["3C","3G","3B","3D","3A","3F","3E","3K"],
-  "ABCDEFGJ": ["3C","3G","3B","3D","3A","3F","3E","3J"],
-  "ABCDEFGI": ["3C","3G","3B","3D","3A","3F","3E","3I"],
-  "ABCDEFGH": ["3H","3G","3B","3C","3A","3F","3D","3E"]
-};
+   * mejor_tercero(grupos)
+   *
+   * Dado un array de 8 strings con las letras de los grupos cuyos terceros
+   * clasificaron (ej: ["B","C","D","E","F","G","H","L"]),
+   * devuelve un objeto indicando qué tercero va a cada partido.
+   *
+   * Fuente: Annex C del Reglamento oficial FIFA World Cup 2026 (495 combinaciones)
+   *
+   * Columnas de la tabla (orden):
+   *   [0] P79 → 1A vs 3?
+   *   [1] P85 → 1B vs 3?
+   *   [2] P81 → 1D vs 3?
+   *   [3] P74 → 1E vs 3?
+   *   [4] P82 → 1G vs 3?
+   *   [5] P77 → 1I vs 3?
+   *   [6] P87 → 1K vs 3?
+   *   [7] P80 → 1L vs 3?
+   */
+  const TABLA = {
+    EFGHIJKL: ['3E', '3J', '3I', '3F', '3H', '3G', '3L', '3K'],
+    DFGHIJKL: ['3H', '3G', '3I', '3D', '3J', '3F', '3L', '3K'],
+    DEGHIJKL: ['3E', '3J', '3I', '3D', '3H', '3G', '3L', '3K'],
+    DEFHIJKL: ['3E', '3J', '3I', '3D', '3H', '3F', '3L', '3K'],
+    DEFGIJKL: ['3E', '3G', '3I', '3D', '3J', '3F', '3L', '3K'],
+    DEFGHJKL: ['3E', '3G', '3J', '3D', '3H', '3F', '3L', '3K'],
+    DEFGHIKL: ['3E', '3G', '3I', '3D', '3H', '3F', '3L', '3K'],
+    DEFGHIJL: ['3E', '3G', '3J', '3D', '3H', '3F', '3L', '3I'],
+    DEFGHIJK: ['3E', '3G', '3J', '3D', '3H', '3F', '3I', '3K'],
+    CFGHIJKL: ['3H', '3G', '3I', '3C', '3J', '3F', '3L', '3K'],
+    CEGHIJKL: ['3E', '3J', '3I', '3C', '3H', '3G', '3L', '3K'],
+    CEFHIJKL: ['3E', '3J', '3I', '3C', '3H', '3F', '3L', '3K'],
+    CEFGIJKL: ['3E', '3G', '3I', '3C', '3J', '3F', '3L', '3K'],
+    CEFGHJKL: ['3E', '3G', '3J', '3C', '3H', '3F', '3L', '3K'],
+    CEFGHIKL: ['3E', '3G', '3I', '3C', '3H', '3F', '3L', '3K'],
+    CEFGHIJL: ['3E', '3G', '3J', '3C', '3H', '3F', '3L', '3I'],
+    CEFGHIJK: ['3E', '3G', '3J', '3C', '3H', '3F', '3I', '3K'],
+    CDGHIJKL: ['3H', '3G', '3I', '3C', '3J', '3D', '3L', '3K'],
+    CDFHIJKL: ['3C', '3J', '3I', '3D', '3H', '3F', '3L', '3K'],
+    CDFGIJKL: ['3C', '3G', '3I', '3D', '3J', '3F', '3L', '3K'],
+    CDFGHJKL: ['3C', '3G', '3J', '3D', '3H', '3F', '3L', '3K'],
+    CDFGHIKL: ['3C', '3G', '3I', '3D', '3H', '3F', '3L', '3K'],
+    CDFGHIJL: ['3C', '3G', '3J', '3D', '3H', '3F', '3L', '3I'],
+    CDFGHIJK: ['3C', '3G', '3J', '3D', '3H', '3F', '3I', '3K'],
+    CDEHIJKL: ['3E', '3J', '3I', '3C', '3H', '3D', '3L', '3K'],
+    CDEGIJKL: ['3E', '3G', '3I', '3C', '3J', '3D', '3L', '3K'],
+    CDEGHJKL: ['3E', '3G', '3J', '3C', '3H', '3D', '3L', '3K'],
+    CDEGHIKL: ['3E', '3G', '3I', '3C', '3H', '3D', '3L', '3K'],
+    CDEGHIJL: ['3E', '3G', '3J', '3C', '3H', '3D', '3L', '3I'],
+    CDEGHIJK: ['3E', '3G', '3J', '3C', '3H', '3D', '3I', '3K'],
+    CDEFIJKL: ['3C', '3J', '3E', '3D', '3I', '3F', '3L', '3K'],
+    CDEFHJKL: ['3C', '3J', '3E', '3D', '3H', '3F', '3L', '3K'],
+    CDEFHIKL: ['3C', '3E', '3I', '3D', '3H', '3F', '3L', '3K'],
+    CDEFHIJL: ['3C', '3J', '3E', '3D', '3H', '3F', '3L', '3I'],
+    CDEFHIJK: ['3C', '3J', '3E', '3D', '3H', '3F', '3I', '3K'],
+    CDEFGJKL: ['3C', '3G', '3E', '3D', '3J', '3F', '3L', '3K'],
+    CDEFGIKL: ['3C', '3G', '3E', '3D', '3I', '3F', '3L', '3K'],
+    CDEFGIJL: ['3C', '3G', '3E', '3D', '3J', '3F', '3L', '3I'],
+    CDEFGIJK: ['3C', '3G', '3E', '3D', '3J', '3F', '3I', '3K'],
+    CDEFGHKL: ['3C', '3G', '3E', '3D', '3H', '3F', '3L', '3K'],
+    CDEFGHJL: ['3C', '3G', '3J', '3D', '3H', '3F', '3L', '3E'],
+    CDEFGHJK: ['3C', '3G', '3J', '3D', '3H', '3F', '3E', '3K'],
+    CDEFGHIL: ['3C', '3G', '3E', '3D', '3H', '3F', '3L', '3I'],
+    CDEFGHIK: ['3C', '3G', '3E', '3D', '3H', '3F', '3I', '3K'],
+    CDEFGHIJ: ['3C', '3G', '3J', '3D', '3H', '3F', '3E', '3I'],
+    BFGHIJKL: ['3H', '3J', '3B', '3F', '3I', '3G', '3L', '3K'],
+    BEGHIJKL: ['3E', '3J', '3I', '3B', '3H', '3G', '3L', '3K'],
+    BEFHIJKL: ['3E', '3J', '3B', '3F', '3I', '3H', '3L', '3K'],
+    BEFGIJKL: ['3E', '3J', '3B', '3F', '3I', '3G', '3L', '3K'],
+    BEFGHJKL: ['3E', '3J', '3B', '3F', '3H', '3G', '3L', '3K'],
+    BEFGHIKL: ['3E', '3G', '3B', '3F', '3I', '3H', '3L', '3K'],
+    BEFGHIJL: ['3E', '3J', '3B', '3F', '3H', '3G', '3L', '3I'],
+    BEFGHIJK: ['3E', '3J', '3B', '3F', '3H', '3G', '3I', '3K'],
+    BDGHIJKL: ['3H', '3J', '3B', '3D', '3I', '3G', '3L', '3K'],
+    BDFHIJKL: ['3H', '3J', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BDFGIJKL: ['3I', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
+    BDFGHJKL: ['3H', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
+    BDFGHIKL: ['3H', '3G', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BDFGHIJL: ['3H', '3G', '3B', '3D', '3J', '3F', '3L', '3I'],
+    BDFGHIJK: ['3H', '3G', '3B', '3D', '3J', '3F', '3I', '3K'],
+    BDEHIJKL: ['3E', '3J', '3B', '3D', '3I', '3H', '3L', '3K'],
+    BDEGIJKL: ['3E', '3J', '3B', '3D', '3I', '3G', '3L', '3K'],
+    BDEGHJKL: ['3E', '3J', '3B', '3D', '3H', '3G', '3L', '3K'],
+    BDEGHIKL: ['3E', '3G', '3B', '3D', '3I', '3H', '3L', '3K'],
+    BDEGHIJL: ['3E', '3J', '3B', '3D', '3H', '3G', '3L', '3I'],
+    BDEGHIJK: ['3E', '3J', '3B', '3D', '3H', '3G', '3I', '3K'],
+    BDEFIJKL: ['3E', '3J', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BDEFHJKL: ['3E', '3J', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BDEFHIKL: ['3E', '3I', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BDEFHIJL: ['3E', '3J', '3B', '3D', '3H', '3F', '3L', '3I'],
+    BDEFHIJK: ['3E', '3J', '3B', '3D', '3H', '3F', '3I', '3K'],
+    BDEFGJKL: ['3E', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
+    BDEFGIKL: ['3E', '3G', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BDEFGIJL: ['3E', '3G', '3B', '3D', '3J', '3F', '3L', '3I'],
+    BDEFGIJK: ['3E', '3G', '3B', '3D', '3J', '3F', '3I', '3K'],
+    BDEFGHKL: ['3E', '3G', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BDEFGHJL: ['3H', '3G', '3B', '3D', '3J', '3F', '3L', '3E'],
+    BDEFGHJK: ['3H', '3G', '3B', '3D', '3J', '3F', '3E', '3K'],
+    BDEFGHIL: ['3E', '3G', '3B', '3D', '3H', '3F', '3L', '3I'],
+    BDEFGHIK: ['3E', '3G', '3B', '3D', '3H', '3F', '3I', '3K'],
+    BDEFGHIJ: ['3H', '3G', '3B', '3D', '3J', '3F', '3E', '3I'],
+    BCGHIJKL: ['3H', '3J', '3B', '3C', '3I', '3G', '3L', '3K'],
+    BCFHIJKL: ['3H', '3J', '3B', '3C', '3I', '3F', '3L', '3K'],
+    BCFGIJKL: ['3I', '3G', '3B', '3C', '3J', '3F', '3L', '3K'],
+    BCFGHJKL: ['3H', '3G', '3B', '3C', '3J', '3F', '3L', '3K'],
+    BCFGHIKL: ['3H', '3G', '3B', '3C', '3I', '3F', '3L', '3K'],
+    BCFGHIJL: ['3H', '3G', '3B', '3C', '3J', '3F', '3L', '3I'],
+    BCFGHIJK: ['3H', '3G', '3B', '3C', '3J', '3F', '3I', '3K'],
+    BCEHIJKL: ['3E', '3J', '3B', '3C', '3I', '3H', '3L', '3K'],
+    BCEGIJKL: ['3E', '3J', '3B', '3C', '3I', '3G', '3L', '3K'],
+    BCEGHJKL: ['3E', '3J', '3B', '3C', '3H', '3G', '3L', '3K'],
+    BCEGHIKL: ['3E', '3G', '3B', '3C', '3I', '3H', '3L', '3K'],
+    BCEGHIJL: ['3E', '3J', '3B', '3C', '3H', '3G', '3L', '3I'],
+    BCEGHIJK: ['3E', '3J', '3B', '3C', '3H', '3G', '3I', '3K'],
+    BCEFIJKL: ['3E', '3J', '3B', '3C', '3I', '3F', '3L', '3K'],
+    BCEFHJKL: ['3E', '3J', '3B', '3C', '3H', '3F', '3L', '3K'],
+    BCEFHIKL: ['3E', '3I', '3B', '3C', '3H', '3F', '3L', '3K'],
+    BCEFHIJL: ['3E', '3J', '3B', '3C', '3H', '3F', '3L', '3I'],
+    BCEFHIJK: ['3E', '3J', '3B', '3C', '3H', '3F', '3I', '3K'],
+    BCEFGJKL: ['3E', '3G', '3B', '3C', '3J', '3F', '3L', '3K'],
+    BCEFGIKL: ['3E', '3G', '3B', '3C', '3I', '3F', '3L', '3K'],
+    BCEFGIJL: ['3E', '3G', '3B', '3C', '3J', '3F', '3L', '3I'],
+    BCEFGIJK: ['3E', '3G', '3B', '3C', '3J', '3F', '3I', '3K'],
+    BCEFGHKL: ['3E', '3G', '3B', '3C', '3H', '3F', '3L', '3K'],
+    BCEFGHJL: ['3H', '3G', '3B', '3C', '3J', '3F', '3L', '3E'],
+    BCEFGHJK: ['3H', '3G', '3B', '3C', '3J', '3F', '3E', '3K'],
+    BCEFGHIL: ['3E', '3G', '3B', '3C', '3H', '3F', '3L', '3I'],
+    BCEFGHIK: ['3E', '3G', '3B', '3C', '3H', '3F', '3I', '3K'],
+    BCEFGHIJ: ['3H', '3G', '3B', '3C', '3J', '3F', '3E', '3I'],
+    BCDHIJKL: ['3H', '3J', '3B', '3C', '3I', '3D', '3L', '3K'],
+    BCDGIJKL: ['3I', '3G', '3B', '3C', '3J', '3D', '3L', '3K'],
+    BCDGHJKL: ['3H', '3G', '3B', '3C', '3J', '3D', '3L', '3K'],
+    BCDGHIKL: ['3H', '3G', '3B', '3C', '3I', '3D', '3L', '3K'],
+    BCDGHIJL: ['3H', '3G', '3B', '3C', '3J', '3D', '3L', '3I'],
+    BCDGHIJK: ['3H', '3G', '3B', '3C', '3J', '3D', '3I', '3K'],
+    BCDFIJKL: ['3C', '3J', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BCDFHJKL: ['3C', '3J', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BCDFHIKL: ['3C', '3I', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BCDFHIJL: ['3C', '3J', '3B', '3D', '3H', '3F', '3L', '3I'],
+    BCDFHIJK: ['3C', '3J', '3B', '3D', '3H', '3F', '3I', '3K'],
+    BCDFGJKL: ['3C', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
+    BCDFGIKL: ['3C', '3G', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BCDFGIJL: ['3C', '3G', '3B', '3D', '3J', '3F', '3L', '3I'],
+    BCDFGIJK: ['3C', '3G', '3B', '3D', '3J', '3F', '3I', '3K'],
+    BCDFGHKL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BCDFGHJL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3J'],
+    BCDFGHJK: ['3H', '3G', '3B', '3C', '3J', '3F', '3D', '3K'],
+    BCDFGHIL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3I'],
+    BCDFGHIK: ['3C', '3G', '3B', '3D', '3H', '3F', '3I', '3K'],
+    BCDFGHIJ: ['3H', '3G', '3B', '3C', '3J', '3F', '3D', '3I'],
+    BCDEIJKL: ['3E', '3J', '3B', '3C', '3I', '3D', '3L', '3K'],
+    BCDEHJKL: ['3E', '3J', '3B', '3C', '3H', '3D', '3L', '3K'],
+    BCDEHIKL: ['3E', '3I', '3B', '3C', '3H', '3D', '3L', '3K'],
+    BCDEHIJL: ['3E', '3J', '3B', '3C', '3H', '3D', '3L', '3I'],
+    BCDEHIJK: ['3E', '3J', '3B', '3C', '3H', '3D', '3I', '3K'],
+    BCDEGJKL: ['3E', '3G', '3B', '3C', '3J', '3D', '3L', '3K'],
+    BCDEGIKL: ['3E', '3G', '3B', '3C', '3I', '3D', '3L', '3K'],
+    BCDEGIJL: ['3E', '3G', '3B', '3C', '3J', '3D', '3L', '3I'],
+    BCDEGIJK: ['3E', '3G', '3B', '3C', '3J', '3D', '3I', '3K'],
+    BCDEGHKL: ['3E', '3G', '3B', '3C', '3H', '3D', '3L', '3K'],
+    BCDEGHJL: ['3H', '3G', '3B', '3C', '3J', '3D', '3L', '3E'],
+    BCDEGHJK: ['3H', '3G', '3B', '3C', '3J', '3D', '3E', '3K'],
+    BCDEGHIL: ['3E', '3G', '3B', '3C', '3H', '3D', '3L', '3I'],
+    BCDEGHIK: ['3E', '3G', '3B', '3C', '3H', '3D', '3I', '3K'],
+    BCDEGHIJ: ['3H', '3G', '3B', '3C', '3J', '3D', '3E', '3I'],
+    BCDEFJKL: ['3C', '3J', '3B', '3D', '3E', '3F', '3L', '3K'],
+    BCDEFIKL: ['3C', '3E', '3B', '3D', '3I', '3F', '3L', '3K'],
+    BCDEFIJL: ['3C', '3J', '3B', '3D', '3E', '3F', '3L', '3I'],
+    BCDEFIJK: ['3C', '3J', '3B', '3D', '3E', '3F', '3I', '3K'],
+    BCDEFHKL: ['3C', '3E', '3B', '3D', '3H', '3F', '3L', '3K'],
+    BCDEFHJL: ['3C', '3J', '3B', '3D', '3H', '3F', '3L', '3E'],
+    BCDEFHJK: ['3C', '3J', '3B', '3D', '3H', '3F', '3E', '3K'],
+    BCDEFHIL: ['3C', '3E', '3B', '3D', '3H', '3F', '3L', '3I'],
+    BCDEFHIK: ['3C', '3E', '3B', '3D', '3H', '3F', '3I', '3K'],
+    BCDEFHIJ: ['3C', '3J', '3B', '3D', '3H', '3F', '3E', '3I'],
+    BCDEFGKL: ['3C', '3G', '3B', '3D', '3E', '3F', '3L', '3K'],
+    BCDEFGJL: ['3C', '3G', '3B', '3D', '3J', '3F', '3L', '3E'],
+    BCDEFGJK: ['3C', '3G', '3B', '3D', '3J', '3F', '3E', '3K'],
+    BCDEFGIL: ['3C', '3G', '3B', '3D', '3E', '3F', '3L', '3I'],
+    BCDEFGIK: ['3C', '3G', '3B', '3D', '3E', '3F', '3I', '3K'],
+    BCDEFGIJ: ['3C', '3G', '3B', '3D', '3J', '3F', '3E', '3I'],
+    BCDEFGHL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3E'],
+    BCDEFGHK: ['3C', '3G', '3B', '3D', '3H', '3F', '3E', '3K'],
+    BCDEFGHJ: ['3H', '3G', '3B', '3C', '3J', '3F', '3D', '3E'],
+    BCDEFGHI: ['3C', '3G', '3B', '3D', '3H', '3F', '3E', '3I'],
+    AFGHIJKL: ['3H', '3J', '3I', '3F', '3A', '3G', '3L', '3K'],
+    AEGHIJKL: ['3E', '3J', '3I', '3A', '3H', '3G', '3L', '3K'],
+    AEFHIJKL: ['3E', '3J', '3I', '3F', '3A', '3H', '3L', '3K'],
+    AEFGIJKL: ['3E', '3J', '3I', '3F', '3A', '3G', '3L', '3K'],
+    AEFGHJKL: ['3E', '3G', '3J', '3F', '3A', '3H', '3L', '3K'],
+    AEFGHIKL: ['3E', '3G', '3I', '3F', '3A', '3H', '3L', '3K'],
+    AEFGHIJL: ['3E', '3G', '3J', '3F', '3A', '3H', '3L', '3I'],
+    AEFGHIJK: ['3E', '3G', '3J', '3F', '3A', '3H', '3I', '3K'],
+    ADGHIJKL: ['3H', '3J', '3I', '3D', '3A', '3G', '3L', '3K'],
+    ADFHIJKL: ['3H', '3J', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ADFGIJKL: ['3I', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
+    ADFGHJKL: ['3H', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
+    ADFGHIKL: ['3H', '3G', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ADFGHIJL: ['3H', '3G', '3J', '3D', '3A', '3F', '3L', '3I'],
+    ADFGHIJK: ['3H', '3G', '3J', '3D', '3A', '3F', '3I', '3K'],
+    ADEHIJKL: ['3E', '3J', '3I', '3D', '3A', '3H', '3L', '3K'],
+    ADEGIJKL: ['3E', '3J', '3I', '3D', '3A', '3G', '3L', '3K'],
+    ADEGHJKL: ['3E', '3G', '3J', '3D', '3A', '3H', '3L', '3K'],
+    ADEGHIKL: ['3E', '3G', '3I', '3D', '3A', '3H', '3L', '3K'],
+    ADEGHIJL: ['3E', '3G', '3J', '3D', '3A', '3H', '3L', '3I'],
+    ADEGHIJK: ['3E', '3G', '3J', '3D', '3A', '3H', '3I', '3K'],
+    ADEFIJKL: ['3E', '3J', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ADEFHJKL: ['3H', '3J', '3E', '3D', '3A', '3F', '3L', '3K'],
+    ADEFHIKL: ['3H', '3E', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ADEFHIJL: ['3H', '3J', '3E', '3D', '3A', '3F', '3L', '3I'],
+    ADEFHIJK: ['3H', '3J', '3E', '3D', '3A', '3F', '3I', '3K'],
+    ADEFGJKL: ['3E', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
+    ADEFGIKL: ['3E', '3G', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ADEFGIJL: ['3E', '3G', '3J', '3D', '3A', '3F', '3L', '3I'],
+    ADEFGIJK: ['3E', '3G', '3J', '3D', '3A', '3F', '3I', '3K'],
+    ADEFGHKL: ['3H', '3G', '3E', '3D', '3A', '3F', '3L', '3K'],
+    ADEFGHJL: ['3H', '3G', '3J', '3D', '3A', '3F', '3L', '3E'],
+    ADEFGHJK: ['3H', '3G', '3J', '3D', '3A', '3F', '3E', '3K'],
+    ADEFGHIL: ['3H', '3G', '3E', '3D', '3A', '3F', '3L', '3I'],
+    ADEFGHIK: ['3H', '3G', '3E', '3D', '3A', '3F', '3I', '3K'],
+    ADEFGHIJ: ['3H', '3G', '3J', '3D', '3A', '3F', '3E', '3I'],
+    ACGHIJKL: ['3H', '3J', '3I', '3C', '3A', '3G', '3L', '3K'],
+    ACFHIJKL: ['3H', '3J', '3I', '3C', '3A', '3F', '3L', '3K'],
+    ACFGIJKL: ['3I', '3G', '3J', '3C', '3A', '3F', '3L', '3K'],
+    ACFGHJKL: ['3H', '3G', '3J', '3C', '3A', '3F', '3L', '3K'],
+    ACFGHIKL: ['3H', '3G', '3I', '3C', '3A', '3F', '3L', '3K'],
+    ACFGHIJL: ['3H', '3G', '3J', '3C', '3A', '3F', '3L', '3I'],
+    ACFGHIJK: ['3H', '3G', '3J', '3C', '3A', '3F', '3I', '3K'],
+    ACEHIJKL: ['3E', '3J', '3I', '3C', '3A', '3H', '3L', '3K'],
+    ACEGIJKL: ['3E', '3J', '3I', '3C', '3A', '3G', '3L', '3K'],
+    ACEGHJKL: ['3E', '3G', '3J', '3C', '3A', '3H', '3L', '3K'],
+    ACEGHIKL: ['3E', '3G', '3I', '3C', '3A', '3H', '3L', '3K'],
+    ACEGHIJL: ['3E', '3G', '3J', '3C', '3A', '3H', '3L', '3I'],
+    ACEGHIJK: ['3E', '3G', '3J', '3C', '3A', '3H', '3I', '3K'],
+    ACEFIJKL: ['3E', '3J', '3I', '3C', '3A', '3F', '3L', '3K'],
+    ACEFHJKL: ['3H', '3J', '3E', '3C', '3A', '3F', '3L', '3K'],
+    ACEFHIKL: ['3H', '3E', '3I', '3C', '3A', '3F', '3L', '3K'],
+    ACEFHIJL: ['3H', '3J', '3E', '3C', '3A', '3F', '3L', '3I'],
+    ACEFHIJK: ['3H', '3J', '3E', '3C', '3A', '3F', '3I', '3K'],
+    ACEFGJKL: ['3E', '3G', '3J', '3C', '3A', '3F', '3L', '3K'],
+    ACEFGIKL: ['3E', '3G', '3I', '3C', '3A', '3F', '3L', '3K'],
+    ACEFGIJL: ['3E', '3G', '3J', '3C', '3A', '3F', '3L', '3I'],
+    ACEFGIJK: ['3E', '3G', '3J', '3C', '3A', '3F', '3I', '3K'],
+    ACEFGHKL: ['3H', '3G', '3E', '3C', '3A', '3F', '3L', '3K'],
+    ACEFGHJL: ['3H', '3G', '3J', '3C', '3A', '3F', '3L', '3E'],
+    ACEFGHJK: ['3H', '3G', '3J', '3C', '3A', '3F', '3E', '3K'],
+    ACEFGHIL: ['3H', '3G', '3E', '3C', '3A', '3F', '3L', '3I'],
+    ACEFGHIK: ['3H', '3G', '3E', '3C', '3A', '3F', '3I', '3K'],
+    ACEFGHIJ: ['3H', '3G', '3J', '3C', '3A', '3F', '3E', '3I'],
+    ACDHIJKL: ['3H', '3J', '3I', '3C', '3A', '3D', '3L', '3K'],
+    ACDGIJKL: ['3I', '3G', '3J', '3C', '3A', '3D', '3L', '3K'],
+    ACDGHJKL: ['3H', '3G', '3J', '3C', '3A', '3D', '3L', '3K'],
+    ACDGHIKL: ['3H', '3G', '3I', '3C', '3A', '3D', '3L', '3K'],
+    ACDGHIJL: ['3H', '3G', '3J', '3C', '3A', '3D', '3L', '3I'],
+    ACDGHIJK: ['3H', '3G', '3J', '3C', '3A', '3D', '3I', '3K'],
+    ACDFIJKL: ['3C', '3J', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ACDFHJKL: ['3H', '3J', '3F', '3C', '3A', '3D', '3L', '3K'],
+    ACDFHIKL: ['3H', '3F', '3I', '3C', '3A', '3D', '3L', '3K'],
+    ACDFHIJL: ['3H', '3J', '3F', '3C', '3A', '3D', '3L', '3I'],
+    ACDFHIJK: ['3H', '3J', '3F', '3C', '3A', '3D', '3I', '3K'],
+    ACDFGJKL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
+    ACDFGIKL: ['3C', '3G', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ACDFGIJL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3I'],
+    ACDFGIJK: ['3C', '3G', '3J', '3D', '3A', '3F', '3I', '3K'],
+    ACDFGHKL: ['3H', '3G', '3F', '3C', '3A', '3D', '3L', '3K'],
+    ACDFGHJL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3H'],
+    ACDFGHJK: ['3H', '3G', '3J', '3C', '3A', '3F', '3D', '3K'],
+    ACDFGHIL: ['3H', '3G', '3F', '3C', '3A', '3D', '3L', '3I'],
+    ACDFGHIK: ['3H', '3G', '3F', '3C', '3A', '3D', '3I', '3K'],
+    ACDFGHIJ: ['3H', '3G', '3J', '3C', '3A', '3F', '3D', '3I'],
+    ACDEIJKL: ['3E', '3J', '3I', '3C', '3A', '3D', '3L', '3K'],
+    ACDEHJKL: ['3H', '3J', '3E', '3C', '3A', '3D', '3L', '3K'],
+    ACDEHIKL: ['3H', '3E', '3I', '3C', '3A', '3D', '3L', '3K'],
+    ACDEHIJL: ['3H', '3J', '3E', '3C', '3A', '3D', '3L', '3I'],
+    ACDEHIJK: ['3H', '3J', '3E', '3C', '3A', '3D', '3I', '3K'],
+    ACDEGJKL: ['3E', '3G', '3J', '3C', '3A', '3D', '3L', '3K'],
+    ACDEGIKL: ['3E', '3G', '3I', '3C', '3A', '3D', '3L', '3K'],
+    ACDEGIJL: ['3E', '3G', '3J', '3C', '3A', '3D', '3L', '3I'],
+    ACDEGIJK: ['3E', '3G', '3J', '3C', '3A', '3D', '3I', '3K'],
+    ACDEGHKL: ['3H', '3G', '3E', '3C', '3A', '3D', '3L', '3K'],
+    ACDEGHJL: ['3H', '3G', '3J', '3C', '3A', '3D', '3L', '3E'],
+    ACDEGHJK: ['3H', '3G', '3J', '3C', '3A', '3D', '3E', '3K'],
+    ACDEGHIL: ['3H', '3G', '3E', '3C', '3A', '3D', '3L', '3I'],
+    ACDEGHIK: ['3H', '3G', '3E', '3C', '3A', '3D', '3I', '3K'],
+    ACDEGHIJ: ['3H', '3G', '3J', '3C', '3A', '3D', '3E', '3I'],
+    ACDEFJKL: ['3C', '3J', '3E', '3D', '3A', '3F', '3L', '3K'],
+    ACDEFIKL: ['3C', '3E', '3I', '3D', '3A', '3F', '3L', '3K'],
+    ACDEFIJL: ['3C', '3J', '3E', '3D', '3A', '3F', '3L', '3I'],
+    ACDEFIJK: ['3C', '3J', '3E', '3D', '3A', '3F', '3I', '3K'],
+    ACDEFHKL: ['3H', '3E', '3F', '3C', '3A', '3D', '3L', '3K'],
+    ACDEFHJL: ['3H', '3J', '3F', '3C', '3A', '3D', '3L', '3E'],
+    ACDEFHJK: ['3H', '3J', '3E', '3C', '3A', '3F', '3D', '3K'],
+    ACDEFHIL: ['3H', '3E', '3F', '3C', '3A', '3D', '3L', '3I'],
+    ACDEFHIK: ['3H', '3E', '3F', '3C', '3A', '3D', '3I', '3K'],
+    ACDEFHIJ: ['3H', '3J', '3E', '3C', '3A', '3F', '3D', '3I'],
+    ACDEFGKL: ['3C', '3G', '3E', '3D', '3A', '3F', '3L', '3K'],
+    ACDEFGJL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3E'],
+    ACDEFGJK: ['3C', '3G', '3J', '3D', '3A', '3F', '3E', '3K'],
+    ACDEFGIL: ['3C', '3G', '3E', '3D', '3A', '3F', '3L', '3I'],
+    ACDEFGIK: ['3C', '3G', '3E', '3D', '3A', '3F', '3I', '3K'],
+    ACDEFGIJ: ['3C', '3G', '3J', '3D', '3A', '3F', '3E', '3I'],
+    ACDEFGHL: ['3H', '3G', '3F', '3C', '3A', '3D', '3L', '3E'],
+    ACDEFGHK: ['3H', '3G', '3E', '3C', '3A', '3F', '3D', '3K'],
+    ACDEFGHJ: ['3H', '3G', '3J', '3C', '3A', '3F', '3D', '3E'],
+    ACDEFGHI: ['3H', '3G', '3E', '3C', '3A', '3F', '3D', '3I'],
+    ABGHIJKL: ['3H', '3J', '3B', '3A', '3I', '3G', '3L', '3K'],
+    ABFHIJKL: ['3H', '3J', '3B', '3A', '3I', '3F', '3L', '3K'],
+    ABFGIJKL: ['3I', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
+    ABFGHJKL: ['3H', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
+    ABFGHIKL: ['3H', '3G', '3B', '3A', '3I', '3F', '3L', '3K'],
+    ABFGHIJL: ['3H', '3J', '3B', '3F', '3A', '3G', '3L', '3I'],
+    ABFGHIJK: ['3H', '3J', '3B', '3F', '3A', '3G', '3I', '3K'],
+    ABEHIJKL: ['3E', '3J', '3B', '3A', '3I', '3H', '3L', '3K'],
+    ABEGIJKL: ['3E', '3J', '3B', '3A', '3I', '3G', '3L', '3K'],
+    ABEGHJKL: ['3E', '3J', '3B', '3A', '3H', '3G', '3L', '3K'],
+    ABEGHIKL: ['3E', '3G', '3B', '3A', '3I', '3H', '3L', '3K'],
+    ABEGHIJL: ['3E', '3J', '3B', '3A', '3H', '3G', '3L', '3I'],
+    ABEGHIJK: ['3E', '3J', '3B', '3A', '3H', '3G', '3I', '3K'],
+    ABEFIJKL: ['3E', '3J', '3B', '3A', '3I', '3F', '3L', '3K'],
+    ABEFHJKL: ['3E', '3J', '3B', '3F', '3A', '3H', '3L', '3K'],
+    ABEFHIKL: ['3E', '3I', '3B', '3F', '3A', '3H', '3L', '3K'],
+    ABEFHIJL: ['3E', '3J', '3B', '3F', '3A', '3H', '3L', '3I'],
+    ABEFHIJK: ['3E', '3J', '3B', '3F', '3A', '3H', '3I', '3K'],
+    ABEFGJKL: ['3E', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
+    ABEFGIKL: ['3E', '3G', '3B', '3A', '3I', '3F', '3L', '3K'],
+    ABEFGIJL: ['3E', '3J', '3B', '3F', '3A', '3G', '3L', '3I'],
+    ABEFGIJK: ['3E', '3J', '3B', '3F', '3A', '3G', '3I', '3K'],
+    ABEFGHKL: ['3E', '3G', '3B', '3F', '3A', '3H', '3L', '3K'],
+    ABEFGHJL: ['3H', '3J', '3B', '3F', '3A', '3G', '3L', '3E'],
+    ABEFGHJK: ['3H', '3J', '3B', '3F', '3A', '3G', '3E', '3K'],
+    ABEFGHIL: ['3E', '3G', '3B', '3F', '3A', '3H', '3L', '3I'],
+    ABEFGHIK: ['3E', '3G', '3B', '3F', '3A', '3H', '3I', '3K'],
+    ABEFGHIJ: ['3H', '3J', '3B', '3F', '3A', '3G', '3E', '3I'],
+    ABDHIJKL: ['3I', '3J', '3B', '3D', '3A', '3H', '3L', '3K'],
+    ABDGIJKL: ['3I', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
+    ABDGHJKL: ['3H', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
+    ABDGHIKL: ['3I', '3G', '3B', '3D', '3A', '3H', '3L', '3K'],
+    ABDGHIJL: ['3H', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
+    ABDGHIJK: ['3H', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
+    ABDFIJKL: ['3I', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDFHJKL: ['3H', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDFHIKL: ['3H', '3I', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDFHIJL: ['3H', '3J', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABDFHIJK: ['3H', '3J', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABDFGJKL: ['3F', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
+    ABDFGIKL: ['3I', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDFGIJL: ['3F', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
+    ABDFGIJK: ['3F', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
+    ABDFGHKL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDFGHJL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3J'],
+    ABDFGHJK: ['3H', '3G', '3B', '3D', '3A', '3F', '3J', '3K'],
+    ABDFGHIL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABDFGHIK: ['3H', '3G', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABDFGHIJ: ['3H', '3G', '3B', '3D', '3A', '3F', '3I', '3J'],
+    ABDEIJKL: ['3E', '3J', '3B', '3A', '3I', '3D', '3L', '3K'],
+    ABDEHJKL: ['3E', '3J', '3B', '3D', '3A', '3H', '3L', '3K'],
+    ABDEHIKL: ['3E', '3I', '3B', '3D', '3A', '3H', '3L', '3K'],
+    ABDEHIJL: ['3E', '3J', '3B', '3D', '3A', '3H', '3L', '3I'],
+    ABDEHIJK: ['3E', '3J', '3B', '3D', '3A', '3H', '3I', '3K'],
+    ABDEGJKL: ['3E', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
+    ABDEGIKL: ['3E', '3G', '3B', '3A', '3I', '3D', '3L', '3K'],
+    ABDEGIJL: ['3E', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
+    ABDEGIJK: ['3E', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
+    ABDEGHKL: ['3E', '3G', '3B', '3D', '3A', '3H', '3L', '3K'],
+    ABDEGHJL: ['3H', '3J', '3B', '3D', '3A', '3G', '3L', '3E'],
+    ABDEGHJK: ['3H', '3J', '3B', '3D', '3A', '3G', '3E', '3K'],
+    ABDEGHIL: ['3E', '3G', '3B', '3D', '3A', '3H', '3L', '3I'],
+    ABDEGHIK: ['3E', '3G', '3B', '3D', '3A', '3H', '3I', '3K'],
+    ABDEGHIJ: ['3H', '3J', '3B', '3D', '3A', '3G', '3E', '3I'],
+    ABDEFJKL: ['3E', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDEFIKL: ['3E', '3I', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDEFIJL: ['3E', '3J', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABDEFIJK: ['3E', '3J', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABDEFHKL: ['3H', '3E', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDEFHJL: ['3H', '3J', '3B', '3D', '3A', '3F', '3L', '3E'],
+    ABDEFHJK: ['3H', '3J', '3B', '3D', '3A', '3F', '3E', '3K'],
+    ABDEFHIL: ['3H', '3E', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABDEFHIK: ['3H', '3E', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABDEFHIJ: ['3H', '3J', '3B', '3D', '3A', '3F', '3E', '3I'],
+    ABDEFGKL: ['3E', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABDEFGJL: ['3E', '3G', '3B', '3D', '3A', '3F', '3L', '3J'],
+    ABDEFGJK: ['3E', '3G', '3B', '3D', '3A', '3F', '3J', '3K'],
+    ABDEFGIL: ['3E', '3G', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABDEFGIK: ['3E', '3G', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABDEFGIJ: ['3E', '3G', '3B', '3D', '3A', '3F', '3I', '3J'],
+    ABDEFGHL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3E'],
+    ABDEFGHK: ['3H', '3G', '3B', '3D', '3A', '3F', '3E', '3K'],
+    ABDEFGHJ: ['3H', '3G', '3B', '3D', '3A', '3F', '3E', '3J'],
+    ABDEFGHI: ['3H', '3G', '3B', '3D', '3A', '3F', '3E', '3I'],
+    ABCHIJKL: ['3I', '3J', '3B', '3C', '3A', '3H', '3L', '3K'],
+    ABCGIJKL: ['3I', '3J', '3B', '3C', '3A', '3G', '3L', '3K'],
+    ABCGHJKL: ['3H', '3J', '3B', '3C', '3A', '3G', '3L', '3K'],
+    ABCGHIKL: ['3I', '3G', '3B', '3C', '3A', '3H', '3L', '3K'],
+    ABCGHIJL: ['3H', '3J', '3B', '3C', '3A', '3G', '3L', '3I'],
+    ABCGHIJK: ['3H', '3J', '3B', '3C', '3A', '3G', '3I', '3K'],
+    ABCFIJKL: ['3I', '3J', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCFHJKL: ['3H', '3J', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCFHIKL: ['3H', '3I', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCFHIJL: ['3H', '3J', '3B', '3C', '3A', '3F', '3L', '3I'],
+    ABCFHIJK: ['3H', '3J', '3B', '3C', '3A', '3F', '3I', '3K'],
+    ABCFGJKL: ['3C', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
+    ABCFGIKL: ['3I', '3G', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCFGIJL: ['3C', '3J', '3B', '3F', '3A', '3G', '3L', '3I'],
+    ABCFGIJK: ['3C', '3J', '3B', '3F', '3A', '3G', '3I', '3K'],
+    ABCFGHKL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCFGHJL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3J'],
+    ABCFGHJK: ['3H', '3G', '3B', '3C', '3A', '3F', '3J', '3K'],
+    ABCFGHIL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3I'],
+    ABCFGHIK: ['3H', '3G', '3B', '3C', '3A', '3F', '3I', '3K'],
+    ABCFGHIJ: ['3H', '3G', '3B', '3C', '3A', '3F', '3I', '3J'],
+    ABCEIJKL: ['3E', '3J', '3B', '3A', '3I', '3C', '3L', '3K'],
+    ABCEHJKL: ['3E', '3J', '3B', '3C', '3A', '3H', '3L', '3K'],
+    ABCEHIKL: ['3E', '3I', '3B', '3C', '3A', '3H', '3L', '3K'],
+    ABCEHIJL: ['3E', '3J', '3B', '3C', '3A', '3H', '3L', '3I'],
+    ABCEHIJK: ['3E', '3J', '3B', '3C', '3A', '3H', '3I', '3K'],
+    ABCEGJKL: ['3E', '3J', '3B', '3C', '3A', '3G', '3L', '3K'],
+    ABCEGIKL: ['3E', '3G', '3B', '3A', '3I', '3C', '3L', '3K'],
+    ABCEGIJL: ['3E', '3J', '3B', '3C', '3A', '3G', '3L', '3I'],
+    ABCEGIJK: ['3E', '3J', '3B', '3C', '3A', '3G', '3I', '3K'],
+    ABCEGHKL: ['3E', '3G', '3B', '3C', '3A', '3H', '3L', '3K'],
+    ABCEGHJL: ['3H', '3J', '3B', '3C', '3A', '3G', '3L', '3E'],
+    ABCEGHJK: ['3H', '3J', '3B', '3C', '3A', '3G', '3E', '3K'],
+    ABCEGHIL: ['3E', '3G', '3B', '3C', '3A', '3H', '3L', '3I'],
+    ABCEGHIK: ['3E', '3G', '3B', '3C', '3A', '3H', '3I', '3K'],
+    ABCEGHIJ: ['3H', '3J', '3B', '3C', '3A', '3G', '3E', '3I'],
+    ABCEFJKL: ['3E', '3J', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCEFIKL: ['3E', '3I', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCEFIJL: ['3E', '3J', '3B', '3C', '3A', '3F', '3L', '3I'],
+    ABCEFIJK: ['3E', '3J', '3B', '3C', '3A', '3F', '3I', '3K'],
+    ABCEFHKL: ['3H', '3E', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCEFHJL: ['3H', '3J', '3B', '3C', '3A', '3F', '3L', '3E'],
+    ABCEFHJK: ['3H', '3J', '3B', '3C', '3A', '3F', '3E', '3K'],
+    ABCEFHIL: ['3H', '3E', '3B', '3C', '3A', '3F', '3L', '3I'],
+    ABCEFHIK: ['3H', '3E', '3B', '3C', '3A', '3F', '3I', '3K'],
+    ABCEFHIJ: ['3H', '3J', '3B', '3C', '3A', '3F', '3E', '3I'],
+    ABCEFGKL: ['3E', '3G', '3B', '3C', '3A', '3F', '3L', '3K'],
+    ABCEFGJL: ['3E', '3G', '3B', '3C', '3A', '3F', '3L', '3J'],
+    ABCEFGJK: ['3E', '3G', '3B', '3C', '3A', '3F', '3J', '3K'],
+    ABCEFGIL: ['3E', '3G', '3B', '3C', '3A', '3F', '3L', '3I'],
+    ABCEFGIK: ['3E', '3G', '3B', '3C', '3A', '3F', '3I', '3K'],
+    ABCEFGIJ: ['3E', '3G', '3B', '3C', '3A', '3F', '3I', '3J'],
+    ABCEFGHL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3E'],
+    ABCEFGHK: ['3H', '3G', '3B', '3C', '3A', '3F', '3E', '3K'],
+    ABCEFGHJ: ['3H', '3G', '3B', '3C', '3A', '3F', '3E', '3J'],
+    ABCEFGHI: ['3H', '3G', '3B', '3C', '3A', '3F', '3E', '3I'],
+    ABCDIJKL: ['3I', '3J', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDHJKL: ['3H', '3J', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDHIKL: ['3H', '3I', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDHIJL: ['3H', '3J', '3B', '3C', '3A', '3D', '3L', '3I'],
+    ABCDHIJK: ['3H', '3J', '3B', '3C', '3A', '3D', '3I', '3K'],
+    ABCDGJKL: ['3C', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
+    ABCDGIKL: ['3I', '3G', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDGIJL: ['3C', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
+    ABCDGIJK: ['3C', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
+    ABCDGHKL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDGHJL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3J'],
+    ABCDGHJK: ['3H', '3G', '3B', '3C', '3A', '3D', '3J', '3K'],
+    ABCDGHIL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3I'],
+    ABCDGHIK: ['3H', '3G', '3B', '3C', '3A', '3D', '3I', '3K'],
+    ABCDGHIJ: ['3H', '3G', '3B', '3C', '3A', '3D', '3I', '3J'],
+    ABCDFJKL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABCDFIKL: ['3C', '3I', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABCDFIJL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABCDFIJK: ['3C', '3J', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABCDFHKL: ['3H', '3F', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDFHJL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3H'],
+    ABCDFHJK: ['3H', '3J', '3B', '3C', '3A', '3F', '3D', '3K'],
+    ABCDFHIL: ['3H', '3F', '3B', '3C', '3A', '3D', '3L', '3I'],
+    ABCDFHIK: ['3H', '3F', '3B', '3C', '3A', '3D', '3I', '3K'],
+    ABCDFHIJ: ['3H', '3J', '3B', '3C', '3A', '3F', '3D', '3I'],
+    ABCDFGKL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABCDFGJL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3J'],
+    ABCDFGJK: ['3C', '3G', '3B', '3D', '3A', '3F', '3J', '3K'],
+    ABCDFGIL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABCDFGIK: ['3C', '3G', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABCDFGIJ: ['3C', '3G', '3B', '3D', '3A', '3F', '3I', '3J'],
+    ABCDFGHL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3H'],
+    ABCDFGHK: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3K'],
+    ABCDFGHJ: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3J'],
+    ABCDFGHI: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3I'],
+    ABCDEJKL: ['3E', '3J', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDEIKL: ['3E', '3I', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDEIJL: ['3E', '3J', '3B', '3C', '3A', '3D', '3L', '3I'],
+    ABCDEIJK: ['3E', '3J', '3B', '3C', '3A', '3D', '3I', '3K'],
+    ABCDEHKL: ['3H', '3E', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDEHJL: ['3H', '3J', '3B', '3C', '3A', '3D', '3L', '3E'],
+    ABCDEHJK: ['3H', '3J', '3B', '3C', '3A', '3D', '3E', '3K'],
+    ABCDEHIL: ['3H', '3E', '3B', '3C', '3A', '3D', '3L', '3I'],
+    ABCDEHIK: ['3H', '3E', '3B', '3C', '3A', '3D', '3I', '3K'],
+    ABCDEHIJ: ['3H', '3J', '3B', '3C', '3A', '3D', '3E', '3I'],
+    ABCDEGKL: ['3E', '3G', '3B', '3C', '3A', '3D', '3L', '3K'],
+    ABCDEGJL: ['3E', '3G', '3B', '3C', '3A', '3D', '3L', '3J'],
+    ABCDEGJK: ['3E', '3G', '3B', '3C', '3A', '3D', '3J', '3K'],
+    ABCDEGIL: ['3E', '3G', '3B', '3C', '3A', '3D', '3L', '3I'],
+    ABCDEGIK: ['3E', '3G', '3B', '3C', '3A', '3D', '3I', '3K'],
+    ABCDEGIJ: ['3E', '3G', '3B', '3C', '3A', '3D', '3I', '3J'],
+    ABCDEGHL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3E'],
+    ABCDEGHK: ['3H', '3G', '3B', '3C', '3A', '3D', '3E', '3K'],
+    ABCDEGHJ: ['3H', '3G', '3B', '3C', '3A', '3D', '3E', '3J'],
+    ABCDEGHI: ['3H', '3G', '3B', '3C', '3A', '3D', '3E', '3I'],
+    ABCDEFKL: ['3C', '3E', '3B', '3D', '3A', '3F', '3L', '3K'],
+    ABCDEFJL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3E'],
+    ABCDEFJK: ['3C', '3J', '3B', '3D', '3A', '3F', '3E', '3K'],
+    ABCDEFIL: ['3C', '3E', '3B', '3D', '3A', '3F', '3L', '3I'],
+    ABCDEFIK: ['3C', '3E', '3B', '3D', '3A', '3F', '3I', '3K'],
+    ABCDEFIJ: ['3C', '3J', '3B', '3D', '3A', '3F', '3E', '3I'],
+    ABCDEFHL: ['3H', '3F', '3B', '3C', '3A', '3D', '3L', '3E'],
+    ABCDEFHK: ['3H', '3E', '3B', '3C', '3A', '3F', '3D', '3K'],
+    ABCDEFHJ: ['3H', '3J', '3B', '3C', '3A', '3F', '3D', '3E'],
+    ABCDEFHI: ['3H', '3E', '3B', '3C', '3A', '3F', '3D', '3I'],
+    ABCDEFGL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3E'],
+    ABCDEFGK: ['3C', '3G', '3B', '3D', '3A', '3F', '3E', '3K'],
+    ABCDEFGJ: ['3C', '3G', '3B', '3D', '3A', '3F', '3E', '3J'],
+    ABCDEFGI: ['3C', '3G', '3B', '3D', '3A', '3F', '3E', '3I'],
+    ABCDEFGH: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3E'],
+  };
 
-/**
- * @param {string[]} grupos - Array de 8 letras (A-L)
- * @returns {Object} Asignaciones por partido
- */
+  /**
+   * @param {string[]} grupos - Array de 8 letras (A-L)
+   * @returns {Object} Asignaciones por partido
+   */
 
-// ─── EJEMPLOS ────────────────────────────────────────────────────────────────
+  // ─── EJEMPLOS ────────────────────────────────────────────────────────────────
 
-// Ejemplo: terceros de L, C, B, H, E, G, F, D
+  // Ejemplo: terceros de L, C, B, H, E, G, F, D
 
-function asignar_terceros(clasificados) {
-  const key = clasificados.map(g => g.toUpperCase()).sort().join("");
-  if (!TABLA[key]) throw new Error(`Combinación no encontrada: ${key}`);
-  const [P79, P85, P81, P74, P82, P77, P87, P80] = TABLA[key];
-  return { P74, P77, P79, P80, P81, P82, P85, P87 };
-}
+  function asignar_terceros(clasificados) {
+    const key = clasificados
+      .map((g) => g.toUpperCase())
+      .sort()
+      .join('');
+    if (!TABLA[key]) throw new Error(`Combinación no encontrada: ${key}`);
+    const [P79, P85, P81, P74, P82, P77, P87, P80] = TABLA[key];
+    return { P74, P77, P79, P80, P81, P82, P85, P87 };
+  }
 
-const PARTIDOS_GRUPOS = {
-  'ABCDF': 'P74',
-  'CDFGH': 'P77',
-  'CEFHI': 'P79',
-  'EHIJK': 'P80',
-  'BEFIJ': 'P81',
-  'AEHIJ': 'P82',
-  'EFGIJ': 'P85',
-  'DEIJL': 'P87',
-};
+  const PARTIDOS_GRUPOS = {
+    ABCDF: 'P74',
+    CDFGH: 'P77',
+    CEFHI: 'P79',
+    EHIJK: 'P80',
+    BEFIJ: 'P81',
+    AEHIJ: 'P82',
+    EFGIJ: 'P85',
+    DEIJL: 'P87',
+  };
 
-function mejor_tercero(gruposPosibles, clasificados) {
-  const resultado = asignar_terceros(clasificados);
-  const partido = PARTIDOS_GRUPOS[gruposPosibles];
-  return resultado[partido];
-}
+  function mejor_tercero(gruposPosibles, clasificados) {
+    const resultado = asignar_terceros(clasificados);
+    const partido = PARTIDOS_GRUPOS[gruposPosibles];
+    return resultado[partido];
+  }
 
-  console.log(mejor_tercero('ABCDF', mejores_terceros))
+  /* console.log(mejor_tercero('ABCDF', mejores_terceros))
   console.log(mejor_tercero('CDFGH', mejores_terceros))
   console.log(mejor_tercero('BEFIJ', mejores_terceros))
   console.log(mejor_tercero('AEHIJ', mejores_terceros))
   console.log(mejor_tercero('CEFHI', mejores_terceros))
   console.log(mejor_tercero('EHIJK', mejores_terceros))
   console.log(mejor_tercero('EFGIJ', mejores_terceros))
-  console.log(mejor_tercero('DEIJL', mejores_terceros))
+  console.log(mejor_tercero('DEIJL', mejores_terceros)) */
 
   const clasificados = ['L', 'C', 'B', 'H', 'E', 'G', 'F', 'D'];
-  console.log(clasificados)
-  console.log(mejores_terceros)
+  console.log(clasificados);
+  console.log(mejores_terceros);
 
-// Probamos asignar_terceros directamente
-console.log(asignar_terceros(clasificados));
-// Debería dar: { P74: '3D', P77: '3F', P79: '3C', P80: '3E', P81: '3B', P82: '3H', P85: '3G', P87: '3L' }
+  // Probamos asignar_terceros directamente
+  /* console.log(asignar_terceros(clasificados)); */
+  // Debería dar: { P74: '3D', P77: '3F', P79: '3C', P80: '3E', P81: '3B', P82: '3H', P85: '3G', P87: '3L' }
 
-// Probamos mejor_tercero
-console.log(mejor_tercero('ABCDF', clasificados));
-// Debería dar: '3D'
+  // Probamos mejor_tercero
+  /* console.log(mejor_tercero('ABCDF', clasificados)); */
+  // Debería dar: '3D'
 
   let playoffs_spots = {
     WorldCup: {
-    '1A': [0, 0],
-    '2B': [0, 1],
-    '1C': [1, 0],
-    '2D': [1, 1],
-    '1E': [2, 0],
-    '2F': [2, 1],
-    '1G': [3, 0],
-    '2H': [3, 1],
-    '1B': [4, 0],
-    '2A': [4, 1],
-    '1D': [5, 0],
-    '2C': [5, 1],
-    '1F': [6, 0],
-    '2E': [6, 1],
-    '1H': [7, 0],
-    '2G': [7, 1],
-  },
-  Mundial: {
-  '1E': [0, 0],
-  [mejor_tercero('ABCDF', mejores_terceros)]: [0, 1],
+      '1A': [0, 0],
+      '2B': [0, 1],
+      '1C': [1, 0],
+      '2D': [1, 1],
+      '1E': [2, 0],
+      '2F': [2, 1],
+      '1G': [3, 0],
+      '2H': [3, 1],
+      '1B': [4, 0],
+      '2A': [4, 1],
+      '1D': [5, 0],
+      '2C': [5, 1],
+      '1F': [6, 0],
+      '2E': [6, 1],
+      '1H': [7, 0],
+      '2G': [7, 1],
+    },
+    Mundial: {
+      '1E': [0, 0],
+      [mejor_tercero('ABCDF', mejores_terceros)]: [0, 1],
 
-  '1I': [1, 0],
-  [mejor_tercero('CDFGH', mejores_terceros)]: [1, 1],
+      '1I': [1, 0],
+      [mejor_tercero('CDFGH', mejores_terceros)]: [1, 1],
 
-  '2A': [2, 0],
-  '2B': [2, 1],
+      '2A': [2, 0],
+      '2B': [2, 1],
 
-  '1F': [3, 0],
-  '2C': [3, 1],
+      '1F': [3, 0],
+      '2C': [3, 1],
 
-  '2K': [4, 0],
-  '2L': [4, 1],
+      '2K': [4, 0],
+      '2L': [4, 1],
 
-  '1H': [5, 0],
-  '2J': [5, 1],
+      '1H': [5, 0],
+      '2J': [5, 1],
 
-  '1D': [6, 0],
-  [mejor_tercero('BEFIJ', mejores_terceros)]: [6, 1],
+      '1D': [6, 0],
+      [mejor_tercero('BEFIJ', mejores_terceros)]: [6, 1],
 
-  '1G': [7, 0],
-  [mejor_tercero('AEHIJ', mejores_terceros)]: [7, 1],
+      '1G': [7, 0],
+      [mejor_tercero('AEHIJ', mejores_terceros)]: [7, 1],
 
-  '1C': [8, 0],
-  '2F': [8, 1],
+      '1C': [8, 0],
+      '2F': [8, 1],
 
-  '2E': [9, 0],
-  '2I': [9, 1],
+      '2E': [9, 0],
+      '2I': [9, 1],
 
-  '1A': [10, 0],
-  [mejor_tercero('CEFHI', mejores_terceros)]: [10, 1],
+      '1A': [10, 0],
+      [mejor_tercero('CEFHI', mejores_terceros)]: [10, 1],
 
-  '1L': [11, 0],
-  [mejor_tercero('EHIJK', mejores_terceros)]: [11, 1],
+      '1L': [11, 0],
+      [mejor_tercero('EHIJK', mejores_terceros)]: [11, 1],
 
-  '1J': [12, 0],
-  '2H': [12, 1],
+      '1J': [12, 0],
+      '2H': [12, 1],
 
-  '2D': [13, 0],
-  '2G': [13, 1],
+      '2D': [13, 0],
+      '2G': [13, 1],
 
-  '1B': [14, 0],
-  [mejor_tercero('EFGIJ', mejores_terceros)]: [14, 1],
-  
-  '1K': [15, 0],
-  [mejor_tercero('DEIJL', mejores_terceros)]: [15, 1],
-},
-  apertura: {
-    "1A": [0, 0],
-    "2B": [0, 1],
-    "1C": [1, 0],
-    "2D": [1, 1],
-    "1E": [2, 0],
-    "2F": [2, 1],
-    "1G": [3, 0],
-    "2H": [3, 1],
-    "1B": [4, 0],
-    "2A": [4, 1],
-    "1D": [5, 0],
-    "2C": [5, 1],
-    "1F": [6, 0],
-    "2E": [6, 1],
-    "1H": [7, 0],
-    "2G": [7, 1],
-  }
-  }
+      '1B': [14, 0],
+      [mejor_tercero('EFGIJ', mejores_terceros)]: [14, 1],
+
+      '1K': [15, 0],
+      [mejor_tercero('DEIJL', mejores_terceros)]: [15, 1],
+    },
+    apertura: {
+      '1A': [0, 0],
+      '2B': [0, 1],
+      '1C': [1, 0],
+      '2D': [1, 1],
+      '1E': [2, 0],
+      '2F': [2, 1],
+      '1G': [3, 0],
+      '2H': [3, 1],
+      '1B': [4, 0],
+      '2A': [4, 1],
+      '1D': [5, 0],
+      '2C': [5, 1],
+      '1F': [6, 0],
+      '2E': [6, 1],
+      '1H': [7, 0],
+      '2G': [7, 1],
+    },
+  };
 
   /* let positions_playoffs = {
     '1A': [0, 0],
@@ -1433,7 +1491,7 @@ console.log(mejor_tercero('ABCDF', clasificados));
     '2G': [7, 1],
   }; */
 
-   /* let positions_playoffs = {
+  /* let positions_playoffs = {
     '1E': [0, 0],
     '3A': [0, 1], //
 
@@ -1483,7 +1541,6 @@ console.log(mejor_tercero('ABCDF', clasificados));
     '3J': [15, 1],//
   }; */
 
-  
   /* let positions_playoffs = {
     "1A": [0, 0],
     "2B": [0, 1],
@@ -1502,9 +1559,9 @@ console.log(mejor_tercero('ABCDF', clasificados));
     "1H": [7, 0],
     "2G": [7, 1],
     }; */
-    
-    let positions_playoffs = playoffs_spots[competencia]
-    console.log(positions_playoffs)
+
+  let positions_playoffs = playoffs_spots[competencia];
+  console.log(positions_playoffs);
 
   /* let positions_playoffs = {
     "1A": [0, 0],
@@ -1542,7 +1599,6 @@ console.log(mejor_tercero('ABCDF', clasificados));
       '1G': [3, 0],
       '1H': [3, 1],
     } */
-
 
   let positions_playoffs4 = {
     0: [0, 0],
@@ -1585,16 +1641,13 @@ console.log(mejor_tercero('ABCDF', clasificados));
     0: [0, 0],
     1: [0, 1],
   };
-  
-  
 
+  // Las rondas siguientes se generan automáticamente:
+  // ganador[i] vs ganador[i+1], con i par
 
-// Las rondas siguientes se generan automáticamente:
-// ganador[i] vs ganador[i+1], con i par
+  console.log(fechas_playoff[0]);
 
-  console.log(fechas_playoff[0])
-
-  console.log(names_playoffs_1[0] !== 'undefined')
+  console.log(names_playoffs_1[0] !== 'undefined');
   /* let clasificados = yearSlice.filter(d => d.rankInGroup < clasificacion_por_grupo && d.final).slice(0, 32)
   console.log(clasificados) */
   /* fechas_playoff.filter(d => d.fecha == 'Fecha 1/8').forEach((d, i) => {
@@ -1615,12 +1668,12 @@ console.log(mejor_tercero('ABCDF', clasificados));
     let filter1 = yearSlice.filter((e) => e.name == d.visitante)[0];
 
     if (names_playoffs_1[0] !== 'undefined') {
-    Object.assign(d, { position_local: filter.position });
-    Object.assign(d, { position_visitante: filter1.position });
+      Object.assign(d, { position_local: filter.position });
+      Object.assign(d, { position_visitante: filter1.position });
     }
   });
 
-  let yPlayoffs = d3.scaleLinear().range([height + heightBars/2, margin.top + heightBars/2]);
+  let yPlayoffs = d3.scaleLinear().range([height + heightBars / 2, margin.top + heightBars / 2]);
 
   let wks = 0;
 
@@ -1628,7 +1681,6 @@ console.log(mejor_tercero('ABCDF', clasificados));
   let arr = ['local', 'visitante'];
   let arr_w = [5, 3, 1.75, 1];
   if (grupos > 1 && names_playoffs_1[0] !== 'undefined') {
-
     rondas.forEach((pp, ppi) => {
       svg
         .append('text')
@@ -1660,7 +1712,6 @@ console.log(mejor_tercero('ABCDF', clasificados));
           opacity: 0.1
         }) */
     });
-
 
     /* let names_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.local || d.visitante))];
     let dates_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.fecha))];
@@ -1733,13 +1784,11 @@ console.log(mejor_tercero('ABCDF', clasificados));
             class: 'line',
           })
           .styles({
-            opacity: function(d) {
+            opacity: function (d) {
               const local = parseScore(d.goles_local);
               const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+              const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
               const esLocal = dd === 'local';
               return ganoLocal === esLocal ? 1 : 0;
@@ -1751,8 +1800,8 @@ console.log(mejor_tercero('ABCDF', clasificados));
           })
           .attr('d', (d) =>
             d3.line().curve(d3.curveStep)([
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
+              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
+              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
             ])
           );
 
@@ -1765,13 +1814,11 @@ console.log(mejor_tercero('ABCDF', clasificados));
             class: 'line',
           })
           .styles({
-            opacity: function(d) {
+            opacity: function (d) {
               const local = parseScore(d.goles_local);
               const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+              const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
               const esLocal = dd === 'local';
               return ganoLocal === esLocal ? 1 : 0;
@@ -1783,181 +1830,180 @@ console.log(mejor_tercero('ABCDF', clasificados));
           })
           .attr('d', (d) =>
             d3.line().curve(d3.curveStep)([
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
+              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
+              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff)],
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
               ],
               [
                 width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs,
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
               ],
             ])
           );
 
         if (primera_ronda_playoff >= 4) {
+          svg
+            .selectAll('.path')
+            .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 2}`))
+            .enter()
+            .append('path')
+            .attrs({
+              class: 'line',
+            })
+            .styles({
+              opacity: function (d) {
+                const local = parseScore(d.goles_local);
+                const visitante = parseScore(d.goles_visitante);
 
-        svg
-          .selectAll('.path')
-          .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 2}`))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            opacity: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+                const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
-
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? 1 : 0;
-            },
-            fill: 'none',
-            stroke: (d) => colores(d[dd].split('-')[0])[ii],
-            'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d) =>
-            d3.line().curve(d3.curveStep)([
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff)],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs + space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2,
-                yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-            ])
-          );
-
+                const esLocal = dd === 'local';
+                return ganoLocal === esLocal ? 1 : 0;
+              },
+              fill: 'none',
+              stroke: (d) => colores(d[dd].split('-')[0])[ii],
+              'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
+              'stroke-linejoin': 'round',
+            })
+            .attr('d', (d) =>
+              d3.line().curve(d3.curveStep)([
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff,
+                  yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs + space_width_playoff / 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs - space_width_playoff / 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2,
+                  yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+              ])
+            );
         }
 
         if (primera_ronda_playoff >= 8) {
-    
-        svg
-          .selectAll('.path')
-          .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            opacity: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          svg
+            .selectAll('.path')
+            .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`))
+            .enter()
+            .append('path')
+            .attrs({
+              class: 'line',
+            })
+            .styles({
+              opacity: function (d) {
+                const local = parseScore(d.goles_local);
+                const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+                const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? 1 : 0;
-            },
-            fill: 'none',
-            stroke: (d) => colores(d[dd].split('-')[0])[ii],
-            'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d) =>
-            d3.line().curve(d3.curveStep)([
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs,
-                yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2 + space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 2 - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 3,
-                yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-            ])
-          );
+                const esLocal = dd === 'local';
+                return ganoLocal === esLocal ? 1 : 0;
+              },
+              fill: 'none',
+              stroke: (d) => colores(d[dd].split('-')[0])[ii],
+              'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
+              'stroke-linejoin': 'round',
+            })
+            .attr('d', (d) =>
+              d3.line().curve(d3.curveStep)([
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs,
+                  yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2 + space_width_playoff / 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 2 - space_width_playoff / 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+              ])
+            );
         }
 
         if (primera_ronda_playoff >= 16) {
-    
-        svg
-          .selectAll('.path')
-          .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            opacity: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          svg
+            .selectAll('.path')
+            .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`))
+            .enter()
+            .append('path')
+            .attrs({
+              class: 'line',
+            })
+            .styles({
+              opacity: function (d) {
+                const local = parseScore(d.goles_local);
+                const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+                const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? 1 : 0;
-            },
-            fill: 'none',
-            stroke: (d) => colores(d[dd].split('-')[0])[ii],
-            'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d) =>
-            d3.line().curve(d3.curveStep)([
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs,
-                yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1][0]] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2 + space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1][0]] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 2 - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 3,
-                yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
-              ],
-            ])
-          );
+                const esLocal = dd === 'local';
+                return ganoLocal === esLocal ? 1 : 0;
+              },
+              fill: 'none',
+              stroke: (d) => colores(d[dd].split('-')[0])[ii],
+              'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
+              'stroke-linejoin': 'round',
+            })
+            .attr('d', (d) =>
+              d3.line().curve(d3.curveStep)([
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs,
+                  yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1][0]] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2 + space_width_playoff / 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1][0]] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 2 - space_width_playoff / 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][0]) +
+                    (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 8) -
+                    heightBars / 2 +
+                    (positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+                [
+                  width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 3,
+                  yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][0]) +
+                    (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 8) -
+                    heightBars / 2 +
+                    (positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+                ],
+              ])
+            );
         }
       });
     });
 
     // 1. Definir el filtro en el <defs> del SVG
-const defs = svg.append("defs");
+    const defs = svg.append('defs');
 
-const filter = defs.append("filter")
-  .attr("id", "shadow-top");
+    const filter = defs.append('filter').attr('id', 'shadow-top');
 
-filter.append("feDropShadow")
-  .attr("dx", 0)        // sin desplazamiento horizontal
-  .attr("dy", -4)       // negativo = hacia arriba
-  .attr("stdDeviation", 4)          // blur
-  .attr("flood-color", "black")
-  .attr("flood-opacity", 0.4);
+    filter
+      .append('feDropShadow')
+      .attr('dx', 0) // sin desplazamiento horizontal
+      .attr('dy', -4) // negativo = hacia arriba
+      .attr('stdDeviation', 4) // blur
+      .attr('flood-color', 'black')
+      .attr('flood-opacity', 0.4);
 
-// 2. Aplicarlo al rectángulo
-/* svg.append("rect")
+    // 2. Aplicarlo al rectángulo
+    /* svg.append("rect")
   .attr("filter", "url(#shadow-top)");
 
   svg.append("rect")
@@ -1967,7 +2013,7 @@ filter.append("feDropShadow")
   .attr("opacity", 0.15)
   .attr("pointer-events", "none"); // para que no interfiera con eventos */
 
-  /* svg
+    /* svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
         .enter()
@@ -1984,7 +2030,6 @@ filter.append("feDropShadow")
         }) */
 
     arr.forEach((dd) => {
-
       /* svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
@@ -2012,26 +2057,24 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars/2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
           width: width_playoffs,
           height: heightBars,
         })
         /* .attr("style", d => `outline: 5px solid ${colores(d[dd].split('-')[0])[0]}`) */
         .styles({
-          fill: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          fill: function (d) {
+            const local = parseScore(d.goles_local);
+            const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+            const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-            },
-        })
+            const esLocal = dd === 'local';
+            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+          },
+        });
 
-        svg
+      svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 2}`).slice(0, primera_ronda_playoff))
         .enter()
@@ -2040,25 +2083,23 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars/2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
           width: width_playoffs,
           height: heightBars,
         })
         .styles({
-          fill: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          fill: function (d) {
+            const local = parseScore(d.goles_local);
+            const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+            const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-            },
-        })
+            const esLocal = dd === 'local';
+            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+          },
+        });
 
-        /* svg
+      /* svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
         .enter()
@@ -2084,7 +2125,7 @@ filter.append("feDropShadow")
             },
         }) */
 
-        svg
+      svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
         .enter()
@@ -2093,25 +2134,23 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
           width: width_playoffs,
           height: heightBars,
         })
         .styles({
-          fill: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          fill: function (d) {
+            const local = parseScore(d.goles_local);
+            const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+            const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-            },
-        })
+            const esLocal = dd === 'local';
+            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+          },
+        });
 
-        /* svg
+      /* svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`).slice(0, primera_ronda_playoff))
         .enter()
@@ -2137,7 +2176,7 @@ filter.append("feDropShadow")
             },
         }) */
 
-         svg
+      svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`).slice(0, primera_ronda_playoff))
         .enter()
@@ -2146,23 +2185,21 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
           width: width_playoffs,
           height: heightBars,
         })
         .styles({
-          fill: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          fill: function (d) {
+            const local = parseScore(d.goles_local);
+            const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+            const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-            },
-        })
+            const esLocal = dd === 'local';
+            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
+          },
+        });
 
       svg
         .selectAll('.text')
@@ -2172,20 +2209,18 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + heightBars * 1.2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
-          opacity: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          opacity: function (d) {
+            const local = parseScore(d.goles_local);
+            const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+            const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? 1 : 0.5;
-            },
+            const esLocal = dd === 'local';
+            return ganoLocal === esLocal ? 1 : 0.5;
+          },
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size,
           'font-weight': defaults.name.style.font_weight,
@@ -2202,20 +2237,18 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + heightBars * 0.5 - defaults.logo.size / 2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
           height: defaults.logo.size,
           href: (d) => `./escudos/${d[dd].split('-')[0]}.png`,
-          opacity: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
+          opacity: function (d) {
+            const local = parseScore(d.goles_local);
+            const visitante = parseScore(d.goles_visitante);
 
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
+            const ganoLocal = local.goles > visitante.goles || (local.goles === visitante.goles && local.penales > visitante.penales);
 
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? 1 : 0.5;
-            },
+            const esLocal = dd === 'local';
+            return ganoLocal === esLocal ? 1 : 0.5;
+          },
         })
         .style('filter', 'url(#dropshadow)');
 
@@ -2226,8 +2259,8 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs*0.875,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs * 0.875,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2246,7 +2279,7 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs + heightBars * 1.2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2265,7 +2298,7 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs + heightBars * 0.5 - defaults.logo.size / 2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
           height: defaults.logo.size,
           href: (d) => `./escudos/${d[dd].split('-')[0]}.png`,
         })
@@ -2278,8 +2311,8 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs + width_playoffs*0.875,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs + width_playoffs * 0.875,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2298,7 +2331,7 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2 + heightBars * 1.2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2317,7 +2350,7 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2 + heightBars * 0.5 - defaults.logo.size / 2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
           height: defaults.logo.size,
           href: (d) => `./escudos/${d[dd].split('-')[0]}.png`,
         })
@@ -2330,8 +2363,8 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2 + width_playoffs*0.875,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2 + width_playoffs * 0.875,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2350,7 +2383,7 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3 + heightBars * 1.2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2369,7 +2402,7 @@ filter.append("feDropShadow")
         .attrs({
           class: 'playoffs_names',
           x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3 + heightBars * 0.5 - defaults.logo.size / 2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size / 2,
           height: defaults.logo.size,
           href: (d) => `./escudos/${d[dd].split('-')[0]}.png`,
         })
@@ -2382,8 +2415,8 @@ filter.append("feDropShadow")
         .append('text')
         .attrs({
           class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3 + width_playoffs*0.875,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
+          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3 + width_playoffs * 0.875,
+          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff),
         })
         .styles({
           fill: defaults.name.style.fill,
@@ -2394,10 +2427,10 @@ filter.append("feDropShadow")
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
 
-        /* svg.append("rect")
+      /* svg.append("rect")
           .attr("filter", "url(#shadow-top)"); */
 
-          /* svg.selectAll('.rect').data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
+      /* svg.selectAll('.rect').data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
         .enter().append("rect")
           .attr("x", width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff).attr("y", (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars/2)
           .attr("width", width_playoffs).attr("height", heightBars)
@@ -2507,8 +2540,7 @@ filter.append("feDropShadow")
   }
 
   if (grupos > 1 && /* names_playoffs_1[0] == 'undefined' */ simular_playoffs) {
-
-    console.log(rondas_playoff)
+    console.log(rondas_playoff);
     rondas.forEach((pp, ppi) => {
       svg
         .append('text')
@@ -2526,8 +2558,8 @@ filter.append("feDropShadow")
         })
         .text(playoffs_names[primera_ronda_playoff / pp]);
     });
-          
-          /* svg
+
+    /* svg
           .selectAll('.path')
           .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
           .enter()
@@ -2562,213 +2594,194 @@ filter.append("feDropShadow")
             heightBars / 2]
           ])); */
 
-          svg
-          .selectAll('.path')
-          .data(d3.range(primera_ronda_playoff*2))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 10,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) =>
-            d3.line().curve(d3.curveStep)([
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*2, 
-                yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff)
-              ],
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*1 + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
-            ])
-          );
+    svg
+      .selectAll('.path')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('path')
+      .attrs({
+        class: 'line',
+      })
+      .styles({
+        fill: 'none',
+        stroke: 'grey',
+        'stroke-width': ((heightBars * 0.35) / 7) * 10,
+        'stroke-linejoin': 'round',
+      })
+      .attr('d', (d, i) =>
+        d3.line().curve(d3.curveStep)([
+          [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff)],
+          [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1 + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
+        ])
+      );
 
-        svg
-          .selectAll('.path')
-          .data(d3.range(primera_ronda_playoff*2))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 10,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) =>
-            d3.line().curve(d3.curveStep)([
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*1, 
-                yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff*1 + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs,
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
-              ],
-            ])
-          );
+    svg
+      .selectAll('.path')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('path')
+      .attrs({
+        class: 'line',
+      })
+      .styles({
+        fill: 'none',
+        stroke: 'grey',
+        'stroke-width': ((heightBars * 0.35) / 7) * 10,
+        'stroke-linejoin': 'round',
+      })
+      .attr('d', (d, i) =>
+        d3.line().curve(d3.curveStep)([
+          [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
+          [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1 + width_playoffs + space_width_playoff / 3, yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -0 : 0)],
+          [
+            width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff - space_width_playoff / 3,
+            yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
+          ],
+          [
+            width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs,
+            yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
+          ],
+        ])
+      );
 
-           if (primera_ronda_playoff >= 4) {
+    if (primera_ronda_playoff >= 4) {
+      svg
+        .selectAll('.path')
+        .data(d3.range(primera_ronda_playoff * 2))
+        .enter()
+        .append('path')
+        .attrs({
+          class: 'line',
+        })
+        .styles({
+          fill: 'none',
+          stroke: 'grey',
+          'stroke-width': ((heightBars * 0.35) / 7) * 10,
+          'stroke-linejoin': 'round',
+        })
+        .attr('d', (d, i) =>
+          d3.line().curve(d3.curveStep)([
+            [
+              width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff,
+              yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
+            ],
+            [
+              width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs + space_width_playoff / 3,
+              yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
+            ],
+            [
+              width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs - space_width_playoff / 3,
+              yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1] == 0 ? -0 : 0),
+            ],
+            [
+              width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2,
+              yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1] == 0 ? -0 : 0),
+            ],
+          ])
+        );
+    }
 
-        svg
-          .selectAll('.path')
-          .data(d3.range(primera_ronda_playoff*2))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 10,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) =>
-            d3.line().curve(d3.curveStep)([
-              [width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff, yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0)],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff + width_playoffs + space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -0 : 0),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1] == 0 ? -0 : 0),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 2 + width_playoffs * 2,
-                yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1] == 0 ? -0 : 0),
-              ],
-            ])
-          );
+    if (primera_ronda_playoff >= 8) {
+      svg
+        .selectAll('.path')
+        .data(d3.range(primera_ronda_playoff * 2))
+        .enter()
+        .append('path')
+        .attrs({
+          class: 'line',
+        })
+        .styles({
+          fill: 'none',
+          stroke: 'grey',
+          'stroke-width': ((heightBars * 0.35) / 7) * 10,
+          'stroke-linejoin': 'round',
+        })
+        .attr('d', (d, i) => {
+          // 1. Navegar la pirámide: de qué partido viene en cada ronda
+          const key = Object.keys(positions_playoffs)[i];
+          const matchOctavos = positions_playoffs[key][0]; // partido en octavos
+          const matchCuartos = positions_playoffs4[matchOctavos][0]; // → cuartos
+          const matchSemis = positions_playoffs2[matchCuartos][0]; // → semis
+          const matchFinal = positions_playoffs1[matchSemis][0]; // → final
 
-        }
+          // 2. Coordenadas X: base + offset por ronda
+          const xBase = width + width_playoffs - (width_playoffs + space_width_playoff) * rondas_playoff;
+          const s = space_width_playoff;
+          const w = width_playoffs;
 
-        if (primera_ronda_playoff >= 8) {
+          const x1 = xBase + 2 * s + w;
+          const x2 = xBase + 2 * s + 2 * w + s / 3; // sale de semis
+          const x3 = xBase + 3 * s + 2 * w - s / 3; // entra a final
+          const x4 = xBase + 3 * s + 3 * w;
 
-        svg
-          .selectAll('.path')
-          .data(d3.range(primera_ronda_playoff*2))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 10,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) => {
-            // 1. Navegar la pirámide: de qué partido viene en cada ronda
-            const key          = Object.keys(positions_playoffs)[i];
-            const matchOctavos = positions_playoffs[key][0];           // partido en octavos
-            const matchCuartos = positions_playoffs4[matchOctavos][0]; // → cuartos
-            const matchSemis   = positions_playoffs2[matchCuartos][0]; // → semis
-            const matchFinal   = positions_playoffs1[matchSemis][0];   // → final
+          // 3. Coordenadas Y: posición vertical por ronda
+          const alturaBase = heightBars * (top_n + grupos / 2);
 
-            // 2. Coordenadas X: base + offset por ronda
-            const xBase = width + width_playoffs
-                        - (width_playoffs + space_width_playoff) * rondas_playoff;
-            const s = space_width_playoff;
-            const w = width_playoffs;
+          const ySemis = yPlayoffs.domain([primera_ronda_playoff / 4, 0])(matchSemis) + alturaBase / (primera_ronda_playoff / 2) - heightBars / 2;
 
-            const x1 = xBase + 2*s + w;
-            const x2 = xBase + 2*s + 2*w + s/3;     // sale de semis
-            const x3 = xBase + 3*s + 2*w - s/3;     // entra a final
-            const x4 = xBase + 3*s + 3*w;
+          const yFinal = yPlayoffs.domain([primera_ronda_playoff / 8, 0])(matchFinal) + alturaBase / (primera_ronda_playoff / 4) - heightBars / 2;
 
-            // 3. Coordenadas Y: posición vertical por ronda
-            const alturaBase = heightBars * (top_n + grupos / 2);
+          // 4. Dibujar la curva (4 puntos)
+          return d3.line().curve(d3.curveStep)([
+            [x1, ySemis], // inicio (sale de semis)
+            [x2, ySemis], // horizontal →
+            [x3, yFinal], // diagonal  ↗ o ↘
+            [x4, yFinal], // horizontal → (llega a final)
+          ]);
+        });
+    }
 
-            const ySemis = yPlayoffs.domain([primera_ronda_playoff / 4, 0])(matchSemis)
-                        + alturaBase / (primera_ronda_playoff / 2)
-                        - heightBars / 2;
+    if (primera_ronda_playoff >= 16) {
+      svg
+        .selectAll('.path')
+        .data(d3.range(primera_ronda_playoff * 2))
+        .enter()
+        .append('path')
+        .attrs({
+          class: 'line',
+        })
+        .styles({
+          fill: 'none',
+          stroke: 'grey',
+          'stroke-width': ((heightBars * 0.35) / 7) * 10,
+          'stroke-linejoin': 'round',
+        })
+        .attr('d', (d, i) => {
+          // 1. Navegar la pirámide: de qué partido viene en cada ronda
+          const key = Object.keys(positions_playoffs)[i];
+          const matchOctavos = positions_playoffs[key][0]; // partido en octavos
+          const matchCuartos = positions_playoffs4[matchOctavos][0]; // → cuartos
+          const matchSemis = positions_playoffs2[matchCuartos][0]; // → semis
+          const matchFinal = positions_playoffs1[matchSemis][0]; // → final
+          const matchFinalfinal = positions_playoffs_final[matchFinal][0]; // → final
 
-            const yFinal = yPlayoffs.domain([primera_ronda_playoff / 8, 0])(matchFinal)
-                        + alturaBase / (primera_ronda_playoff / 4)
-                        - heightBars / 2;
+          // 2. Coordenadas X: base + offset por ronda
+          const xBase = width + width_playoffs - (width_playoffs + space_width_playoff) * rondas_playoff;
+          const s = space_width_playoff;
+          const w = width_playoffs;
 
-            // 4. Dibujar la curva (4 puntos)
-            return d3.line().curve(d3.curveStep)([
-              [x1, ySemis],    // inicio (sale de semis)
-              [x2, ySemis],    // horizontal →
-              [x3, yFinal],    // diagonal  ↗ o ↘
-              [x4, yFinal],    // horizontal → (llega a final)
-            ]);
-          })
+          const x1 = xBase + 3 * s + w * 2;
+          const x2 = xBase + 3 * s + 3 * w + s / 4; // sale de semis
+          const x3 = xBase + 4 * s + 3 * w - s / 4; // entra a final
+          const x4 = xBase + 4 * s + 4 * w;
 
-        }
+          // 3. Coordenadas Y: posición vertical por ronda
+          const alturaBase = heightBars * (top_n + grupos / 2);
 
-        if (primera_ronda_playoff >= 16) {
+          const ySemis = yPlayoffs.domain([primera_ronda_playoff / 8, 0])(matchFinal) + alturaBase / (primera_ronda_playoff / 4) - heightBars / 2;
 
-          svg
-          .selectAll('.path')
-          .data(d3.range(primera_ronda_playoff*2))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 10,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) => {
-            // 1. Navegar la pirámide: de qué partido viene en cada ronda
-            const key          = Object.keys(positions_playoffs)[i];
-            const matchOctavos = positions_playoffs[key][0];           // partido en octavos
-            const matchCuartos = positions_playoffs4[matchOctavos][0]; // → cuartos
-            const matchSemis   = positions_playoffs2[matchCuartos][0]; // → semis
-            const matchFinal   = positions_playoffs1[matchSemis][0];   // → final
-            const matchFinalfinal = positions_playoffs_final[matchFinal][0];   // → final
+          const yFinal = yPlayoffs.domain([primera_ronda_playoff / 16, 0])(matchFinalfinal) + alturaBase / (primera_ronda_playoff / 8) - heightBars / 2;
 
-            // 2. Coordenadas X: base + offset por ronda
-            const xBase = width + width_playoffs
-                        - (width_playoffs + space_width_playoff) * rondas_playoff;
-            const s = space_width_playoff;
-            const w = width_playoffs;
+          // 4. Dibujar la curva (4 puntos)
+          return d3.line().curve(d3.curveStep)([
+            [x1, ySemis], // inicio (sale de semis)
+            [x2, ySemis], // horizontal →
+            [x3, yFinal], // diagonal  ↗ o ↘
+            [x4, yFinal], // horizontal → (llega a final)
+          ]);
+        });
 
-            const x1 = xBase + 3*s + w*2;
-            const x2 = xBase + 3*s + 3*w + s/4;     // sale de semis
-            const x3 = xBase + 4*s + 3*w - s/4;     // entra a final
-            const x4 = xBase + 4*s + 4*w;
-
-            // 3. Coordenadas Y: posición vertical por ronda
-            const alturaBase = heightBars * (top_n + grupos / 2);
-
-            const ySemis = yPlayoffs.domain([primera_ronda_playoff / 8, 0])(matchFinal)
-                        + alturaBase / (primera_ronda_playoff / 4)
-                        - heightBars / 2;
-
-            const yFinal = yPlayoffs.domain([primera_ronda_playoff / 16, 0])(matchFinalfinal)
-                        + alturaBase / (primera_ronda_playoff / 8)
-                        - heightBars / 2;
-
-            // 4. Dibujar la curva (4 puntos)
-            return d3.line().curve(d3.curveStep)([
-              [x1, ySemis],    // inicio (sale de semis)
-              [x2, ySemis],    // horizontal →
-              [x3, yFinal],    // diagonal  ↗ o ↘
-              [x4, yFinal],    // horizontal → (llega a final)
-            ]);
-          })
-
-        /* svg
+      /* svg
           .selectAll('.path')
           .data(d3.range(primera_ronda_playoff*2))
           .enter()
@@ -2802,109 +2815,108 @@ filter.append("feDropShadow")
               ],
             ])
           ); */
+    }
 
-        }
-          
-          svg
-            .selectAll('.rect')
-            .data(d3.range(primera_ronda_playoff*2))
-            .enter()
-            .append('rect')
-            /* .style('filter', 'url(#dropshadow)') */
-            .attrs({
-              class: 'playoffs_names',
-              x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
-              y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-              width: width_playoffs,
-              height: heightBars,
-            })
-            .attr("style", d => `outline: 1px solid grey`) 
-            .styles({
-              fill: (d, i) => {
-                if (i % 2 === 1) {
-                  return '#dddddd'
-                } else {
-                  return '#c2c2c2'
-                }
-              }
-            })
-            
-            svg
-            .selectAll('.rect')
-            .data(d3.range(primera_ronda_playoff*2))
-            .enter()
-            .append('rect')
-            /* .style('filter', 'url(#dropshadow)') */
-            .attrs({
-              class: 'playoffs_names',
-              x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs * 1,
-              y: (d, i) =>
-                yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars/2,
-              width: width_playoffs,
-              height: heightBars,
-            })
-            .attr("style", d => `outline: 1px solid grey`) 
-            .styles({
-              fill: '#dddddd'
-            })
+    svg
+      .selectAll('.rect')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('rect')
+      /* .style('filter', 'url(#dropshadow)') */
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        fill: (d, i) => {
+          if (i % 2 === 1) {
+            return '#dddddd';
+          } else {
+            return '#c2c2c2';
+          }
+        },
+      });
 
-            svg
-            .selectAll('.rect')
-            .data(d3.range(primera_ronda_playoff*2))
-            .enter()
-            .append('rect')
-            /* .style('filter', 'url(#dropshadow)') */
-            .attrs({
-              class: 'playoffs_names',
-              x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-              width: width_playoffs,
-              height: heightBars,
-            })
-            .attr("style", d => `outline: 1px solid grey`) 
-            .styles({
-              fill: '#dddddd'
-            })
+    svg
+      .selectAll('.rect')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('rect')
+      /* .style('filter', 'url(#dropshadow)') */
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs * 1,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        fill: '#dddddd',
+      });
 
-            svg
-            .selectAll('.rect')
-            .data(d3.range(primera_ronda_playoff*2))
-            .enter()
-            .append('rect')
-           /*  .style('filter', 'url(#dropshadow)') */
-            .attrs({
-              class: 'playoffs_names',
-              x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-              width: width_playoffs,
-              height: heightBars,
-            })
-            .attr("style", d => `outline: 1px solid grey`) 
-            .styles({
-              fill: '#dddddd'
-            })
+    svg
+      .selectAll('.rect')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('rect')
+      /* .style('filter', 'url(#dropshadow)') */
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        fill: '#dddddd',
+      });
 
-            svg
-            .selectAll('.rect')
-            .data(d3.range(primera_ronda_playoff*2))
-            .enter()
-            .append('rect')
-            /* .style('filter', 'url(#dropshadow)') */
-            .attrs({
-              class: 'playoffs_names',
-              x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 5 + width_playoffs * 4,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-              width: width_playoffs,
-              height: heightBars,
-            })
-            .attr("style", d => `outline: 1px solid grey`) 
-            .styles({
-              fill: '#dddddd'
-            })
-            
+    svg
+      .selectAll('.rect')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('rect')
+      /*  .style('filter', 'url(#dropshadow)') */
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3,
+        y: (d, i) =>
+          yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        fill: '#dddddd',
+      });
+
+    svg
+      .selectAll('.rect')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('rect')
+      /* .style('filter', 'url(#dropshadow)') */
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 5 + width_playoffs * 4,
+        y: (d, i) =>
+          yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        fill: '#dddddd',
+      });
+
     arr.forEach((dd) => {
-
-        /* svg
+      /* svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 2}`).slice(0, primera_ronda_playoff))
         .enter()
@@ -2973,116 +2985,69 @@ filter.append("feDropShadow")
           }
         })
  */
+    });
+
+    const keysSet = new Set(Object.keys(positions_playoffs));
+
+    svg
+      .selectAll('.image')
+      .data(yearSlice.filter((d, i) => (d.rankInGroup >= 0 && d.rankInGroup <= clasificacion_por_grupo - 1) || (d.rankInGroup >= equipos_por_grupos && d.rankInGroup <= equipos_por_grupos + clasificacion_por_grupo - 1)).filter((d) => keysSet.has(d.position)))
+      .enter()
+      .append('image')
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + heightBars * 0.5 - (defaults.logo.size * 0.8) / 2,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][1] == 0 ? -space_height_playoff : space_height_playoff) - (defaults.logo.size * 0.8) / 2,
+        height: defaults.logo.size * 0.8,
+        href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
       })
+      .styles({
+        opacity: 0.7,
+      })
+      .style('filter', 'url(#dropshadow)');
 
-      const keysSet = new Set(Object.keys(positions_playoffs))
+    svg
+      .selectAll('.text')
+      .data(yearSlice.filter((d, i) => (d.rankInGroup >= 0 && d.rankInGroup <= clasificacion_por_grupo - 1) || (d.rankInGroup >= equipos_por_grupos && d.rankInGroup <= equipos_por_grupos + clasificacion_por_grupo - 1)).filter((d) => keysSet.has(d.position)))
+      .enter()
+      .append('text')
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + heightBars * 1.2,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][1] == 0 ? -space_height_playoff : space_height_playoff),
+      })
+      .styles({
+        fill: defaults.name.style.fill,
+        'font-size': defaults.name.style.font_size,
+        'font-weight': defaults.name.style.font_weight,
+        'text-anchor': defaults.name.style.text_anchor,
+        'alignment-baseline': defaults.name.style.alignment_baseline,
+        opacity: 0.7,
+      })
+      .text((d) => d.name.split('-')[0]);
 
-      svg
-        .selectAll(".image")
-        .data(
-          yearSlice.filter(
-            (d, i) =>
-              (d.rankInGroup >= 0 &&
-                d.rankInGroup <= clasificacion_por_grupo - 1) ||
-              (d.rankInGroup >= equipos_por_grupos &&
-                d.rankInGroup <=
-                  equipos_por_grupos + clasificacion_por_grupo - 1),
-          ).filter(d => keysSet.has(d.position))
-        )
-        .enter()
-        .append("image")
-        .attrs({
-          class: "playoffs_names",
-          x:
-            width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff +
-            heightBars * 0.5 -
-            defaults.logo.size*0.8 / 2,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] == 0 ? -space_height_playoff : space_height_playoff) - defaults.logo.size*0.8 / 2,
-          height: defaults.logo.size*0.8,
-          href: (d) => `./escudos/${d.name.split("-")[0]}.png`,
-        })
-        .styles({
-          opacity: 0.7,
-        })
-        .style("filter", "url(#dropshadow)");
-
-      svg
-        .selectAll(".text")
-        .data(
-          yearSlice.filter(
-            (d, i) =>
-              (d.rankInGroup >= 0 &&
-                d.rankInGroup <= clasificacion_por_grupo - 1) ||
-              (d.rankInGroup >= equipos_por_grupos &&
-                d.rankInGroup <=
-                  equipos_por_grupos + clasificacion_por_grupo - 1),
-          ).filter(d => keysSet.has(d.position))
-        )
-        .enter()
-        .append("text")
-        .attrs({
-          class: "playoffs_names",
-          x:
-            width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff +
-            heightBars * 1.2,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] == 0 ? -space_height_playoff : space_height_playoff),
-        })
-        .styles({
-          fill: defaults.name.style.fill,
-          "font-size": defaults.name.style.font_size,
-          "font-weight": defaults.name.style.font_weight,
-          "text-anchor": defaults.name.style.text_anchor,
-          "alignment-baseline": defaults.name.style.alignment_baseline,
-          opacity: 0.7,
-        })
-        .text((d) => d.name.split("-")[0]);
-
-        svg
-        .selectAll(".text")
-        .data(
-          yearSlice.filter(
-            (d, i) =>
-              (d.rankInGroup >= 0 &&
-                d.rankInGroup <= clasificacion_por_grupo - 1) ||
-              (d.rankInGroup >= equipos_por_grupos &&
-                d.rankInGroup <=
-                  equipos_por_grupos + clasificacion_por_grupo - 1),
-          ).filter(d => keysSet.has(d.position))
-        )
-        .enter()
-        .append("text")
-        .attrs({
-          class: "playoffs_names",
-          x:
-            width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff -
-            heightBars * 0.9,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] == 0 ? -space_height_playoff : space_height_playoff),
-        })
-        .styles({
-          fill: defaults.name.style.fill,
-          "font-size": defaults.name.style.font_size,
-          "font-weight": defaults.name.style.font_weight,
-          "text-anchor": defaults.name.style.text_anchor,
-          "alignment-baseline": defaults.name.style.alignment_baseline,
-          opacity: 0.7,
-        })
-        .text((d) => d.rankInGroup+1 + d.name.split("-")[1]);
-    }
+    svg
+      .selectAll('.text')
+      .data(yearSlice.filter((d, i) => (d.rankInGroup >= 0 && d.rankInGroup <= clasificacion_por_grupo - 1) || (d.rankInGroup >= equipos_por_grupos && d.rankInGroup <= equipos_por_grupos + clasificacion_por_grupo - 1)).filter((d) => keysSet.has(d.position)))
+      .enter()
+      .append('text')
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff - heightBars * 0.9,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][1] == 0 ? -space_height_playoff : space_height_playoff),
+      })
+      .styles({
+        fill: defaults.name.style.fill,
+        'font-size': defaults.name.style.font_size,
+        'font-weight': defaults.name.style.font_weight,
+        'text-anchor': defaults.name.style.text_anchor,
+        'alignment-baseline': defaults.name.style.alignment_baseline,
+        opacity: 0.7,
+      })
+      .text((d) => d.rankInGroup + 1 + d.name.split('-')[1]);
+  }
 
   let fechasNotPlayed = (i) => {
-    
     let a = () => {
       if (i > fechas_not_played) {
         return x(i - not_played_yet_x * i);
@@ -3131,16 +3096,20 @@ filter.append("feDropShadow")
     })
     .text((semana) => {
       let filterr = data.filter((d) => d.semana == semana && d.vs != 'none').sort((a, b) => parseDate(a.dia_large) - parseDate(b.dia_large));
-      let first_date = filterr[0].dia_large
-      let last_date = filterr[filterr.length-1].dia_large
-      let mismo_mes = data.filter((d) => d.semana == semana-1 && d.vs != 'none').sort((a, b) => parseDate(a.dia_large) - parseDate(b.dia_large))[0]?.dia_large.split(' ')[0] == first_date.split(' ')[0]
+      let first_date = filterr[0].dia_large;
+      let last_date = filterr[filterr.length - 1].dia_large;
+      let mismo_mes =
+        data
+          .filter((d) => d.semana == semana - 1 && d.vs != 'none')
+          .sort((a, b) => parseDate(a.dia_large) - parseDate(b.dia_large))[0]
+          ?.dia_large.split(' ')[0] == first_date.split(' ')[0];
 
       if (!mismo_mes) {
-        if (first_date==last_date) return filterr[0].dia_large
-        return filterr[0].dia_large + '-' + filterr[filterr.length-1].dia_large.split(' ')[1]
+        if (first_date == last_date) return filterr[0].dia_large;
+        return filterr[0].dia_large + '-' + filterr[filterr.length - 1].dia_large.split(' ')[1];
       } else {
-        if (first_date==last_date) return filterr[0].dia_large.split(' ')[1]
-        return filterr[0].dia_large.split(' ')[1] + '-' + filterr[filterr.length-1].dia_large.split(' ')[1]
+        if (first_date == last_date) return filterr[0].dia_large.split(' ')[1];
+        return filterr[0].dia_large.split(' ')[1] + '-' + filterr[filterr.length - 1].dia_large.split(' ')[1];
       }
     });
 
@@ -3255,6 +3224,27 @@ filter.append("feDropShadow")
               .replace('Post.', d)
     );
 
+  svg
+    /* .selectAll('.text')
+    .data(dates)
+    .enter() */
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) => fechasNotPlayed(dates.length) + defaults.logo.size / 2,
+      y: margin.top * 0.8,
+      transform: `translate(${margin_left * 2}, 0)`,
+      'clip-path': `url(#ellipse-clip-margin-left)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.2,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('Seleccion RankingFIFA Probabilidad #2 3°');
+
   var defs = svg.append('defs');
 
   var filter = defs.append('filter').attr('id', 'dropshadow');
@@ -3270,304 +3260,402 @@ filter.append("feDropShadow")
   feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
   const FLAG_COLORS = {
-  // ─── CONMEBOL ───────────────────────────────────────────────────
-  'Argentina':              ['#74ACDF', '#FFFFFF', '#74ACDF'],
-  'Brasil':                 ['#009739', '#FEDD00', '#009739'],
-  'Colombia':               ['#FCD116', '#FCD116', '#003893', '#CE1126'],
-  'Ecuador':                ['#FFD100', '#FFD100', '#0033A0', '#CE1126'],
-  'Paraguay':               ['#D52B1E', '#FFFFFF', '#0038A8'],
-  'Uruguay':                ['#001489', '#FFFFFF', '#001489'],
-  // ─── CONCACAF ──────────────────────────────────────────────────
-  'Estados Unidos':         ['#B31942', '#FFFFFF', '#0A3161'],
-  'México':                 ['#006341', '#FFFFFF', '#CE1126'],
-  'Canadá':                 ['#FF0000', '#FFFFFF', '#FF0000'],
-  'Panamá':                 ['#FFFFFF', '#D21034', '#005DA6', '#FFFFFF'],
-  'Haití':                  ['#00209F', '#D21034'],
-  'Curazao':                ['#002B7F', '#002B7F', '#F9E814'],
-  // ─── UEFA ─────────────────────────────────────────────────────
-  'Francia':                ['#002395', '#FFFFFF', '#ED2939'],
-  'Inglaterra':             ['#FFFFFF', '#CE1124', '#FFFFFF'],
-  'Alemania':               ['#000000', '#DD0000', '#FFCC00'],
-  'España':                 ['#AA151B', '#F1BF00', '#AA151B'],
-  'Países Bajos':           ['#AE1C28', '#FFFFFF', '#21468B'],
-  'Portugal':               ['#006600', '#006600', '#FF0000', '#FF0000', '#FF0000'],
-  'Bélgica':                ['#000000', '#FDDA24', '#EF3340'],
-  'Croacia':                ['#FF0000', '#FFFFFF', '#171796'],
-  'Austria':                ['#ED2939', '#FFFFFF', '#ED2939'],
-  'Suiza':                  ['#FF0000', '#FFFFFF', '#FF0000'],
-  'Suecia':                 ['#006AA7', '#FECC02', '#006AA7'],
-  'Noruega':                ['#EF2B2D', '#FFFFFF', '#002868'],
-  'Dinamarca':              ['#C8102E', '#FFFFFF', '#C8102E'],
-  'Escocia':                ['#003399', '#FFFFFF', '#003399'],
-  'Turquía':                ['#E30A17', '#FFFFFF', '#E30A17'],
-  'Bosnia y Herzegovina':   ['#002395', '#FECE00', '#002395'],
-  'República Checa':        ['#FFFFFF', '#11457E', '#D7141A'],
-  // ─── AFC ──────────────────────────────────────────────────────
-  'Japón':                  ['#FFFFFF', '#BC002D', '#FFFFFF'],
-  'Corea del Sur':          ['#FFFFFF', '#CD2E3A', '#0047A0'],
-  'Australia':              ['#002868', '#FFCD00', '#002868'],
-  'Arabia Saudita':         ['#006C35', '#FFFFFF', '#006C35'],
-  'Irán':                   ['#239F40', '#FFFFFF', '#DA0000'],
-  'Irak':                   ['#CE1126', '#FFFFFF', '#000000'],
-  'Qatar':                  ['#8A1538', '#FFFFFF', '#8A1538'],
-  'Jordania':               ['#000000', '#FFFFFF', '#007A3D'],
-  'Uzbekistán':             ['#0099B5', '#FFFFFF', '#1EB53A'],
-  // ─── CAF ──────────────────────────────────────────────────────
-  'Marruecos':              ['#C1272D', '#006233', '#C1272D'],
-  'Senegal':                ['#00853F', '#FDEF42', '#E31B23'],
-  'Nigeria':                ['#008751', '#FFFFFF', '#008751'],
-  'Egipto':                 ['#CE1126', '#FFFFFF', '#000000'],
-  'Costa de Marfil':        ['#FF8200', '#FFFFFF', '#009A44'],
-  'Sudáfrica':              ['#007749', '#FFB81C', '#000000', '#FFFFFF', '#002395', '#DE3831'],
-  'RD de Congo':            ['#007FFF', '#F7D618', '#CE1021'],
-  'Ghana':                  ['#EF3340', '#FCD116', '#006B3F'],
-  'Argelia':                ['#006233', '#FFFFFF', '#D21034'],
-  'Túnez':                  ['#E70013', '#FFFFFF', '#E70013'],
-  'Cabo Verde':             ['#003893', '#003893', '#FFFFFF', '#CE1126', '#FFFFFF'],
-  // ─── OFC ──────────────────────────────────────────────────────
-  'Nueva Zelanda':          ['#00247D', '#CC142B', '#FFFFFF'],
-};
+    // ─── CONMEBOL ───────────────────────────────────────────────────
+    Argentina: ['#74ACDF', '#FFFFFF', '#74ACDF'],
+    Brasil: ['#009739', '#FEDD00', '#009739'],
+    Colombia: ['#FCD116', '#FCD116', '#003893', '#CE1126'],
+    Ecuador: ['#FFD100', '#FFD100', '#0033A0', '#CE1126'],
+    Paraguay: ['#D52B1E', '#FFFFFF', '#0038A8'],
+    Uruguay: ['#6da9f1', '#FFFFFF', '#6da9f1', '#FFFFFF', '#6da9f1'],
+    // ─── CONCACAF ──────────────────────────────────────────────────
+    'Estados Unidos': ['#B31942', '#FFFFFF', '#0A3161'],
+    México: ['#006341', '#FFFFFF', '#CE1126'],
+    Canadá: ['#FF0000', '#FFFFFF', '#FF0000', '#FFFFFF', '#FF0000'],
+    Panamá: ['#FFFFFF', '#D21034', '#005DA6', '#FFFFFF'],
+    Haití: ['#00209F', '#D21034'],
+    Curazao: ['#002B7F', '#002B7F', '#F9E814'],
+    // ─── UEFA ─────────────────────────────────────────────────────
+    Francia: ['#002395', '#FFFFFF', '#ED2939'],
+    Inglaterra: ['#FFFFFF', '#CE1124', '#FFFFFF'],
+    Alemania: ['#000000', '#DD0000', '#FFCC00'],
+    España: ['#AA151B', '#F1BF00', '#AA151B'],
+    'Países Bajos': ['#AE1C28', '#FFFFFF', '#21468B'],
+    Portugal: ['#006600', '#006600', '#FF0000', '#FF0000', '#FF0000'],
+    Bélgica: ['#000000', '#FDDA24', '#EF3340'],
+    Croacia: ['#FF0000', '#FFFFFF', '#171796'],
+    Austria: ['#ED2939', '#FFFFFF', '#ED2939'],
+    Suiza: ['#FF0000', '#FFFFFF', '#FF0000'],
+    Suecia: ['#006AA7', '#FECC02', '#006AA7'],
+    Noruega: ['#EF2B2D', '#FFFFFF', '#002868'],
+    Dinamarca: ['#C8102E', '#FFFFFF', '#C8102E'],
+    Escocia: ['#003399', '#FFFFFF', '#003399'],
+    Turquía: ['#E30A17', '#FFFFFF', '#E30A17'],
+    'Bosnia y Herzegovina': ['#002395', '#FECE00', '#002395'],
+    'República Checa': ['#FFFFFF', '#11457E', '#D7141A'],
+    // ─── AFC ──────────────────────────────────────────────────────
+    Japón: ['#FFFFFF', '#BC002D', '#FFFFFF'],
+    'Corea del Sur': ['#FFFFFF', '#CD2E3A', '#0047A0'],
+    Australia: ['#002868', '#FFCD00', '#002868'],
+    'Arabia Saudita': ['#006C35', '#FFFFFF', '#006C35'],
+    Irán: ['#239F40', '#FFFFFF', '#DA0000'],
+    Irak: ['#CE1126', '#FFFFFF', '#000000'],
+    Qatar: ['#8A1538', '#FFFFFF', '#8A1538'],
+    Jordania: ['#000000', '#FFFFFF', '#007A3D'],
+    Uzbekistán: ['#0099B5', '#FFFFFF', '#1EB53A'],
+    // ─── CAF ──────────────────────────────────────────────────────
+    Marruecos: ['#C1272D', '#006233', '#C1272D'],
+    Senegal: ['#00853F', '#FDEF42', '#E31B23'],
+    Nigeria: ['#008751', '#FFFFFF', '#008751'],
+    Egipto: ['#CE1126', '#FFFFFF', '#000000'],
+    'Costa de Marfil': ['#FF8200', '#FFFFFF', '#009A44'],
+    Sudáfrica: ['#007749', '#FFB81C', '#000000', '#FFFFFF', '#002395', '#DE3831'],
+    'RD de Congo': ['#007FFF', '#F7D618', '#CE1021'],
+    Ghana: ['#EF3340', '#FCD116', '#006B3F'],
+    Argelia: ['#006233', '#FFFFFF', '#D21034'],
+    Túnez: ['#E70013', '#FFFFFF', '#E70013'],
+    'Cabo Verde': ['#003893', '#003893', '#FFFFFF', '#CE1126', '#FFFFFF'],
+    // ─── OFC ──────────────────────────────────────────────────────
+    'Nueva Zelanda': ['#00247D', '#CC142B', '#FFFFFF'],
+  };
 
+  const FLAG_COLORS1 = {
+    // ─── Los 5 Grandes ─────────────────────────────────────────────
+    'River Plate': ['#FFFFFF', '#DC2626', '#FFFFFF'],
+    'Boca Juniors': ['#1D3B8A', '#FFD700', '#1D3B8A'],
+    Racing: ['#87CEEB', '#FFFFFF', '#87CEEB'],
+    Independiente: ['#DC2626', '#FFFFFF', '#DC2626'],
+    'San Lorenzo': ['#1A237E', '#DC2626', '#1A237E'],
+
+    // ─── Buenos Aires / GBA ────────────────────────────────────────
+    Huracán: ['#FFFFFF', '#E53935', '#FFFFFF', '#E53935', '#FFFFFF'],
+    'Vélez Sarsfield': ['#FFFFFF', '#1565C0', '#FFFFFF'],
+    'Argentinos Juniors': ['#D32F2F', '#FFFFFF', '#D32F2F'],
+    Lanús: ['#722F37', '#FFFFFF', '#722F37'],
+    Banfield: ['#2E7D32', '#FFFFFF', '#2E7D32'],
+    Tigre: ['#003DA5', '#D2232A', '#003DA5', '#D2232A'],
+    Platense: ['#8B6914', '#FFFFFF', '#8B6914'],
+    'Barracas Central': ['#CE1126', '#000000', '#CE1126'],
+    Riestra: ['#D2232A', '#1A1A1A', '#D2232A'],
+    'Defensa y Justicia': ['#FEDD00', '#2E7D32', '#FEDD00'],
+
+    // ─── La Plata ──────────────────────────────────────────────────
+    Gimnasia: ['#1A3C6E', '#FFFFFF', '#1A3C6E'],
+    Estudiantes: ['#CE1126', '#FFFFFF', '#CE1126'],
+
+    // ─── Rosario ───────────────────────────────────────────────────
+    "Newell's Old Boys": ['#D2232A', '#000000'],
+    'Rosario Central': ['#003DA5', '#FEDD00', '#003DA5'],
+
+    // ─── Córdoba ───────────────────────────────────────────────────
+    Talleres: ['#002F6C', '#FFFFFF', '#002F6C'],
+    Belgrano: ['#5DADE2', '#5DADE2', '#FFFFFF'],
+    Instituto: ['#E53935', '#FFFFFF', '#E53935'],
+
+    // ─── Interior ──────────────────────────────────────────────────
+    'Godoy Cruz': ['#FFFFFF', '#2C3E50', '#FFFFFF'],
+    'Atlético Tucumán': ['#4FC3F7', '#FFFFFF', '#4FC3F7'],
+    Unión: ['#D32F2F', '#FFFFFF', '#D32F2F'],
+    Sarmiento: ['#1B5E20', '#FFFFFF', '#1B5E20'],
+    'Central Córdoba': ['#000000', '#FFFFFF', '#000000'],
+    'Independiente Rivadavia': ['#003DA5', '#FFFFFF', '#003DA5'],
+  };
+  const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
 
   if (grupos > 1) {
     const strokeWidthBase = (heightBars * 0.35) / 7;
-const capas = [
-  { colorIdx: 0, width: strokeWidthBase * 5 },
-  { colorIdx: 1, width: strokeWidthBase * 3 },
-  { colorIdx: 2, width: strokeWidthBase * 1.75 },
-  { colorIdx: 3, width: strokeWidthBase },
-];
+    const capas = [
+      { colorIdx: 0, width: strokeWidthBase * 5 },
+      { colorIdx: 1, width: strokeWidthBase * 3 },
+      { colorIdx: 2, width: strokeWidthBase * 1.75 },
+      { colorIdx: 3, width: strokeWidthBase },
+    ];
 
-const barWidth = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
-  + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0)
-  + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + heightBars * 10;
+    const barWidth = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x + heightBars * 10;
 
-  svg
+    svg
       .append('rect')
       .attrs({
         class: 'bars_names',
         x: barWidth,
         y: margin.top,
-        width: margin_left/2,
+        width: margin_left / 2,
         height: height,
       })
       .styles({
         fill: (d, i) => (i == 0 ? 'url(#areaGradient0)' : i % 2 == 1 ? 'url(#areaGradient0)' : 'url(#areaGradient0)'),
       });
 
-const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
+    /* const pathLine = d3.line().curve(d3.curveCardinal.tension(1)); */
 
-grupos_1.forEach((grupo, indice_grupo) => {
-  const offsetGrupo = indice_grupo * (equipos_por_grupos + distancia_entre_grupos);
+    grupos_1.forEach((grupo, indice_grupo) => {
+      const offsetGrupo = indice_grupo * (equipos_por_grupos + distancia_entre_grupos);
 
-  // Rect encabezado grupo
-  svg.selectAll('.rect')
-    .data(grupos_1)
-    .enter()
-    .append('rect')
-    .attrs({
-      class: 'bars_names_grupos',
-      x: 0,
-      y: y(offsetGrupo) - heightBars / 2,
-      width: barWidth,
-      height: heightBars / 2,
-    })
-    .style('fill', '#ebebeb');
+      // Rect encabezado grupo
+      svg
+        .selectAll('.rect')
+        .data(grupos_1)
+        .enter()
+        .append('rect')
+        .attrs({
+          class: 'bars_names_grupos',
+          x: 0,
+          y: y(offsetGrupo) - heightBars / 2,
+          width: barWidth,
+          height: heightBars / 2,
+        })
+        .style('fill', '#ebebeb');
 
-  // Texto grupo
-  svg.append('text')
-    .attrs({
-      class: 'name',
-      x: weeks,
-      y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
-    })
-    .styles({
-      fill: defaults.name.style.fill,
-      'font-size': defaults.name.style.font_size,
-      'font-weight': defaults.name.style.font_weight,
-      'text-anchor': defaults.name.style.text_anchor,
-      'alignment-baseline': defaults.name.style.alignment_baseline,
-    })
-    .text('Grupo ' + grupo);
+      // Texto grupo
+      svg
+        .append('text')
+        .attrs({
+          class: 'name',
+          x: weeks,
+          y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
+        })
+        .styles({
+          fill: defaults.name.style.fill,
+          'font-size': defaults.name.style.font_size,
+          'font-weight': defaults.name.style.font_weight,
+          'text-anchor': defaults.name.style.text_anchor,
+          'alignment-baseline': defaults.name.style.alignment_baseline,
+        })
+        .text('Grupo ' + grupo);
 
-  // Rects equipos
-  svg.selectAll('.rect')
-    .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
-    .enter()
-    .append('rect')
-    .attrs({
-      class: 'bars_names',
-      x: 0,
-      y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo) - heightBars / 2,
-      width: barWidth,
-      height: heightBars,
-    })
-    /* .style('fill', (d, i) => i < clasificacion_por_grupo
+      // Rects equipos
+      svg
+        .selectAll('.rect')
+        .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
+        .enter()
+        .append('rect')
+        .attrs({
+          class: 'bars_names',
+          x: 0,
+          y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo) - heightBars / 2,
+          width: barWidth,
+          height: heightBars,
+        })
+        /* .style('fill', (d, i) => i < clasificacion_por_grupo
       ? (i % 2 === 1 ? '#94e694' : '#76c476')
       : (i % 2 === 1 ? '#dddddd' : '#c2c2c2')
     ); */
-    .style('fill', (d, i) => {
-      if (i < (clasificacion_por_grupo-repechaje)) {
-        if (i % 2 === 1) {
-          return '#94e694'
-        } else {
-          return '#76c476'
-        }
-      } else if (i < clasificacion_por_grupo && mejores_terceros.includes(d.position[1])) {
-        console.log(mejores_terceros)
-        if (i % 2 === 1) {
-          return '#d8ffb8'
-        } else {
-          return '#e3ffb5'
-        }
-      } else {
-        if (i % 2 === 1) {
-          return '#dddddd'
-        } else {
-          return '#c2c2c2'
-        }
-      }
-    }
-    );
+        .style('fill', (d, i) => {
+          if (i < clasificacion_por_grupo - repechaje) {
+            if (i % 2 === 1) {
+              return '#94e694';
+            } else {
+              return '#76c476';
+            }
+          } else if (i < clasificacion_por_grupo && mejores_terceros.includes(d.position[1])) {
+            console.log(mejores_terceros);
+            if (i % 2 === 1) {
+              return '#d8ffb8';
+            } else {
+              return '#e3ffb5';
+            }
+          } else {
+            if (i % 2 === 1) {
+              return '#dddddd';
+            } else {
+              return '#c2c2c2';
+            }
+          }
+        });
 
-  // Líneas verticales de fechas
-  svg.selectAll('.rect')
-    .data(dates)
-    .enter()
-    .append('rect')
-    .attrs({
-      class: 'lines_years',
-      x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
-      y: y(distancia_entre_grupos + offsetGrupo) - heightBars / 2,
-      width: heightBars * 0.05,
-      height: heightBars * equipos_por_grupos,
-      transform: `translate(${margin_left * 2}, 0)`,
-    })
-    .styles({ fill: black_color, opacity: 0.4 });
+      // Líneas verticales de fechas
+      svg
+        .selectAll('.rect')
+        .data(dates)
+        .enter()
+        .append('rect')
+        .attrs({
+          class: 'lines_years',
+          x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
+          y: y(distancia_entre_grupos + offsetGrupo) - heightBars / 2,
+          width: heightBars * 0.05,
+          height: heightBars * equipos_por_grupos,
+          transform: `translate(${margin_left * 2}, 0)`,
+        })
+        .styles({ fill: black_color, opacity: 0.4 });
 
-  // Rect gradiente lateral
-  svg.append('rect')
-    .attrs({
-      class: 'bars_names',
-      x: margin_left - 1,
-      y: y(offsetGrupo),
-      width: margin_left / 4,
-      height: heightBars * equipos_por_grupos,
-    })
-    .style('fill', 'url(#areaGradient0)');
+      // Rect gradiente lateral
+      svg
+        .append('rect')
+        .attrs({
+          class: 'bars_names',
+          x: margin_left - 1,
+          y: y(offsetGrupo),
+          width: margin_left / 4,
+          height: heightBars * equipos_por_grupos,
+        })
+        .style('fill', 'url(#areaGradient0)');
 
-    svg.append('rect')
-    .attrs({
-      class: 'bars_names',
-      x: 0,
-      y: y(offsetGrupo),
-      width: barWidth,
-      height: heightBars / 2,
-    })
-    .style('fill', 'url(#areaGradient1)');
+      svg
+        .append('rect')
+        .attrs({
+          class: 'bars_names',
+          x: 0,
+          y: y(offsetGrupo),
+          width: barWidth,
+          height: heightBars / 2,
+        })
+        .style('fill', 'url(#areaGradient1)');
 
-    svg.append('rect')
-    .attrs({
-      class: 'bars_names',
-      x: 0,
-      y: y(offsetGrupo) - heightBars,
-      width: barWidth,
-      height: heightBars / 2,
-    })
-    .style('fill', 'url(#areaGradient2)');
+      svg
+        .append('rect')
+        .attrs({
+          class: 'bars_names',
+          x: 0,
+          y: y(offsetGrupo) - heightBars,
+          width: barWidth,
+          height: heightBars / 2,
+        })
+        .style('fill', 'url(#areaGradient2)');
 
-  // Líneas de posición por equipo
-  names_1
-    .filter((d) => d.split('-')[1] == grupo)
-    .forEach((nombre) => {
-      let wks = 0;
-      const points = [];
-      const club = nombre.split('-')[0];
+      // Líneas de posición por equipo
+      names_1
+        .filter((d) => d.split('-')[1] == grupo)
+        .forEach((nombre) => {
+          let wks = 0;
+          const points = [];
+          const club = nombre.split('-')[0];
 
-      dates.forEach((o) => {
-        const yearSlice1 = sort_teams1(
-          data.filter((d) => d.semana == o && d.name.split('-')[1] == grupo && !isNaN(d.value))
-        );
-        const rank1 = yearSlice1.find((d) => d.name == nombre).rank
-          + distancia_entre_grupos + offsetGrupo;
+          dates.forEach((o) => {
+            const yearSlice1 = sort_teams1(data.filter((d) => d.semana == o && d.name.split('-')[1] == grupo && !isNaN(d.value)));
+            const rank1 = yearSlice1.find((d) => d.name == nombre).rank + distancia_entre_grupos + offsetGrupo;
 
-        if (wks > fechas_not_played) wks -= not_played_yet_x;
-        if (o == dates[dates.length - 1] && fechas_not_played < dates.length - 1) wks += not_played_yet_x;
+            if (wks > fechas_not_played) wks -= not_played_yet_x;
+            if (o == dates[dates.length - 1] && fechas_not_played < dates.length - 1) wks += not_played_yet_x;
 
-        points.push([x(wks), y(rank1)]);
-        wks++;
-      });
+            points.push([x(wks), y(rank1)]);
+            wks++;
+          });
 
-      const pathD = pathLine(points);
+          /* const pathD = pathLine(points); */
 
-      /* capas.forEach(({ colorIdx, width }) => {
-        svg.append('path')
-          .attrs({
-            transform: `translate(${margin_left * 2}, 0)`,
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: colores(club)[colorIdx],
-            'stroke-width': width,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', pathD);
-      }); */
-      function drawFlagPath(svg, pathD, club, totalWidth = 6, transform = '', className = 'line') {
-  const colors = FLAG_COLORS[club];
-  if (!colors) {
-    console.warn(`No se encontraron colores de bandera para: ${club}`);
-    return;
-  }
-  const stripeWidth = totalWidth / colors.length;
-  colors.forEach((color, i) => {
-    // Calcular offset vertical: centrado respecto al medio
-    // Para 3 colores: offsets = [-stripeWidth, 0, +stripeWidth]
-    const middleIndex = (colors.length - 1) / 2;
-    const offset = (i - middleIndex) * stripeWidth;
-    svg.append('path')
-      .attr('d', pathD)
-      .attr('transform', transform ? `${transform} translate(0, ${offset})` : `translate(0, ${offset})`)
-      .attr('class', className)
-      .style('fill', 'none')
-      .style('stroke', color)
-      .style('stroke-width', stripeWidth)
-      .style('stroke-linejoin', 'round')
-      .style('stroke-linecap', 'round');
-  });
-}
-/* 
-      const totalWidth = 20;
-const stripeWidth = totalWidth / 3;
-const colors = ['#002395', '#FFFFFF']; // ej: Francia
+          function offsetPoints(points, offset) {
+            return points.map((p, i) => {
+              let nx, ny;
 
-colors.forEach((color, i) => {
-  // Offset: -1, 0, +1 (multiplicado por stripeWidth)
-  const offset = (i - 1) * stripeWidth;
+              if (i === 0) {
+                const dx = points[1][0] - points[0][0];
+                const dy = points[1][1] - points[0][1];
+                const len = Math.sqrt(dx * dx + dy * dy);
+                nx = -dy / len;
+                ny = dx / len;
+              } else if (i === points.length - 1) {
+                const dx = points[i][0] - points[i - 1][0];
+                const dy = points[i][1] - points[i - 1][1];
+                const len = Math.sqrt(dx * dx + dy * dy);
+                nx = -dy / len;
+                ny = dx / len;
+              } else {
+                // Normal del segmento anterior
+                const dx1 = points[i][0] - points[i - 1][0];
+                const dy1 = points[i][1] - points[i - 1][1];
+                const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                const nx1 = -dy1 / len1;
+                const ny1 = dx1 / len1;
 
-  svg.append('path')
-    .attr('d', pathD)
-    .attr('transform', `translate(${margin_left * 2}, ${offset})`)
-    .attr('class', 'line')
-    .style('fill', 'none')
-    .style('stroke', color)
-    .style('stroke-width', stripeWidth)
-    .style('stroke-linejoin', 'round');
-}); */
+                // Normal del segmento siguiente
+                const dx2 = points[i + 1][0] - points[i][0];
+                const dy2 = points[i + 1][1] - points[i][1];
+                const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                const nx2 = -dy2 / len2;
+                const ny2 = dx2 / len2;
 
-drawFlagPath(
-        svg,
-        pathD,
-        club,
-        15,
-        `translate(${margin_left * 2}, 0)`,
-        'line'
-      );
+                // Promediar normales
+                nx = (nx1 + nx2) / 2;
+                ny = (ny1 + ny2) / 2;
+                let nlen = Math.sqrt(nx * nx + ny * ny);
+
+                if (nlen < 0.01) {
+                  // Segmentos casi opuestos, usar la normal del anterior
+                  nx = nx1;
+                  ny = ny1;
+                } else {
+                  // Corrección miter: dividir por cos(θ/2) para mantener ancho constante
+                  nx /= nlen * nlen;
+                  ny /= nlen * nlen;
+
+                  // Cap para evitar picos en ángulos muy cerrados
+                  const miterLen = Math.sqrt(nx * nx + ny * ny);
+                  if (miterLen > 2) {
+                    nx = (nx / miterLen) * 2;
+                    ny = (ny / miterLen) * 2;
+                  }
+                }
+              }
+
+              return [p[0] + nx * offset, p[1] + ny * offset];
+            });
+          }
+
+          /* function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
+          const colors = FLAG_COLORS[club];
+          if (!colors) {
+            console.warn(`No se encontraron colores de bandera para: ${club}`);
+            return;
+          }
+          const stripeWidth = totalWidth / colors.length;
+
+          colors.forEach((color, i) => {
+            const middleIndex = (colors.length - 1) / 2;
+            const offset = (i - middleIndex) * stripeWidth;
+
+            // Generar puntos desplazados perpendicularmente
+            const offsetPts = offsetPoints(points, offset);
+            const pathD = pathLine(offsetPts);
+
+            svg.append('path')
+              .attr('d', pathD)
+              .attr('transform', transform)
+              .attr('class', className)
+              .style('fill', 'none')
+              .style('stroke', color)
+              .style('stroke-width', stripeWidth)
+              .style('stroke-linejoin', 'round')
+              .style('stroke-linecap', 'round');
+          });
+        } */
+
+          function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
+            const colors = FLAG_COLORS[club];
+            if (!colors) {
+              console.warn(`No se encontraron colores de bandera para: ${club}`);
+              return;
+            }
+            const stripeWidth = totalWidth / colors.length;
+
+            // ── SOMBRA ──────────────────────────────────────────
+            const shadowPath = pathLine(points);
+            svg
+              .append('path')
+              .attr('d', shadowPath)
+              .attr('transform', transform)
+              .attr('class', className + ' flag-shadow')
+              .style('fill', 'none')
+              .style('stroke', 'rgba(0, 0, 0, 0.2)')
+              .style('stroke-width', totalWidth + 4) // un poco más ancho que la bandera
+              .style('stroke-linejoin', 'round')
+              .style('stroke-linecap', 'round')
+              .style('filter', 'blur(3px)');
+
+            // ── FRANJAS ─────────────────────────────────────────
+            colors.forEach((color, i) => {
+              const middleIndex = (colors.length - 1) / 2;
+              const offset = (i - middleIndex) * stripeWidth;
+
+              const offsetPts = offsetPoints(points, offset);
+              const pathD = pathLine(offsetPts);
+
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
+            });
+          }
+
+          drawFlagPath(svg, points, club, 15, `translate(${margin_left * 2}, 0)`, 'line');
+        });
     });
-});
-
-
 
     grupos_1.forEach((grupo, indice_grupo) => {
       names_1
@@ -3902,7 +3990,7 @@ drawFlagPath(
         opacity: 0.4,
       }); */
 
-   /*  svg
+    /*  svg
       .append('rect')
       .attrs({
         class: 'bars_names',
@@ -3914,54 +4002,108 @@ drawFlagPath(
       .styles({
         fill: 'url(#areaGradient0)',
       }); */
-      /* if (nombre !== 'Defensa y Justicia') return; */
+    /* if (nombre !== 'Defensa y Justicia') return; */
 
     names_1.forEach((nombre) => {
       let wks = 0;
       const points = [];
+      const club = nombre.split('-')[0];
 
-      dates.slice(0).forEach((o) => {
+      dates.forEach((o) => {
         const yearSlice1 = sort_teams1(data.filter((d) => d.semana == o && !isNaN(d.value)));
         const rank1 = yearSlice1.find((d) => d.name == nombre).rank;
 
-        wks > fechas_not_played ? (wks = wks - not_played_yet_x) : '';
-        o == dates[dates.length - 1] && fechas_not_played < dates.length - 1 ? (wks = wks + not_played_yet_x) : '';
+        if (wks > fechas_not_played) wks -= not_played_yet_x;
+        if (o == dates[dates.length - 1] && fechas_not_played < dates.length - 1) wks += not_played_yet_x;
 
         points.push([x(wks), y(rank1)]);
         wks++;
       });
 
-      const strokeWidthBase = (heightBars * 0.35) / 7;
-      const capas = [
-        { colorIdx: 0, width: strokeWidthBase * 5 },
-        { colorIdx: 1, width: strokeWidthBase * 3 },
-        { colorIdx: 2, width: strokeWidthBase * 1.75 },
-        { colorIdx: 3, width: strokeWidthBase },
-      ];
+      /* const pathD = pathLine(points); */
 
-      const pathD = d3.line().curve(d3.curveCardinal.tension(1))(points);
-      const club = nombre.split('-')[0];
+      function offsetPoints(points, offset) {
+        return points.map((p, i) => {
+          let nx, ny;
 
-      capas.forEach(({ colorIdx, width }, i) => {
-        svg
-          .append('path')
-          .attrs({
-            transform: `translate(${margin_left * 2}, 0)`,
-            class: 'line',
-            /* ...(i === 0 && { filter: 'url(#dropshadow)' }), // solo la primera capa tiene sombra */
-          })
-          .styles({
-            fill: 'none',
-            stroke: colores(club)[colorIdx],
-            'stroke-width': width,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', pathD);
-      });
+          if (i === 0) {
+            const dx = points[1][0] - points[0][0];
+            const dy = points[1][1] - points[0][1];
+            const len = Math.sqrt(dx * dx + dy * dy);
+            nx = -dy / len;
+            ny = dx / len;
+          } else if (i === points.length - 1) {
+            const dx = points[i][0] - points[i - 1][0];
+            const dy = points[i][1] - points[i - 1][1];
+            const len = Math.sqrt(dx * dx + dy * dy);
+            nx = -dy / len;
+            ny = dx / len;
+          } else {
+            // Normal del segmento anterior
+            const dx1 = points[i][0] - points[i - 1][0];
+            const dy1 = points[i][1] - points[i - 1][1];
+            const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+            const nx1 = -dy1 / len1;
+            const ny1 = dx1 / len1;
+
+            // Normal del segmento siguiente
+            const dx2 = points[i + 1][0] - points[i][0];
+            const dy2 = points[i + 1][1] - points[i][1];
+            const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+            const nx2 = -dy2 / len2;
+            const ny2 = dx2 / len2;
+
+            // Promediar normales
+            nx = (nx1 + nx2) / 2;
+            ny = (ny1 + ny2) / 2;
+            let nlen = Math.sqrt(nx * nx + ny * ny);
+
+            if (nlen < 0.01) {
+              // Segmentos casi opuestos, usar la normal del anterior
+              nx = nx1;
+              ny = ny1;
+            } else {
+              // Corrección miter: dividir por cos(θ/2) para mantener ancho constante
+              nx /= nlen * nlen;
+              ny /= nlen * nlen;
+
+              // Cap para evitar picos en ángulos muy cerrados
+              const miterLen = Math.sqrt(nx * nx + ny * ny);
+              if (miterLen > 2) {
+                nx = (nx / miterLen) * 2;
+                ny = (ny / miterLen) * 2;
+              }
+            }
+          }
+
+          return [p[0] + nx * offset, p[1] + ny * offset];
+        });
+      }
+
+      function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
+        const colors = FLAG_COLORS1[club];
+        if (!colors) {
+          console.warn(`No se encontraron colores de bandera para: ${club}`);
+          return;
+        }
+        const stripeWidth = totalWidth / colors.length;
+
+        colors.forEach((color, i) => {
+          const middleIndex = (colors.length - 1) / 2;
+          const offset = (i - middleIndex) * stripeWidth;
+
+          // Generar puntos desplazados perpendicularmente
+          const offsetPts = offsetPoints(points, offset);
+          const pathD = pathLine(offsetPts);
+
+          svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth).style('stroke-linejoin', 'round').style('stroke-linecap', 'round');
+        });
+      }
+
+      drawFlagPath(svg, points, club, 15, `translate(${margin_left * 2}, 0)`, 'line');
     });
 
     names_1.forEach((nombre) => {
-
       let wks = 0;
 
       dates.slice(0).forEach((o) => {
@@ -4065,7 +4207,7 @@ drawFlagPath(
                 href: pts1.vs != 'none' ? `./escudos/${team.vs.split('-')[0]}.png` : '',
               });
 
-              svg
+            svg
               .append('image')
               /* .style('filter', 'url(#dropshadow)') */
               .attrs({
@@ -4074,7 +4216,7 @@ drawFlagPath(
                 x: x(wks) + heightBars * 0.2 + (team.goles_fecha == not_played_yet ? (team.l_or_v == 'L' ? heightBars * 0.2 : -heightBars * 0.2) : 0) + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor + hor_not_played_yet + defaults.mini_logo.size1 * 0.35 + (team.l_or_v == 'L' ? -heightBars * 0.95 : 0),
                 y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
                 height: defaults.mini_logo.size1,
-                href: pts1.vs != 'none' ? team.simulado ? `./icons/simulated.png` : '' : '',
+                href: pts1.vs != 'none' ? (team.simulado ? `./icons/simulated.png` : '') : '',
               });
 
             svg
@@ -4286,7 +4428,6 @@ drawFlagPath(
   areaGradient2.append('stop').attr('offset', '100%').attr('stop-color', '#000').attr('stop-opacity', 0);
 
   if (grupos > 1) {
-
     grupos_1.forEach((e, index) => {
       svg
         .selectAll('.text')
@@ -4347,83 +4488,88 @@ drawFlagPath(
   }); */
 
   svg.append('image').attrs({
-    x: margin_left*0.5 - heightBars*0.75/2,
-    y: margin.top*0.3 - heightBars*0.75/2,
-    height: heightBars*0.75,
+    x: margin_left * 0.5 - (heightBars * 0.75) / 2,
+    y: margin.top * 0.3 - (heightBars * 0.75) / 2,
+    height: heightBars * 0.75,
     href: `./escudos/${nombre_torneo}.png`,
   });
 
   if (datos_totales) {
+    // ── Variables comunes ─────────────────────────────────────────────────────────
+    const totalPJ = (d3.sum(yearSlice, (d) => d.partidos_jugados) + d3.sum(yearSlice, (d) => d.partidos_jugados1)) / 2;
+    const totalPG = d3.sum(yearSlice, (d) => d.partidos_ganados) + d3.sum(yearSlice, (d) => d.partidos_ganados1);
+    const totalPE = Math.round((d3.sum(yearSlice, (d) => d.partidos_empatados) + d3.sum(yearSlice, (d) => d.partidos_empatados1)) / 2);
+    const totalGF = d3.sum(yearSlice, (d) => d.goles);
+    const totalGF1 = d3.sum(yearSlice, (d) => d.goles1);
 
-// ── Variables comunes ─────────────────────────────────────────────────────────
-const totalPJ  = (d3.sum(yearSlice, d => d.partidos_jugados) + d3.sum(yearSlice, d => d.partidos_jugados1)) / 2;
-const totalPG  = d3.sum(yearSlice, d => d.partidos_ganados)  + d3.sum(yearSlice, d => d.partidos_ganados1);
-const totalPE  = Math.round((d3.sum(yearSlice, d => d.partidos_empatados) + d3.sum(yearSlice, d => d.partidos_empatados1)) / 2);
-const totalGF  = d3.sum(yearSlice, d => d.goles);
-const totalGF1 = d3.sum(yearSlice, d => d.goles1);
+    const pctPG = d3.format('.0f')((totalPG / totalPJ) * 100);
+    const pctPE = d3.format('.0f')((totalPE / totalPJ) * 100);
+    const avgG = d3
+      .format('.1f')((totalGF + totalGF1) / totalPJ)
+      .replace('.', ',');
 
-const pctPG = d3.format('.0f')(totalPG / totalPJ * 100);
-const pctPE = d3.format('.0f')(totalPE / totalPJ * 100);
-const avgG  = d3.format('.1f')((totalGF + totalGF1) / totalPJ).replace('.', ',');
+    // ── Helper común ──────────────────────────────────────────────────────────────
+    const dv = defaults.value.style;
+    const tspan = (text, { cls, fill, size = margin.top * 0.3, attrs = {}, text: label }) =>
+      text
+        .append('tspan')
+        .attrs({ ...(cls ? { class: cls } : {}), ...attrs })
+        .styles({
+          fill,
+          'font-size': size,
+          'font-weight': 600,
+          'text-anchor': dv.text_anchor,
+          'alignment-baseline': dv.alignment_baseline,
+        })
+        .text(label);
 
-// ── Helper común ──────────────────────────────────────────────────────────────
-const dv = defaults.value.style;
-const tspan = (text, { cls, fill, size = margin.top * 0.3, attrs = {}, text: label }) =>
-  text.append('tspan')
-    .attrs({ ...(cls ? { class: cls } : {}), ...attrs })
-    .styles({
-      fill,
-      'font-size'          : size,
-      'font-weight'        : 600,
-      'text-anchor'        : dv.text_anchor,
-      'alignment-baseline' : dv.alignment_baseline,
-    })
-    .text(label);
+    // ── Texto principal (común) ───────────────────────────────────────────────────
+    const textEl = svg
+      .append('text')
+      .attrs({ class: 'top', x: margin_left * 2, y: margin.top * 0.33 })
+      .styles({
+        fill: defaults.name.style.fill,
+        'font-size': defaults.name.style.font_size,
+        'font-weight': defaults.name.style.font_weight,
+        'text-anchor': defaults.name.style.text_anchor,
+        'alignment-baseline': defaults.name.style.alignment_baseline,
+      })
+      .call((t) => tspan(t, { cls: 'pj_top', fill: 'lightgrey', text: `${Math.round(totalPJ)} ` }))
+      .call((t) => tspan(t, { cls: 'pg_top', fill: victoria_color, text: `${totalPG} ` }))
+      .call((t) => tspan(t, { cls: 'pg_por_top', fill: victoria_color, text: `(${pctPG}%) ` }));
 
-// ── Texto principal (común) ───────────────────────────────────────────────────
-const textEl = svg.append('text')
-  .attrs({ class: 'top', x: margin_left * 2, y: margin.top * 0.33 })
-  .styles({
-    fill                 : defaults.name.style.fill,
-    'font-size'          : defaults.name.style.font_size,
-    'font-weight'        : defaults.name.style.font_weight,
-    'text-anchor'        : defaults.name.style.text_anchor,
-    'alignment-baseline' : defaults.name.style.alignment_baseline,
-  })
-  .call(t => tspan(t, { cls: 'pj_top',     fill: 'lightgrey',    text: `${Math.round(totalPJ)} ` }))
-  .call(t => tspan(t, { cls: 'pg_top',     fill: victoria_color, text: `${totalPG} ` }))
-  .call(t => tspan(t, { cls: 'pg_por_top', fill: victoria_color, text: `(${pctPG}%) ` }));
+    if (localia) {
+      const played = data.filter((e) => e.final != true);
+      const winsBy = (loc) => d3.sum(played, (e) => (e.l_or_v == loc && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0));
+      const goalsBy = (loc) => d3.sum(played, (e) => (e.l_or_v == loc && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0));
 
-if (localia) {
-  const played  = data.filter(e => e.final != true);
-  const winsBy  = loc => d3.sum(played, e => e.l_or_v == loc && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0);
-  const goalsBy = loc => d3.sum(played, e => e.l_or_v == loc && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0);
+      const winText_L = `${winsBy('L')} (${d3.format('.0%')(winsBy('L') / totalPJ)}) `;
+      const winText_V = `${winsBy('V')} (${d3.format('.0%')(winsBy('V') / totalPJ)})\xa0\xa0 `;
+      const goalText_L = `${goalsBy('L')} (${d3
+        .format('.1f')(goalsBy('L') / totalPJ)
+        .replace('.', ',')}) `;
+      const goalText_V = `${goalsBy('V')} (${d3
+        .format('.1f')(goalsBy('V') / totalPJ)
+        .replace('.', ',')})  `;
 
-  const winText_L  = `${winsBy('L')} (${d3.format('.0%')(winsBy('L') / totalPJ)}) `;
-  const winText_V  = `${winsBy('V')} (${d3.format('.0%')(winsBy('V') / totalPJ)})\xa0\xa0 `;
-  const goalText_L = `${goalsBy('L')} (${d3.format('.1f')(goalsBy('L') / totalPJ).replace('.', ',')}) `;
-  const goalText_V = `${goalsBy('V')} (${d3.format('.1f')(goalsBy('V') / totalPJ).replace('.', ',')})  `;
+      const tspanSub = (text, { fill, dy, dx = 0, text: label }) => tspan(text, { fill, size: margin.top * 0.2, attrs: { dy, ...(dx ? { dx } : {}) }, text: label });
 
-  const tspanSub = (text, { fill, dy, dx = 0, text: label }) =>
-    tspan(text, { fill, size: margin.top * 0.2, attrs: { dy, ...(dx ? { dx } : {}) }, text: label });
-
-  textEl
-    .call(t => tspanSub(t, { fill: victoria_color, dy: -heightBars * 0.16, text: winText_L }))
-    .call(t => tspanSub(t, { fill: victoria_color, dy:  heightBars * 0.32, dx: -winText_L.length * margin.top * 0.2 * 0.55, text: winText_V }))
-    .call(t => tspan(t, { cls: 'pe_top',     fill: empate_color, attrs: { dy: -heightBars * 0.16 }, text: `${totalPE} ` }))
-    .call(t => tspan(t, { cls: 'pe_por_top', fill: empate_color, text: `(${pctPE}%)\xa0\xa0\xa0` }))
-    .call(t => tspan(t, { cls: 'gf_top',    fill: 'lightgrey',  text: `${totalGF} ` }))
-    .call(t => tspan(t, { cls: 'avg_g_top', fill: 'lightgrey',  text: `(${avgG}) ` }))
-    .call(t => tspanSub(t, { fill: 'lightgrey', dy: -heightBars * 0.16, text: goalText_L }))
-    .call(t => tspanSub(t, { fill: 'lightgrey', dy:  heightBars * 0.32, dx: -goalText_L.length * margin.top * 0.2 * 0.48, text: goalText_V }));
-
-} else {
-  textEl
-    .call(t => tspan(t, { cls: 'pe_top',     fill: empate_color, text: `${totalPE} ` }))
-    .call(t => tspan(t, { cls: 'pe_por_top', fill: empate_color, text: `(${pctPE}%)\xa0\xa0\xa0` }))
-    .call(t => tspan(t, { cls: 'gf_top',    fill: 'lightgrey',  text: `${totalGF} ` }))
-    .call(t => tspan(t, { cls: 'avg_g_top', fill: 'lightgrey',  text: `(${avgG}) ` }));
-}
+      textEl
+        .call((t) => tspanSub(t, { fill: victoria_color, dy: -heightBars * 0.16, text: winText_L }))
+        .call((t) => tspanSub(t, { fill: victoria_color, dy: heightBars * 0.32, dx: -winText_L.length * margin.top * 0.2 * 0.55, text: winText_V }))
+        .call((t) => tspan(t, { cls: 'pe_top', fill: empate_color, attrs: { dy: -heightBars * 0.16 }, text: `${totalPE} ` }))
+        .call((t) => tspan(t, { cls: 'pe_por_top', fill: empate_color, text: `(${pctPE}%)\xa0\xa0\xa0` }))
+        .call((t) => tspan(t, { cls: 'gf_top', fill: 'lightgrey', text: `${totalGF} ` }))
+        .call((t) => tspan(t, { cls: 'avg_g_top', fill: 'lightgrey', text: `(${avgG}) ` }))
+        .call((t) => tspanSub(t, { fill: 'lightgrey', dy: -heightBars * 0.16, text: goalText_L }))
+        .call((t) => tspanSub(t, { fill: 'lightgrey', dy: heightBars * 0.32, dx: -goalText_L.length * margin.top * 0.2 * 0.48, text: goalText_V }));
+    } else {
+      textEl
+        .call((t) => tspan(t, { cls: 'pe_top', fill: empate_color, text: `${totalPE} ` }))
+        .call((t) => tspan(t, { cls: 'pe_por_top', fill: empate_color, text: `(${pctPE}%)\xa0\xa0\xa0` }))
+        .call((t) => tspan(t, { cls: 'gf_top', fill: 'lightgrey', text: `${totalGF} ` }))
+        .call((t) => tspan(t, { cls: 'avg_g_top', fill: 'lightgrey', text: `(${avgG}) ` }));
+    }
   }
   var rankingSVG = svg.selectAll('.g').data(yearSlice).enter().append('g').attr('class', 'rankingSVG');
 
@@ -4435,1119 +4581,6 @@ if (localia) {
   });
 
   if (localia) {
-    if (grupos > 1) {
-      grupos_1.forEach((grupo, indice_grupo) => {
-        rankingSVG.filter((d) => d.name.split('-')[1] == grupo)
-      .append('text')
-      .attrs({
-        class: 'name',
-        x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-         y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.name.position.y,
-      })
-      .styles({
-        fill: defaults.name.style.fill,
-        'font-size': defaults.name.style.font_size,
-        'font-weight': defaults.name.style.font_weight,
-        'text-anchor': defaults.name.style.text_anchor,
-        'alignment-baseline': defaults.name.style.alignment_baseline,
-      })
-      .text((d) => d.name.split('-')[0])
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'efec',
-          })
-          .styles({
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)), d3.max(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100))]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              return myColor1(myColor(+formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)));
-            },
-            'font-size': heightBars * 0.275,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.09,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +formatEfec(
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                    ) /
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      ) *
-                        puntos_por_partido)) *
-                      100
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : `(${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`.replace('NaN%', 'ND')
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.18,
-            dx: (d) =>
-              -`(${formatEfec(
-                (d3.sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                ) /
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ) *
-                    puntos_por_partido)) *
-                  100
-              ).replace('.', ',')}%)`
-                .replace('NaN%', 'ND')
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.6,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +formatEfec(
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                    ) /
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      ) *
-                        puntos_por_partido)) *
-                      100
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : ` (${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`.replace('NaN%', 'ND')
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.09,
-            class: 'goles_por_partido',
-            dx: (d) =>
-              -`(${formatEfec(
-                (d3.sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                ) /
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ) *
-                    puntos_por_partido)) *
-                  100
-              ).replace('.', ',')}%)`
-                .replace('NaN%', 'ND')
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.6 +
-              d3.max([
-                `(${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`
-                  .replace('NaN%', 'ND')
-                  .toString().length,
-                `(${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`
-                  .replace('NaN%', 'ND')
-                  .toString().length,
-              ]) *
-                defaults.value.style.font_size *
-                0.625 *
-                0.6,
-          })
-          .styles({
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados)), d3.max(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados))]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              return myColor1(myColor(+d3.format('.1f')(d.goles / d.partidos_jugados)));
-            },
-            'font-size': heightBars * 0.275,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : ` (${d3
-                  .format('.1f')(d.goles / d.partidos_jugados)
-                  .replace('.', ',')})`
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.09,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +d3.format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : `(${d3
-                  .format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                  .replace('.', ',')
-                  .replace('NaN', 'ND')})`
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.18,
-            dx: -`(1,0)`.toString().length * defaults.value.style.font_size * 0.625 * 0.43,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +d3.format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : `(${d3
-                  .format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                  .replace('.', ',')
-                  .replace('NaN', 'ND')})`
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'campeon',
-            dy: -heightBars * 0.09,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': heightBars * 0.275,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' (' + probabilidad(d.name) + '%)')
-      ).call(halo1, heightBars * 0.2, '#f1f1f1');
-    })
-    }
-     else {
-      rankingSVG
-      .append('text')
-      .attrs({
-        class: 'name',
-        x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-        y: (d) => y(d.rank) + defaults.name.position.y,
-        'clip-path': `url(#ellipse-clip-margin-bottom)`,
-      })
-      .styles({
-        fill: defaults.name.style.fill,
-        'font-size': defaults.name.style.font_size,
-        'font-weight': defaults.name.style.font_weight,
-        'text-anchor': defaults.name.style.text_anchor,
-        'alignment-baseline': defaults.name.style.alignment_baseline,
-      })
-      .text((d) => d.name.split('-')[0])
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'efec',
-          })
-          .styles({
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)), d3.max(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100))]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              return myColor1(myColor(+formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)));
-            },
-            'font-size': heightBars * 0.275,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.09,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +formatEfec(
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                    ) /
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      ) *
-                        puntos_por_partido)) *
-                      100
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : `(${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`.replace('NaN%', 'ND')
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.18,
-            dx: (d) =>
-              -`(${formatEfec(
-                (d3.sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                ) /
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ) *
-                    puntos_por_partido)) *
-                  100
-              ).replace('.', ',')}%)`
-                .replace('NaN%', 'ND')
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.6,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +formatEfec(
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                    ) /
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      ) *
-                        puntos_por_partido)) *
-                      100
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +formatEfec(
-                      (d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                      ) /
-                        (d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        ) *
-                          puntos_por_partido)) *
-                        100
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : ` (${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`.replace('NaN%', 'ND')
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.09,
-            class: 'goles_por_partido',
-            dx: (d) =>
-              -`(${formatEfec(
-                (d3.sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                ) /
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ) *
-                    puntos_por_partido)) *
-                  100
-              ).replace('.', ',')}%)`
-                .replace('NaN%', 'ND')
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.6 +
-              d3.max([
-                `(${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`
-                  .replace('NaN%', 'ND')
-                  .toString().length,
-                `(${formatEfec(
-                  (d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                  ) /
-                    (d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                    ) *
-                      puntos_por_partido)) *
-                    100
-                ).replace('.', ',')}%)`
-                  .replace('NaN%', 'ND')
-                  .toString().length,
-              ]) *
-                defaults.value.style.font_size *
-                0.625 *
-                0.6,
-          })
-          .styles({
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados)), d3.max(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados))]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              return myColor1(myColor(+d3.format('.1f')(d.goles / d.partidos_jugados)));
-            },
-            'font-size': heightBars * 0.275,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : ` (${d3
-                  .format('.1f')(d.goles / d.partidos_jugados)
-                  .replace('.', ',')})`
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.09,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +d3.format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : `(${d3
-                  .format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                  .replace('.', ',')
-                  .replace('NaN', 'ND')})`
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.18,
-            dx: -`(1,0)`.toString().length * defaults.value.style.font_size * 0.625 * 0.43,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) => {
-              var myColor = d3.scaleLinear().domain([
-                d3.min(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-                d3.max(
-                  yearSlice,
-                  (d) =>
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                ),
-              ]);
-              var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
-
-              if (
-                isNaN(
-                  +d3.format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                )
-              ) {
-                return grey_color;
-              } else {
-                return myColor1(
-                  myColor(
-                    +d3.format('.1f')(
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                      ) /
-                        d3.sum(
-                          data.filter((e) => e.name == d.name && e.final != true),
-                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                        )
-                    )
-                  )
-                );
-              }
-            },
-            'font-size': heightBars * 0.275 * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) =>
-            d.partidos_jugados == 0
-              ? ''
-              : `(${d3
-                  .format('.1f')(
-                    d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                    ) /
-                      d3.sum(
-                        data.filter((e) => e.name == d.name && e.final != true),
-                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                      )
-                  )
-                  .replace('.', ',')
-                  .replace('NaN', 'ND')})`
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'campeon',
-            dy: -heightBars * 0.09,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': heightBars * 0.275,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' (' + probabilidad(d.name) + '%)')
-      ).call(halo1, heightBars * 0.2, '#f1f1f1');
-  }} else {
     if (grupos > 1) {
       grupos_1.forEach((grupo, indice_grupo) => {
         rankingSVG
@@ -5566,6 +4599,1146 @@ if (localia) {
             'alignment-baseline': defaults.name.style.alignment_baseline,
           })
           .text((d) => d.name.split('-')[0])
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'efec',
+              })
+              .styles({
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)), d3.max(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100))]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  return myColor1(myColor(+formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)));
+                },
+                'font-size': heightBars * 0.275,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.09,
+              })
+              .styles({
+                opacity: 1,
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([
+                    d3.min(
+                      yearSlice,
+                      (d) =>
+                        +formatEfec(
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                          ) /
+                            (d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            ) *
+                              puntos_por_partido)) *
+                            100
+                        )
+                    ),
+                    d3.max(
+                      yearSlice,
+                      (d) =>
+                        +formatEfec(
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                          ) /
+                            (d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            ) *
+                              puntos_por_partido)) *
+                            100
+                        )
+                    ),
+                  ]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  if (
+                    isNaN(
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                    )
+                  ) {
+                    return grey_color;
+                  } else {
+                    return myColor1(
+                      myColor(
+                        +formatEfec(
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                          ) /
+                            (d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            ) *
+                              puntos_por_partido)) *
+                            100
+                        )
+                      )
+                    );
+                  }
+                },
+                'font-size': heightBars * 0.275 * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) =>
+                d.partidos_jugados == 0
+                  ? ''
+                  : `(${formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.18,
+                dx: (d) =>
+                  -`(${formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  ).replace('.', ',')}%)`
+                    .replace('NaN%', 'ND')
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.6,
+              })
+              .styles({
+                opacity: 1,
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([
+                    d3.min(
+                      yearSlice,
+                      (d) =>
+                        +formatEfec(
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                          ) /
+                            (d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            ) *
+                              puntos_por_partido)) *
+                            100
+                        )
+                    ),
+                    d3.max(
+                      yearSlice,
+                      (d) =>
+                        +formatEfec(
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                          ) /
+                            (d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            ) *
+                              puntos_por_partido)) *
+                            100
+                        )
+                    ),
+                  ]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  if (
+                    isNaN(
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                    )
+                  ) {
+                    return grey_color;
+                  } else {
+                    return myColor1(
+                      myColor(
+                        +formatEfec(
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                          ) /
+                            (d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            ) *
+                              puntos_por_partido)) *
+                            100
+                        )
+                      )
+                    );
+                  }
+                },
+                'font-size': heightBars * 0.275 * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) =>
+                d.partidos_jugados == 0
+                  ? ''
+                  : ` (${formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.09,
+                class: 'goles_por_partido',
+                dx: (d) =>
+                  -`(${formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  ).replace('.', ',')}%)`
+                    .replace('NaN%', 'ND')
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.6 +
+                  d3.max([
+                    `(${formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    ).replace('.', ',')}%)`
+                      .replace('NaN%', 'ND')
+                      .toString().length,
+                    `(${formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    ).replace('.', ',')}%)`
+                      .replace('NaN%', 'ND')
+                      .toString().length,
+                  ]) *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.6,
+              })
+              .styles({
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados)), d3.max(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados))]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  return myColor1(myColor(+d3.format('.1f')(d.goles / d.partidos_jugados)));
+                },
+                'font-size': heightBars * 0.275,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) =>
+                d.partidos_jugados == 0
+                  ? ''
+                  : ` (${d3
+                      .format('.1f')(d.goles / d.partidos_jugados)
+                      .replace('.', ',')})`
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.09,
+              })
+              .styles({
+                opacity: 1,
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([
+                    d3.min(
+                      yearSlice,
+                      (d) =>
+                        +d3.format('.1f')(
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                          ) /
+                            d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            )
+                        )
+                    ),
+                    d3.max(
+                      yearSlice,
+                      (d) =>
+                        +d3.format('.1f')(
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                          ) /
+                            d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            )
+                        )
+                    ),
+                  ]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  if (
+                    isNaN(
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                    )
+                  ) {
+                    return grey_color;
+                  } else {
+                    return myColor1(
+                      myColor(
+                        +d3.format('.1f')(
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                          ) /
+                            d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            )
+                        )
+                      )
+                    );
+                  }
+                },
+                'font-size': heightBars * 0.275 * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) =>
+                d.partidos_jugados == 0
+                  ? ''
+                  : `(${d3
+                      .format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                      .replace('.', ',')
+                      .replace('NaN', 'ND')})`
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.18,
+                dx: -`(1,0)`.toString().length * defaults.value.style.font_size * 0.625 * 0.43,
+              })
+              .styles({
+                opacity: 1,
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([
+                    d3.min(
+                      yearSlice,
+                      (d) =>
+                        +d3.format('.1f')(
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                          ) /
+                            d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            )
+                        )
+                    ),
+                    d3.max(
+                      yearSlice,
+                      (d) =>
+                        +d3.format('.1f')(
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                          ) /
+                            d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            )
+                        )
+                    ),
+                  ]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  if (
+                    isNaN(
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                    )
+                  ) {
+                    return grey_color;
+                  } else {
+                    return myColor1(
+                      myColor(
+                        +d3.format('.1f')(
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                          ) /
+                            d3.sum(
+                              data.filter((e) => e.name == d.name && e.final != true),
+                              (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                            )
+                        )
+                      )
+                    );
+                  }
+                },
+                'font-size': heightBars * 0.275 * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) =>
+                d.partidos_jugados == 0
+                  ? ''
+                  : `(${d3
+                      .format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                      .replace('.', ',')
+                      .replace('NaN', 'ND')})`
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'campeon',
+              })
+              .styles({
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([0, 100]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  return myColor1(myColor(probabilidad(d.name).probabilidad));
+                },
+                'font-size': heightBars * 0.275,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+          )
+          .call(halo1, heightBars * 0.2, '#f1f1f1');
+      });
+    } else {
+      rankingSVG
+        .append('text')
+        .attrs({
+          class: 'name',
+          x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
+          y: (d) => y(d.rank) + defaults.name.position.y,
+          'clip-path': `url(#ellipse-clip-margin-bottom)`,
+        })
+        .styles({
+          fill: defaults.name.style.fill,
+          'font-size': defaults.name.style.font_size,
+          'font-weight': defaults.name.style.font_weight,
+          'text-anchor': defaults.name.style.text_anchor,
+          'alignment-baseline': defaults.name.style.alignment_baseline,
+        })
+        .text((d) => d.name.split('-')[0])
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'efec',
+            })
+            .styles({
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)), d3.max(yearSlice, (d) => +formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100))]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                return myColor1(myColor(+formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100)));
+              },
+              'font-size': heightBars * 0.275,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.09,
+            })
+            .styles({
+              opacity: 1,
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([
+                  d3.min(
+                    yearSlice,
+                    (d) =>
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                  ),
+                  d3.max(
+                    yearSlice,
+                    (d) =>
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                  ),
+                ]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                if (
+                  isNaN(
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                  )
+                ) {
+                  return grey_color;
+                } else {
+                  return myColor1(
+                    myColor(
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                    )
+                  );
+                }
+              },
+              'font-size': heightBars * 0.275 * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) =>
+              d.partidos_jugados == 0
+                ? ''
+                : `(${formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.18,
+              dx: (d) =>
+                -`(${formatEfec(
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  ) /
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ) *
+                      puntos_por_partido)) *
+                    100
+                ).replace('.', ',')}%)`
+                  .replace('NaN%', 'ND')
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.6,
+            })
+            .styles({
+              opacity: 1,
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([
+                  d3.min(
+                    yearSlice,
+                    (d) =>
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                  ),
+                  d3.max(
+                    yearSlice,
+                    (d) =>
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                  ),
+                ]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                if (
+                  isNaN(
+                    +formatEfec(
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                      ) /
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        ) *
+                          puntos_por_partido)) *
+                        100
+                    )
+                  )
+                ) {
+                  return grey_color;
+                } else {
+                  return myColor1(
+                    myColor(
+                      +formatEfec(
+                        (d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                        ) /
+                          (d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          ) *
+                            puntos_por_partido)) *
+                          100
+                      )
+                    )
+                  );
+                }
+              },
+              'font-size': heightBars * 0.275 * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) =>
+              d.partidos_jugados == 0
+                ? ''
+                : ` (${formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.09,
+              class: 'goles_por_partido',
+              dx: (d) =>
+                -`(${formatEfec(
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  ) /
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ) *
+                      puntos_por_partido)) *
+                    100
+                ).replace('.', ',')}%)`
+                  .replace('NaN%', 'ND')
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.6 +
+                d3.max([
+                  `(${formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  ).replace('.', ',')}%)`
+                    .replace('NaN%', 'ND')
+                    .toString().length,
+                  `(${formatEfec(
+                    (d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    ) /
+                      (d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ) *
+                        puntos_por_partido)) *
+                      100
+                  ).replace('.', ',')}%)`
+                    .replace('NaN%', 'ND')
+                    .toString().length,
+                ]) *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.6,
+            })
+            .styles({
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([d3.min(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados)), d3.max(yearSlice, (d) => +d3.format('.1f')(d.goles / d.partidos_jugados))]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                return myColor1(myColor(+d3.format('.1f')(d.goles / d.partidos_jugados)));
+              },
+              'font-size': heightBars * 0.275,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) =>
+              d.partidos_jugados == 0
+                ? ''
+                : ` (${d3
+                    .format('.1f')(d.goles / d.partidos_jugados)
+                    .replace('.', ',')})`
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.09,
+            })
+            .styles({
+              opacity: 1,
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([
+                  d3.min(
+                    yearSlice,
+                    (d) =>
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                  ),
+                  d3.max(
+                    yearSlice,
+                    (d) =>
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                  ),
+                ]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                if (
+                  isNaN(
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                  )
+                ) {
+                  return grey_color;
+                } else {
+                  return myColor1(
+                    myColor(
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                    )
+                  );
+                }
+              },
+              'font-size': heightBars * 0.275 * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) =>
+              d.partidos_jugados == 0
+                ? ''
+                : `(${d3
+                    .format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                    .replace('.', ',')
+                    .replace('NaN', 'ND')})`
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.18,
+              dx: -`(1,0)`.toString().length * defaults.value.style.font_size * 0.625 * 0.43,
+            })
+            .styles({
+              opacity: 1,
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([
+                  d3.min(
+                    yearSlice,
+                    (d) =>
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                  ),
+                  d3.max(
+                    yearSlice,
+                    (d) =>
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                  ),
+                ]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                if (
+                  isNaN(
+                    +d3.format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                  )
+                ) {
+                  return grey_color;
+                } else {
+                  return myColor1(
+                    myColor(
+                      +d3.format('.1f')(
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                        ) /
+                          d3.sum(
+                            data.filter((e) => e.name == d.name && e.final != true),
+                            (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                          )
+                      )
+                    )
+                  );
+                }
+              },
+              'font-size': heightBars * 0.275 * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) =>
+              d.partidos_jugados == 0
+                ? ''
+                : `(${d3
+                    .format('.1f')(
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ) /
+                        d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                        )
+                    )
+                    .replace('.', ',')
+                    .replace('NaN', 'ND')})`
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'campeon',
+            })
+            .styles({
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([0, 100]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                return myColor1(myColor(probabilidad(d.name).probabilidad));
+              },
+              'font-size': heightBars * 0.275,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+        )
+        .call(halo1, heightBars * 0.2, '#f1f1f1');
+    }
+  } else {
+    if (grupos > 1) {
+      grupos_1.forEach((grupo, indice_grupo) => {
+        rankingSVG
+          .filter((d) => d.name.split('-')[1] == grupo)
+          .append('text')
+          .attrs({
+            class: 'name',
+            x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
+            y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.name.position.y,
+          })
+          .styles({
+            fill: defaults.name.style.fill,
+            'font-size': defaults.name.style.font_size,
+            'font-weight': defaults.name.style.font_weight,
+            'text-anchor': defaults.name.style.text_anchor,
+            'alignment-baseline': defaults.name.style.alignment_baseline,
+          })
+          .text((d) => d.name.split('-')[0])
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'campeon',
+              })
+              .styles({
+                fill: '#0a48ce',
+                'font-size': heightBars * 0.275,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' #' + getRankingFIFA1(d.name) + '')
+          )
 
           .call((text) =>
             text
@@ -5615,6 +5788,22 @@ if (localia) {
               )
           )
 
+          /* .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'campeon',
+              })
+              .styles({
+                fill: '#0a48ce',
+                'font-size': heightBars * 0.275,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' #' + getRankingFIFA1(d.name) + '')
+          ) */
+
           .call((text) =>
             text
               .append('tspan')
@@ -5622,14 +5811,20 @@ if (localia) {
                 class: 'campeon',
               })
               .styles({
-                fill: black_color,
+                fill: (d) => {
+                  var myColor = d3.scaleLinear().domain([0, 100]);
+                  var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                  return myColor1(myColor(probabilidad(d.name).probabilidad));
+                },
                 'font-size': heightBars * 0.275,
                 'font-weight': 600,
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => ' (' + probabilidad(d.name) + '%)')
-          ).call(halo1, heightBars * 0.2, '#f1f1f1');
+              .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+          )
+          .call(halo1, heightBars * 0.2, '#f1f1f1');
       });
     } else {
       rankingSVG
@@ -5703,16 +5898,22 @@ if (localia) {
               class: 'campeon',
             })
             .styles({
-              fill: black_color,
+              fill: (d) => {
+                var myColor = d3.scaleLinear().domain([0, 100]);
+                var myColor1 = d3.interpolateRgbBasis([derrota_color, empate_color, victoria_color]);
+
+                return myColor1(myColor(probabilidad(d.name).probabilidad));
+              },
               'font-size': heightBars * 0.275,
               'font-weight': 600,
               'text-anchor': defaults.value.style.text_anchor,
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
-            .text((d) => ' (' + probabilidad(d.name) + '%)')
-        ).call(halo1, heightBars * 0.2, '#f1f1f1');
+            .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+        )
+        .call(halo1, heightBars * 0.2, '#f1f1f1');
 
-        /* .call((text) =>
+      /* .call((text) =>
           text
             .append('tspan')
             .attrs({
@@ -5732,2178 +5933,2183 @@ if (localia) {
 
   if (localia) {
     if (grupos > 1) {
-    
-    grupos_1.forEach((grupo, indice_grupo) => {
-      rankingSVG.filter((d) => d.name.split('-')[1] == grupo)
-      .append('text')
-      .attrs({
-        x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-        y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y,
-      })
-      .styles({
-        fill: 'green',
-        'font-size': defaults.value.style.font_size,
-        'font-weight': 600,
-        'text-anchor': defaults.value.style.text_anchor,
-        'alignment-baseline': defaults.value.style.alignment_baseline,
-      })
-      .text('')
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({})
+      grupos_1.forEach((grupo, indice_grupo) => {
+        rankingSVG
+          .filter((d) => d.name.split('-')[1] == grupo)
+          .append('text')
+          .attrs({
+            x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
+            y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y,
+          })
           .styles({
-            fill: black_color,
+            fill: 'green',
             'font-size': defaults.value.style.font_size,
             'font-weight': 600,
             'text-anchor': defaults.value.style.text_anchor,
             'alignment-baseline': defaults.value.style.alignment_baseline,
           })
-          .text((d) => d.value + '')
-      )
+          .text('')
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({})
+              .styles({
+                fill: black_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => d.value + '')
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: black_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: black_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => '\xa0\xa0\xa0' + d.partidos_jugados)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                fill: black_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => '\xa0\xa0\xa0' + d.partidos_jugados)
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: black_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: black_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.partidos_ganados)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' ' + d.partidos_ganados)
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.partidos_empatados)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: empate_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' ' + d.partidos_empatados)
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: empate_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: empate_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.partidos_perdidos)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' ' + d.partidos_perdidos)
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => '\xa0\xa0\xa0' + d.goles)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: +heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-              )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => '\xa0\xa0\xa0' + d.goles)
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                  ),
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: +heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text('-')
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => d.goles_en_contra)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: +heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-                )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-              )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: black_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text('-')
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'dif',
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .styles({
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => d.goles_en_contra)
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-                  ),
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: +heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                    )
+                    .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+              })
+              .styles({
+                opacity: 1,
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color),
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) =>
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? victoria_color
-                : d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                    ) < 0
-                  ? derrota_color
-                  : empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? '+'
-                : '') +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  )
               )
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: +heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 -
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? '+'
-                : ''
-              ).toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.6 +
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) < 0
-                ? '-'
-                : ''
-              ).toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.34,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) =>
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? victoria_color
-                : d3.sum(
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'dif',
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
                       data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                    ) < 0
-                  ? derrota_color
-                  : empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? '+'
-                : '') +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              )
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color),
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles)
           )
-      )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'dif',
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
-                  data.filter((e) => e.name == d.name && e.final != true),
-                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: -heightBars * 0.08,
+              })
+              .styles({
+                opacity: 1,
+                fill: (d) =>
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                  ),
+                  ) > 0
+                    ? victoria_color
+                    : d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                        ) < 0
+                      ? derrota_color
+                      : empate_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ) > 0
+                    ? '+'
+                    : '') +
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  )
+              )
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                dy: +heightBars * 0.16,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 -
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ) > 0
+                    ? '+'
+                    : ''
+                  ).toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.6 +
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ) < 0
+                    ? '-'
+                    : ''
+                  ).toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.34,
+              })
+              .styles({
+                opacity: 1,
+                fill: (d) =>
+                  d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ) > 0
+                    ? victoria_color
+                    : d3.sum(
+                          data.filter((e) => e.name == d.name && e.final != true),
+                          (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                        ) < 0
+                      ? derrota_color
+                      : empate_color,
+                'font-size': defaults.value.style.font_size * 0.625,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text(
+                (d) =>
+                  '' +
+                  (d3.sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  ) > 0
+                    ? '+'
+                    : '') +
                   d3.sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['))
-      )
+                  )
+              )
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pts1',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'dif',
+                dy: -heightBars * 0.08,
+                dx: (d) =>
+                  -d3
+                    .sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                    )
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7 +
+                  d3
+                    .max([
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                      ),
+                      d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                      ),
+                    ])
+                    .toString().length *
+                    defaults.value.style.font_size *
+                    0.625 *
+                    0.7,
+              })
+              .styles({
+                fill: 'black',
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pj1',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'pts1',
+              })
+              .styles({
+                fill: 'black',
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pg1',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'pj1',
+              })
+              .styles({
+                fill: 'black',
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pe1',
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'pg1',
+              })
+              .styles({
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pp1',
-          })
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + '\xa0\xa0\xa0'))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'pe1',
+              })
+              .styles({
+                fill: empate_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gf1',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles1))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'pp1',
+              })
+              .styles({
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + '\xa0\xa0\xa0'))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gf1_guion',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : '-'))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'gf1',
+              })
+              .styles({
+                fill: victoria_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles1))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gc1',
-          })
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'gf1_guion',
+              })
+              .styles({
+                fill: 'black',
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : '-'))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'dif1',
-          })
-          .styles({
-            fill: (d) => (d.diferencia_de_goles1 > 0 ? victoria_color : d.diferencia_de_goles1 < 0 ? derrota_color : empate_color),
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1))
-      )
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'gc1',
+              })
+              .styles({
+                fill: derrota_color,
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '))
+          )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'bracket2',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
-      );
-    })} else {
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'dif1',
+              })
+              .styles({
+                fill: (d) => (d.diferencia_de_goles1 > 0 ? victoria_color : d.diferencia_de_goles1 < 0 ? derrota_color : empate_color),
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1))
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'bracket2',
+              })
+              .styles({
+                fill: 'black',
+                'font-size': defaults.value.style.font_size,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
+          );
+      });
+    } else {
       rankingSVG
-      .append('text')
-      .attrs({
-        x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
-        y: (d, i) => y(i) + defaults.value.position.y,
-      })
-      .styles({
-        fill: 'green',
-        'font-size': defaults.value.style.font_size,
-        'font-weight': 600,
-        'text-anchor': defaults.value.style.text_anchor,
-        'alignment-baseline': defaults.value.style.alignment_baseline,
-      })
-      .text('')
+        .append('text')
+        .attrs({
+          x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x,
+          y: (d, i) => y(i) + defaults.value.position.y,
+        })
+        .styles({
+          fill: 'green',
+          'font-size': defaults.value.style.font_size,
+          'font-weight': 600,
+          'text-anchor': defaults.value.style.text_anchor,
+          'alignment-baseline': defaults.value.style.alignment_baseline,
+        })
+        .text('')
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({})
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => d.value + '')
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({})
+            .styles({
+              fill: black_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => d.value + '')
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: black_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => '\xa0\xa0\xa0' + d.partidos_jugados)
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: black_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.pts_fecha : 0)
+                )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              fill: black_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => '\xa0\xa0\xa0' + d.partidos_jugados)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: black_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: black_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: black_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.partidos_ganados)
-      )
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => ' ' + d.partidos_ganados)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.partidos_empatados)
-      )
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.pts_fecha > 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: empate_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => ' ' + d.partidos_empatados)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: empate_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: empate_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + d.partidos_perdidos)
-      )
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.pts_fecha == 1 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => ' ' + d.partidos_perdidos)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => '\xa0\xa0\xa0' + d.goles)
-      )
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.pts_fecha == 0 && e.goles_fecha !== not_played_yet ? 1 : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => '\xa0\xa0\xa0' + d.goles)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: +heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: +heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: black_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text('-')
-      )
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: black_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text('-')
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => d.goles_en_contra)
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .styles({
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => d.goles_en_contra)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-              )
-          )
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: +heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
                 )
-                .toString().length *
-              defaults.value.style.font_size *
-              0.625 *
-              0.7,
-          })
-          .styles({
-            opacity: 1,
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'dif',
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: +heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                  )
+                  .toString().length *
+                defaults.value.style.font_size *
+                0.625 *
+                0.7,
+            })
+            .styles({
+              opacity: 1,
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'dif',
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color),
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles)
-      )
-
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: -heightBars * 0.08,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) =>
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? victoria_color
-                : d3.sum(
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
                       data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                    ) < 0
-                  ? derrota_color
-                  : empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? '+'
-                : '') +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              )
-          )
-      )
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_en_contra_fecha : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: (d) => (d.diferencia_de_goles > 0 ? victoria_color : d.diferencia_de_goles < 0 ? derrota_color : empate_color),
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => ' ' + (d.diferencia_de_goles > 0 ? '+' : '') + d.diferencia_de_goles)
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            dy: +heightBars * 0.16,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: -heightBars * 0.08,
+            })
+            .styles({
+              opacity: 1,
+              fill: (d) =>
+                d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                ) > 0
+                  ? victoria_color
+                  : d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                      ) < 0
+                    ? derrota_color
+                    : empate_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                (d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                ) > 0
+                  ? '+'
+                  : '') +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 -
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? '+'
-                : ''
-              ).toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.6 +
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) < 0
-                ? '-'
-                : ''
-              ).toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.34,
-          })
-          .styles({
-            opacity: 1,
-            fill: (d) =>
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? victoria_color
-                : d3.sum(
-                      data.filter((e) => e.name == d.name && e.final != true),
-                      (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                    ) < 0
-                  ? derrota_color
-                  : empate_color,
-            'font-size': defaults.value.style.font_size * 0.625,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text(
-            (d) =>
-              '' +
-              (d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              ) > 0
-                ? '+'
-                : '') +
-              d3.sum(
-                data.filter((e) => e.name == d.name && e.final != true),
-                (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-              )
-          )
-      )
+            )
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'dif',
-            dy: -heightBars * 0.08,
-            dx: (d) =>
-              -d3
-                .sum(
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              dy: +heightBars * 0.16,
+              dx: (d) =>
+                -d3
+                  .sum(
+                    data.filter((e) => e.name == d.name && e.final != true),
+                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 -
+                (d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                ) > 0
+                  ? '+'
+                  : ''
+                ).toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.6 +
+                (d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                ) < 0
+                  ? '-'
+                  : ''
+                ).toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.34,
+            })
+            .styles({
+              opacity: 1,
+              fill: (d) =>
+                d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                ) > 0
+                  ? victoria_color
+                  : d3.sum(
+                        data.filter((e) => e.name == d.name && e.final != true),
+                        (e) => (e.l_or_v == 'V' ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                      ) < 0
+                    ? derrota_color
+                    : empate_color,
+              'font-size': defaults.value.style.font_size * 0.625,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text(
+              (d) =>
+                '' +
+                (d3.sum(
+                  data.filter((e) => e.name == d.name && e.final != true),
+                  (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                ) > 0
+                  ? '+'
+                  : '') +
+                d3.sum(
                   data.filter((e) => e.name == d.name && e.final != true),
                   (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
                 )
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7 +
-              d3
-                .max([
-                  d3.sum(
-                    data.filter((e) => e.name == d.name && e.final != true),
-                    (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                  ),
-                  d3.sum(
+            )
+        )
+
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'dif',
+              dy: -heightBars * 0.08,
+              dx: (d) =>
+                -d3
+                  .sum(
                     data.filter((e) => e.name == d.name && e.final != true),
                     (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
-                  ),
-                ])
-                .toString().length *
-                defaults.value.style.font_size *
-                0.625 *
-                0.7,
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['))
-      )
+                  )
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7 +
+                d3
+                  .max([
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                    ),
+                    d3.sum(
+                      data.filter((e) => e.name == d.name && e.final != true),
+                      (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? e.goles_fecha - e.goles_en_contra_fecha : 0)
+                    ),
+                  ])
+                  .toString().length *
+                  defaults.value.style.font_size *
+                  0.625 *
+                  0.7,
+            })
+            .styles({
+              fill: 'black',
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : '\xa0\xa0\xa0['))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pts1',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'pts1',
+            })
+            .styles({
+              fill: 'black',
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.value1 + '\xa0\xa0\xa0'))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pj1',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'pj1',
+            })
+            .styles({
+              fill: 'black',
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_jugados1 + ' '))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pg1',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'pg1',
+            })
+            .styles({
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_ganados1 + ' '))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pe1',
-          })
-          .styles({
-            fill: empate_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'pe1',
+            })
+            .styles({
+              fill: empate_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_empatados1 + ' '))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'pp1',
-          })
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + '\xa0\xa0\xa0'))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'pp1',
+            })
+            .styles({
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.partidos_perdidos1 + '\xa0\xa0\xa0'))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gf1',
-          })
-          .styles({
-            fill: victoria_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles1))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'gf1',
+            })
+            .styles({
+              fill: victoria_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles1))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gf1_guion',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : '-'))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'gf1_guion',
+            })
+            .styles({
+              fill: 'black',
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : '-'))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'gc1',
-          })
-          .styles({
-            fill: derrota_color,
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'gc1',
+            })
+            .styles({
+              fill: derrota_color,
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : d.goles_en_contra1 + ' '))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'dif1',
-          })
-          .styles({
-            fill: (d) => (d.diferencia_de_goles1 > 0 ? victoria_color : d.diferencia_de_goles1 < 0 ? derrota_color : empate_color),
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1))
-      )
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'dif1',
+            })
+            .styles({
+              fill: (d) => (d.diferencia_de_goles1 > 0 ? victoria_color : d.diferencia_de_goles1 < 0 ? derrota_color : empate_color),
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : (d.diferencia_de_goles1 > 0 ? '+' : '') + d.diferencia_de_goles1))
+        )
 
-      .call((text) =>
-        text
-          .append('tspan')
-          .attrs({
-            class: 'bracket2',
-          })
-          .styles({
-            fill: 'black',
-            'font-size': defaults.value.style.font_size,
-            'font-weight': 600,
-            'text-anchor': defaults.value.style.text_anchor,
-            'alignment-baseline': defaults.value.style.alignment_baseline,
-          })
-          .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
-      );
+        .call((text) =>
+          text
+            .append('tspan')
+            .attrs({
+              class: 'bracket2',
+            })
+            .styles({
+              fill: 'black',
+              'font-size': defaults.value.style.font_size,
+              'font-weight': 600,
+              'text-anchor': defaults.value.style.text_anchor,
+              'alignment-baseline': defaults.value.style.alignment_baseline,
+            })
+            .text((d) => (d.partidos_jugados1 == 0 ? '' : ']'))
+        );
     }
   } else {
     // --- Helpers compartidos (fuera del if/else) ---
 
-const diffColor  = (diff) => diff > 0 ? victoria_color : diff < 0 ? derrota_color : empate_color;
-const signedDiff = (diff) => (diff > 0 ? '+' : '') + diff;
-const show1      = (d, val) => d.partidos_jugados1 == 0 ? '' : val;
+    const diffColor = (diff) => (diff > 0 ? victoria_color : diff < 0 ? derrota_color : empate_color);
+    const signedDiff = (diff) => (diff > 0 ? '+' : '') + diff;
+    const show1 = (d, val) => (d.partidos_jugados1 == 0 ? '' : val);
 
-const getValorDirecto = (() => {
-  const cache = new Map();
-  return (d) => {
-    if (!cache.has(d)) {
-      const empates = data
-        .filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value)
-        .map((e) => e.name);
-      cache.set(d, statsDirectos(empates)[d.name]);
+    const getValorDirecto = (() => {
+      const cache = new Map();
+      return (d) => {
+        if (!cache.has(d)) {
+          const empates = data.filter((e) => e.name.split('-')[1] == d.name.split('-')[1] && e.fecha == '' && e.value == d.value).map((e) => e.name);
+          cache.set(d, statsDirectos(empates)[d.name]);
+        }
+        return cache.get(d);
+      };
+    })();
+
+    const padding = '';
+
+    const commonStyles = {
+      fill: black_color,
+      'font-size': defaults.value.style.font_size,
+      'font-weight': 600,
+      'text-anchor': defaults.value.style.text_anchor,
+      'alignment-baseline': defaults.value.style.alignment_baseline,
+    };
+
+    const xPos = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x;
+
+    const tspan = (text, fill, textFn, cls) => {
+      const t = text.append('tspan');
+      if (cls) t.attr('class', cls);
+      t.style('fill', fill || black_color); // fill puede ser función o string
+      t.text(textFn);
+    };
+
+    const appendAllTspans = (selection) =>
+      selection
+        .call((text) => {
+          // --- Puntos + stats generales ---
+          tspan(text, null, (d) => d.value + padding);
+          tspan(text, null, (d) => '\xa0\xa0\xa0' + d.partidos_jugados);
+          tspan(text, victoria_color, (d) => ' ' + d.partidos_ganados);
+          tspan(text, empate_color, (d) => ' ' + d.partidos_empatados);
+          tspan(text, derrota_color, (d) => ' ' + d.partidos_perdidos);
+
+          // --- Goles generales ---
+          tspan(text, victoria_color, (d) => '\xa0\xa0\xa0' + d.goles);
+          tspan(text, null, () => '-');
+          tspan(text, derrota_color, (d) => d.goles_en_contra);
+          tspan(
+            text,
+            (d) => diffColor(d.diferencia_de_goles),
+            (d) => ' ' + signedDiff(d.diferencia_de_goles)
+          );
+
+          // --- Bloque stats fase 1 [ ... ] ---
+          tspan(text, null, (d) => show1(d, '\xa0\xa0\xa0['));
+          tspan(text, null, (d) => show1(d, d.value1 + '\xa0\xa0\xa0'));
+          tspan(text, null, (d) => show1(d, d.partidos_jugados1 + ' '));
+          tspan(text, victoria_color, (d) => show1(d, d.partidos_ganados1 + ' '));
+          tspan(text, empate_color, (d) => show1(d, d.partidos_empatados1 + ' '));
+          tspan(text, derrota_color, (d) => show1(d, d.partidos_perdidos1 + '\xa0\xa0\xa0'));
+          tspan(text, victoria_color, (d) => show1(d, d.goles1));
+          tspan(text, null, (d) => show1(d, '-'));
+          tspan(text, derrota_color, (d) => show1(d, d.goles_en_contra1 + ' '));
+          tspan(
+            text,
+            (d) => diffColor(d.diferencia_de_goles1),
+            (d) => show1(d, signedDiff(d.diferencia_de_goles1))
+          );
+          tspan(text, null, (d) => show1(d, ']'));
+
+          // --- Bloque stats directos [ ... ] ---
+          const v = (d) => getValorDirecto(d);
+          const sd = (d, val) => (v(d).pj_directo > 0 ? val : '');
+
+          tspan(text, null, (d) => sd(d, '\xa0\xa0\xa0['));
+          tspan(text, null, (d) => sd(d, v(d).pts_directo + '\xa0\xa0\xa0'));
+          tspan(text, null, (d) => sd(d, v(d).pj_directo + ' '));
+          tspan(text, victoria_color, (d) => sd(d, v(d).pg_directo + ' '));
+          tspan(text, empate_color, (d) => sd(d, v(d).pe_directo + ' '));
+          tspan(text, derrota_color, (d) => sd(d, v(d).pp_directo + '\xa0\xa0\xa0'));
+          tspan(text, victoria_color, (d) => sd(d, v(d).gf_directo));
+          tspan(text, null, (d) => sd(d, '-'));
+          tspan(text, derrota_color, (d) => sd(d, v(d).gc_directo + ' '));
+          tspan(
+            text,
+            (d) => diffColor(v(d).diff_directo),
+            (d) => sd(d, signedDiff(v(d).diff_directo))
+          );
+          tspan(text, null, (d) => sd(d, ']'));
+        })
+        .call(halo1, heightBars * 0.2, '#f1f1f1');
+
+    // --- Renderizado ---
+
+    if (grupos > 1) {
+      grupos_1.forEach((grupo, indice_grupo) => {
+        rankingSVG
+          .filter((d) => d.name.split('-')[1] == grupo)
+          .append('text')
+          .attrs({
+            x: xPos,
+            y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y * 1.5,
+          })
+          .styles(commonStyles)
+          .call(appendAllTspans);
+      });
+    } else {
+      rankingSVG
+        .append('text')
+        .attrs({
+          x: xPos,
+          y: (d, i) => y(i) + defaults.value.position.y + defaults.value.style.font_size / 2,
+        })
+        .styles(commonStyles)
+        .call(appendAllTspans);
     }
-    return cache.get(d);
-  };
-})();
-
-const padding = '';
-
-const commonStyles = {
-  fill: black_color,
-  'font-size': defaults.value.style.font_size,
-  'font-weight': 600,
-  'text-anchor': defaults.value.style.text_anchor,
-  'alignment-baseline': defaults.value.style.alignment_baseline,
-};
-
-const xPos =
-  x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
-  + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
-  + margin_left * 2
-  + defaults.logo.size / 2
-  + defaults.name.position.x;
-
-const tspan = (text, fill, textFn, cls) => {
-  const t = text.append('tspan');
-  if (cls) t.attr('class', cls);
-  t.style('fill', fill || black_color);  // fill puede ser función o string
-  t.text(textFn);
-};
-
-const appendAllTspans = (selection) =>
-  selection
-    .call((text) => {
-      // --- Puntos + stats generales ---
-      tspan(text, null,           (d) => d.value + padding);
-      tspan(text, null,           (d) => '\xa0\xa0\xa0' + d.partidos_jugados);
-      tspan(text, victoria_color, (d) => ' ' + d.partidos_ganados);
-      tspan(text, empate_color,   (d) => ' ' + d.partidos_empatados);
-      tspan(text, derrota_color,  (d) => ' ' + d.partidos_perdidos);
-
-      // --- Goles generales ---
-      tspan(text, victoria_color, (d) => '\xa0\xa0\xa0' + d.goles);
-      tspan(text, null,           ()  => '-');
-      tspan(text, derrota_color,  (d) => d.goles_en_contra);
-      tspan(text, (d) => diffColor(d.diferencia_de_goles), (d) => ' ' + signedDiff(d.diferencia_de_goles));
-
-      // --- Bloque stats fase 1 [ ... ] ---
-      tspan(text, null,           (d) => show1(d, '\xa0\xa0\xa0['));
-      tspan(text, null,           (d) => show1(d, d.value1 + '\xa0\xa0\xa0'));
-      tspan(text, null,           (d) => show1(d, d.partidos_jugados1 + ' '));
-      tspan(text, victoria_color, (d) => show1(d, d.partidos_ganados1 + ' '));
-      tspan(text, empate_color,   (d) => show1(d, d.partidos_empatados1 + ' '));
-      tspan(text, derrota_color,  (d) => show1(d, d.partidos_perdidos1 + '\xa0\xa0\xa0'));
-      tspan(text, victoria_color, (d) => show1(d, d.goles1));
-      tspan(text, null,           (d) => show1(d, '-'));
-      tspan(text, derrota_color,  (d) => show1(d, d.goles_en_contra1 + ' '));
-      tspan(text, (d) => diffColor(d.diferencia_de_goles1), (d) => show1(d, signedDiff(d.diferencia_de_goles1)));
-      tspan(text, null,           (d) => show1(d, ']'));
-
-      // --- Bloque stats directos [ ... ] ---
-      const v = (d) => getValorDirecto(d);
-      const sd = (d, val) => v(d).pj_directo > 0 ? val : '';
-
-      tspan(text, null,           (d) => sd(d, '\xa0\xa0\xa0['));
-      tspan(text, null,           (d) => sd(d, v(d).pts_directo + '\xa0\xa0\xa0'));
-      tspan(text, null,           (d) => sd(d, v(d).pj_directo  + ' '));
-      tspan(text, victoria_color, (d) => sd(d, v(d).pg_directo  + ' '));
-      tspan(text, empate_color,   (d) => sd(d, v(d).pe_directo  + ' '));
-      tspan(text, derrota_color,  (d) => sd(d, v(d).pp_directo  + '\xa0\xa0\xa0'));
-      tspan(text, victoria_color, (d) => sd(d, v(d).gf_directo));
-      tspan(text, null,           (d) => sd(d, '-'));
-      tspan(text, derrota_color,  (d) => sd(d, v(d).gc_directo  + ' '));
-      tspan(text, (d) => diffColor(v(d).diff_directo), (d) => sd(d, signedDiff(v(d).diff_directo)));
-      tspan(text, null,           (d) => sd(d, ']'));
-    })
-    .call(halo1, heightBars * 0.2, '#f1f1f1');
-
-// --- Renderizado ---
-
-if (grupos > 1) {
-  grupos_1.forEach((grupo, indice_grupo) => {
-    rankingSVG
-      .filter((d) => d.name.split('-')[1] == grupo)
-      .append('text')
-      .attrs({
-        x: xPos,
-        y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + defaults.value.position.y*1.5,
-      })
-      .styles(commonStyles)
-      .call(appendAllTspans);
-  });
-} else {
-  rankingSVG
-    .append('text')
-    .attrs({
-      x: xPos,
-      y: (d, i) => y(i) + defaults.value.position.y + defaults.value.style.font_size/2,
-    })
-    .styles(commonStyles)
-    .call(appendAllTspans);
-}
   }
 
   if (grupos > 1) {
     grupos_1.forEach((grupo, indice_grupo) => {
-
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
@@ -7919,22 +8125,21 @@ if (grupos > 1) {
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('circle')
         .attrs({
-          cx: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + (defaults.logo.size1 * 1.1 / 3),
-          cy: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + (defaults.logo.size1 * 1.1 / 3), //ojo d.rank
+          cx: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + (defaults.logo.size1 * 1.1) / 3,
+          cy: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + (defaults.logo.size1 * 1.1) / 3, //ojo d.rank
           r: defaults.logo.size1 * 0.225,
-        })
+        });
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
         .attrs({
-          x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1 / 3),
-          y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1 / 3), //ojo d.rank
-          href: (d) => `./flags/${getFlag(d.name.split('-')[0])}`,
+          x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1) / 3,
+          y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1) / 3, //ojo d.rank
+          href: (d) => `./flags/${countryToCode(d.name.split('-')[0])}.svg`,
           height: defaults.logo.size1 * 0.4,
-        })
-        /* .style('filter', 'url(#dropshadow)'); */
-
+        });
+      /* .style('filter', 'url(#dropshadow)'); */
     });
   } else {
     rankingSVG.append('image').attrs({
@@ -7954,162 +8159,167 @@ if (grupos > 1) {
   });
 
   let array_p = [];
-if (stats_on_top) {
-  array_p = ['racha', 'racha_empates', 'racha_derrotas', 'racha_sin_victorias', 'racha_sin_empates', 'racha_sin_derrotas', 'goleadas', 'goleadas_en_contra', 'valla_invicta', 'fechas_en_top'];
-}
-
-function generarPositions(max) {
-  const positions = {};
-  for (let n = 1; n <= max; n++) {
-    const filas = Math.ceil(n / 3);
-    const cols  = Math.ceil(n / filas);
-    const resto = n % cols;
-    const offsetsCols = Array.from({ length: cols }, (_, i) => i - (cols - 1) / 2);
-    const result = [];
-    for (let i = 0; i < n; i++) {
-      const esUltimaFila      = i >= n - (resto || cols);
-      const itemsEnEstaFila   = esUltimaFila && resto ? resto : cols;
-      const offsetsFilaActual = Array.from({ length: itemsEnEstaFila }, (_, j) => j - (itemsEnEstaFila - 1) / 2);
-      const col       = i % cols;
-      const fila      = Math.floor(i / cols);
-      const colOffset = esUltimaFila && resto ? offsetsFilaActual[i - (n - resto)] : offsetsCols[col];
-      result.push([colOffset, fila]);
-    }
-    positions[n] = result;
+  if (stats_on_top) {
+    array_p = ['racha', 'racha_empates', 'racha_derrotas', 'racha_sin_victorias', 'racha_sin_empates', 'racha_sin_derrotas', 'goleadas', 'goleadas_en_contra', 'valla_invicta', 'fechas_en_top'];
   }
-  return positions;
-}
 
-const positions     = generarPositions(15);
-const try_positions = (a, b, c) => { try { return positions[a][b][c]; } catch { return 0; } };
+  function generarPositions(max) {
+    const positions = {};
+    for (let n = 1; n <= max; n++) {
+      const filas = Math.ceil(n / 3);
+      const cols = Math.ceil(n / filas);
+      const resto = n % cols;
+      const offsetsCols = Array.from({ length: cols }, (_, i) => i - (cols - 1) / 2);
+      const result = [];
+      for (let i = 0; i < n; i++) {
+        const esUltimaFila = i >= n - (resto || cols);
+        const itemsEnEstaFila = esUltimaFila && resto ? resto : cols;
+        const offsetsFilaActual = Array.from({ length: itemsEnEstaFila }, (_, j) => j - (itemsEnEstaFila - 1) / 2);
+        const col = i % cols;
+        const fila = Math.floor(i / cols);
+        const colOffset = esUltimaFila && resto ? offsetsFilaActual[i - (n - resto)] : offsetsCols[col];
+        result.push([colOffset, fila]);
+      }
+      positions[n] = result;
+    }
+    return positions;
+  }
 
-const EXTRAS_HASTA_INDEX  = new Set(['racha_derrotas', 'racha_sin_derrotas', 'goleadas_en_contra', 'valla_invicta']);
-const EXTRAS_HASTA_INDEX1 = new Set(['racha_sin_victorias', 'goleadas', 'valla_invicta', 'fechas_en_top']);
+  const positions = generarPositions(15);
+  const try_positions = (a, b, c) => {
+    try {
+      return positions[a][b][c];
+    } catch {
+      return 0;
+    }
+  };
 
-const xBase = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x)
-  + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0)
-  + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x;
+  const EXTRAS_HASTA_INDEX = new Set(['racha_derrotas', 'racha_sin_derrotas', 'goleadas_en_contra', 'valla_invicta']);
+  const EXTRAS_HASTA_INDEX1 = new Set(['racha_sin_victorias', 'goleadas', 'valla_invicta', 'fechas_en_top']);
 
-const maxPorProp = Object.fromEntries(array_p.map((p) => [p, d3.max(data, (d) => d[p])]));
+  const xBase = x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(not_played_yet_x) : 0) + margin_left * 2 + defaults.logo.size / 2 + defaults.name.position.x;
 
-// calcLength global (para los elementos de arriba, usa el máximo global)
-function calcLength(slice, extrasSet) {
-  let length = 0;
-  slice.forEach((ee) => {
-    if (extrasSet.has(ee)) length++;
-    length += maxPorProp[ee].toString().length;
-  });
-  return length;
-}
+  const maxPorProp = Object.fromEntries(array_p.map((p) => [p, d3.max(data, (d) => d[p])]));
 
-// calcLength por equipo (para los elementos del ranking, usa el máximo de ese equipo)
-function calcLengthPorDatum(slice, extrasSet, name) {
-  let length = 0;
-  slice.forEach((ee) => {
-    if (extrasSet.has(ee)) length++;
-    length += maxByName[name][ee].toString().length;
-  });
-  return length;
-}
-
-const commonTextStyles = {
-  fill: '#f1f1f1',
-  'font-size': defaults.value.style.font_size,
-  'font-weight': 600,
-  'text-anchor': 'start',
-  'alignment-baseline': defaults.value.style.alignment_baseline,
-};
-
-const commonTextStylesRanking = {
-  ...commonTextStyles,
-  fill: black_color,
-  // text-anchor: 'start' se hereda del spread
-};
-
-const getRank = (grupos > 1)
-  ? (d, indice_grupo) => d.rank + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)
-  : (d) => d.rank;
-
-const maxByName = Object.fromEntries(
-  [...new Set(data.map((d) => d.name))].map((name) => [
-    name,
-    Object.fromEntries(array_p.map((p) => [p, d3.max(data.filter((e) => e.name == name), (e) => e[p])]))
-  ])
-);
-
-const renderGroup = (dataSlice, indice_grupo, p, index) => {
-  const yPos = (d) => y(getRank(d, indice_grupo)) + defaults.final_infos.position.y - heightBars / 3;
-
-  svg
-    .selectAll('.text')
-    .data(dataSlice)
-    .enter()
-    .append('text')
-    .attrs({
-      class: 'final_infos',
-      opacity: 1,
-      x: (d) => xBase + calcLengthPorDatum(array_p.slice(0, index), EXTRAS_HASTA_INDEX, d.name) * heightBars * 0.225 + index * heightBars * 0.4,
-      y: (d) => yPos(d),
-    })
-    .styles(commonTextStylesRanking)
-    .text((d) => maxByName[d.name][p]);
-
-  svg
-    .selectAll('.images')
-    .data(dataSlice)
-    .enter()
-    .append('image')
-    .attrs({
-      class: 'final_infos',
-      x: (d) => xBase + calcLengthPorDatum(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1, d.name) * heightBars * 0.225 + index * heightBars * 0.4 - heightBars * 0.05,
-      y: (d) => yPos(d) - (defaults.final_infos.logos.size * 0.9) / 2,
-      href: `./icons/${p}.png`,
-      height: defaults.final_infos.logos.size * 0.9,
+  // calcLength global (para los elementos de arriba, usa el máximo global)
+  function calcLength(slice, extrasSet) {
+    let length = 0;
+    slice.forEach((ee) => {
+      if (extrasSet.has(ee)) length++;
+      length += maxPorProp[ee].toString().length;
     });
-};
+    return length;
+  }
 
-// --- Loop principal ---
-
-array_p.forEach((p, index) => {
-  const maxVal    = maxPorProp[p];
-  const maxValLen = maxVal.toString().length;
-  const dataMax   = removeDuplicates(data.filter((d) => d[p] == maxVal));
-
-  const lengthHasta  = calcLength(array_p.slice(0, index),     EXTRAS_HASTA_INDEX);
-  const lengthHasta1 = calcLength(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1);
-  const xComun       = xBase + index * heightBars * 0.6;
-
-  // Escudos de los equipos con el máximo (arriba)
-  svg.selectAll('.img')
-    .data(dataMax)
-    .enter()
-    .append('image')
-    .attrs({
-      x: (d, i, total) =>
-        xComun
-        + lengthHasta * heightBars * 0.225
-        + try_positions(total.length, i, 0) * defaults.mini_logo.size * 0.55
-        - defaults.mini_logo.size1 / 2
-        + ((maxValLen + 1) / 2) * heightBars * 0.225,
-      y: (d, i, total) =>
-        y(-1) - heightBars / 2.5 - try_positions(total.length, i, 1) * defaults.mini_logo.size * 0.65,
-      height: defaults.mini_logo.size1,
-      href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
+  // calcLength por equipo (para los elementos del ranking, usa el máximo de ese equipo)
+  function calcLengthPorDatum(slice, extrasSet, name) {
+    let length = 0;
+    slice.forEach((ee) => {
+      if (extrasSet.has(ee)) length++;
+      length += maxByName[name][ee].toString().length;
     });
+    return length;
+  }
 
-  // Número máximo (arriba)
-  svg.append('text')
-    .attrs({
-      class: 'final_infos',
-      x: xComun + lengthHasta * heightBars * 0.225,
-      y: margin.top * 0.8,
-    })
-    .styles(commonTextStyles)
-    .text(maxVal);
+  const commonTextStyles = {
+    fill: '#f1f1f1',
+    'font-size': defaults.value.style.font_size,
+    'font-weight': 600,
+    'text-anchor': 'start',
+    'alignment-baseline': defaults.value.style.alignment_baseline,
+  };
 
-  // Ícono de la propiedad (arriba)
-  svg.append('image')
-    .attrs({
+  const commonTextStylesRanking = {
+    ...commonTextStyles,
+    fill: black_color,
+    // text-anchor: 'start' se hereda del spread
+  };
+
+  const getRank = grupos > 1 ? (d, indice_grupo) => d.rank + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos) : (d) => d.rank;
+
+  const maxByName = Object.fromEntries(
+    [...new Set(data.map((d) => d.name))].map((name) => [
+      name,
+      Object.fromEntries(
+        array_p.map((p) => [
+          p,
+          d3.max(
+            data.filter((e) => e.name == name),
+            (e) => e[p]
+          ),
+        ])
+      ),
+    ])
+  );
+
+  const renderGroup = (dataSlice, indice_grupo, p, index) => {
+    const yPos = (d) => y(getRank(d, indice_grupo)) + defaults.final_infos.position.y - heightBars / 3;
+
+    svg
+      .selectAll('.text')
+      .data(dataSlice)
+      .enter()
+      .append('text')
+      .attrs({
+        class: 'final_infos',
+        opacity: 1,
+        x: (d) => xBase + calcLengthPorDatum(array_p.slice(0, index), EXTRAS_HASTA_INDEX, d.name) * heightBars * 0.225 + index * heightBars * 0.4,
+        y: (d) => yPos(d),
+      })
+      .styles(commonTextStylesRanking)
+      .text((d) => maxByName[d.name][p]);
+
+    svg
+      .selectAll('.images')
+      .data(dataSlice)
+      .enter()
+      .append('image')
+      .attrs({
+        class: 'final_infos',
+        x: (d) => xBase + calcLengthPorDatum(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1, d.name) * heightBars * 0.225 + index * heightBars * 0.4 - heightBars * 0.05,
+        y: (d) => yPos(d) - (defaults.final_infos.logos.size * 0.9) / 2,
+        href: `./icons/${p}.png`,
+        height: defaults.final_infos.logos.size * 0.9,
+      });
+  };
+
+  // --- Loop principal ---
+
+  array_p.forEach((p, index) => {
+    const maxVal = maxPorProp[p];
+    const maxValLen = maxVal.toString().length;
+    const dataMax = removeDuplicates(data.filter((d) => d[p] == maxVal));
+
+    const lengthHasta = calcLength(array_p.slice(0, index), EXTRAS_HASTA_INDEX);
+    const lengthHasta1 = calcLength(array_p.slice(0, index + 1), EXTRAS_HASTA_INDEX1);
+    const xComun = xBase + index * heightBars * 0.6;
+
+    // Escudos de los equipos con el máximo (arriba)
+    svg
+      .selectAll('.img')
+      .data(dataMax)
+      .enter()
+      .append('image')
+      .attrs({
+        x: (d, i, total) => xComun + lengthHasta * heightBars * 0.225 + try_positions(total.length, i, 0) * defaults.mini_logo.size * 0.55 - defaults.mini_logo.size1 / 2 + ((maxValLen + 1) / 2) * heightBars * 0.225,
+        y: (d, i, total) => y(-1) - heightBars / 2.5 - try_positions(total.length, i, 1) * defaults.mini_logo.size * 0.65,
+        height: defaults.mini_logo.size1,
+        href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
+      });
+
+    // Número máximo (arriba)
+    svg
+      .append('text')
+      .attrs({
+        class: 'final_infos',
+        x: xComun + lengthHasta * heightBars * 0.225,
+        y: margin.top * 0.8,
+      })
+      .styles(commonTextStyles)
+      .text(maxVal);
+
+    // Ícono de la propiedad (arriba)
+    svg.append('image').attrs({
       class: 'final_infos',
       x: xComun + lengthHasta1 * heightBars * 0.225 - heightBars * 0.05,
       y: margin.top * 0.8 - (defaults.final_infos.logos.size * 0.9) / 2,
@@ -8117,20 +8327,22 @@ array_p.forEach((p, index) => {
       height: defaults.final_infos.logos.size * 0.9,
     });
 
-  // Stats por equipo en el ranking (por grupo o sin grupos)
-  if (grupos > 1) {
-    grupos_1.forEach((grupo, indice_grupo) => {
-      renderGroup(
-        yearSlice.filter((d) => d.name.split('-')[1] == grupo),
-        indice_grupo, p, index
-      );
-    });
-  } else {
-    renderGroup(yearSlice, 0, p, index);
-  }
-});
+    // Stats por equipo en el ranking (por grupo o sin grupos)
+    if (grupos > 1) {
+      grupos_1.forEach((grupo, indice_grupo) => {
+        renderGroup(
+          yearSlice.filter((d) => d.name.split('-')[1] == grupo),
+          indice_grupo,
+          p,
+          index
+        );
+      });
+    } else {
+      renderGroup(yearSlice, 0, p, index);
+    }
+  });
 
-/* svg.append('rect').attrs({
+  /* svg.append('rect').attrs({
     x: 0,
     y: 0,
     width: width,

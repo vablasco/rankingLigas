@@ -518,6 +518,17 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
 
   const LAMBDAS = {
     Mundial: { local: 1.35, visitante: 1.35 },
+    argentina: { local: 1.1, visitante: 0.8 },
+    Campeonato: { local: 1.1, visitante: 0.8 },
+    Apertura: { local: 1.1, visitante: 0.8 },
+    WorldCup: { local: 1.35, visitante: 1.35 },
+    ClubWorldCup: { local: 1.35, visitante: 1.35 },
+    ELIMINATORIAS: { local: 1.4, visitante: 0.81 },
+    Libertadores: { local: 1.4, visitante: 0.81 },
+    Sudamericana: { local: 1.4, visitante: 0.81 },
+    premierLeague: { local: 1.55, visitante: 1.15 },
+    españa: { local: 1.55, visitante: 1.1 },
+    bundesliga: { local: 1.65, visitante: 1.2 },
   };
 
   /* function generarResultado(liga = 'argentina', override = null) {
@@ -556,8 +567,6 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     goles_visitante: poisson(lambdaV),
   };
 }
-
-console.log(generarResultado)
 
   /* function calcularLambdas(data) {
   let sumLocal = 0, sumVisitante = 0, n = 0;
@@ -891,7 +900,7 @@ function calcularYOrdenarTablaConDatos(partidos) {
 }
 
 
-function calcularProbabilidades(
+/* function calcularProbabilidades(
   partidos,
   cantidadClassif = 2,
   mejoresTerceros = 8,    // Mundial 2026: 8 mejores terceros
@@ -955,6 +964,84 @@ function calcularProbabilidades(
       probabilidad: Number(
         ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)
       ),
+    };
+  });
+
+  return resultado;
+} */
+
+  function calcularProbabilidades(
+  partidos,
+  cantidadClassif = 2,
+  mejoresTerceros = 8,
+  simulaciones = 50_000
+) {
+  const equipos = obtenerEquipos(partidos);
+  const grupos = obtenerGrupos(data1);
+
+  const clasificaciones = {};
+  const posiciones = {}; // NEW: trackear posiciones
+  equipos.forEach((e) => {
+    clasificaciones[e] = 0;
+    posiciones[e] = new Set(); // NEW
+  });
+
+  for (let sim = 0; sim < simulaciones; sim++) {
+    const partidosSimulados = partidos.map((p) => {
+      if (p.jugado) return { ...p, simulados: false, id: sim };
+      const resultado = generarResultado(competencia, null, p.local, p.visitante);
+      return { ...p, ...resultado, jugado: true, simulados: true, id: sim };
+    });
+
+    const terceros = [];
+
+    grupos.forEach((d) => {
+      const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
+      const tabla = calcularYOrdenarTablaConDatos(grupo);
+      const orden = tabla.map((t) => t.equipo);
+
+      // NEW: registrar posición de cada equipo en esta simulación
+      orden.forEach((eq, i) => posiciones[eq].add(i + 1));
+
+      orden.slice(0, cantidadClassif).forEach((eq) => clasificaciones[eq]++);
+
+      if (mejoresTerceros > 0 && tabla.length > cantidadClassif) {
+        terceros.push(tabla[cantidadClassif]);
+      }
+
+      casos1.push([tabla, grupo]);
+    });
+
+    if (mejoresTerceros > 0 && terceros.length > 0) {
+      terceros.sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.diff !== a.diff) return b.diff - a.diff;
+        if (b.gf !== a.gf) return b.gf - a.gf;
+        if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+        const rankA = rankingFIFA2026[a.equipo.replace(/-[A-L]$/, "")] || 999;
+        const rankB = rankingFIFA2026[b.equipo.replace(/-[A-L]$/, "")] || 999;
+        return rankA - rankB;
+      });
+
+      terceros
+        .slice(0, mejoresTerceros)
+        .forEach((t) => clasificaciones[t.equipo]++);
+    }
+  }
+
+  const resultado = {};
+  equipos.forEach((equipo) => {
+    const posArr = [...posiciones[equipo]].sort((a, b) => a - b);
+    const posStr = posArr.length === 1
+      ? `${posArr[0]}`
+      : `${posArr[0]}-${posArr[posArr.length - 1]}`;
+
+    resultado[equipo] = {
+      clasificaciones: clasificaciones[equipo],
+      probabilidad: Number(
+        ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)
+      ),
+      posicion: posStr, // NEW
     };
   });
 
