@@ -220,6 +220,18 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 
   fechas_not_played = d3.max(data, (d) => d.partidos_jugados + d.partidos_jugados1);
   console.log(structuredClone(fechas_not_played));
+  let contFechas = 0
+  for (let i = 1; i < dates.length; i++) {
+    let filter = data.filter(d => d.semana == i)
+    let filter1 = filter.find(d => d.goles_fecha != 99)
+    if (filter1 != undefined) {
+      contFechas = contFechas + 1
+    }
+    console.log(i, filter1)
+    
+  }
+  console.log(contFechas)
+  fechas_not_played=contFechas
 
   let fechas_no_jugadas = dates.length - 1 - fechas_not_played - 1;
   let weeks = heightBars * 2;
@@ -3228,7 +3240,7 @@ stripes.forEach(s => {
     .append('text')
     .attrs({
       class: 'years',
-      x: (d, i) => fechasNotPlayed(fechas_not_played) + defaults.logo.size / 2,
+      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
       y: margin.top * 0.75,
       transform: `translate(${margin_left * 2}, 0)`,
       'clip-path': `url(#ellipse-clip-margin-left)`,
@@ -3240,13 +3252,13 @@ stripes.forEach(s => {
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Selección - RankingFIFA - Efec. - Goles Prom. - Probabilidad Claificacón - Posición esperada');
+    .text('Selección - RankingFIFA - Efec. - Goles Prom. - Probabilidad Claificacón - Rango de posiciones');
 
     svg
     .append('text')
     .attrs({
       class: 'years',
-      x: (d, i) => fechasNotPlayed(fechas_not_played) + defaults.logo.size / 2,
+      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
       y: margin.top * 0.85,
       transform: `translate(${margin_left * 2}, 0)`,
       'clip-path': `url(#ellipse-clip-margin-left)`,
@@ -3331,9 +3343,6 @@ stripes.forEach(s => {
     'Cabo Verde': ['#003893', '#003893', '#FFFFFF', '#CE1126', '#FFFFFF'],
     // ─── OFC ──────────────────────────────────────────────────────
     'Nueva Zelanda': ['#00247D', '#CC142B', '#FFFFFF'],
-  };
-
-  const FLAG_COLORS1 = {
     // ─── Los 5 Grandes ─────────────────────────────────────────────
     'River Plate': ['#FFFFFF', '#DC2626', '#FFFFFF'],
     'Boca Juniors': ['#1D3B8A', '#FFD700', '#1D3B8A'],
@@ -4103,7 +4112,7 @@ stripes.forEach(s => {
       }
 
       function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
-            const colors = FLAG_COLORS1[club];
+            const colors = FLAG_COLORS[club];
             if (!colors) {
               console.warn(`No se encontraron colores de bandera para: ${club}`);
               return;
@@ -4120,8 +4129,8 @@ stripes.forEach(s => {
               .style('fill', 'none')
               .style('stroke', 'rgba(0, 0, 0, 1)')
               .style('stroke-width', totalWidth + 2) // un poco más ancho que la bandera
-              .style('stroke-linejoin', 'round')
-              .style('stroke-linecap', 'round')
+              /* .style('stroke-linejoin', 'round')
+              .style('stroke-linecap', 'round') */
               .style('filter', 'blur(1px)')/* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
 
             // ── FRANJAS ─────────────────────────────────────────
@@ -4132,7 +4141,7 @@ stripes.forEach(s => {
               const offsetPts = offsetPoints(points, offset);
               const pathD = pathLine(offsetPts);
 
-              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth).style('stroke-linejoin', 'round').style('stroke-linecap', 'round')/* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round')/* .style('stroke-linecap', 'round') *//* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
             });
           }
 
@@ -4233,7 +4242,7 @@ stripes.forEach(s => {
 
             svg
               .append('image')
-              /* .style('filter', 'url(#dropshadow)') */
+              .style('filter', 'url(#dropshadow)')
               .attrs({
                 transform: `translate(${margin_left * 2}, 0)`,
                 class: 'line',
@@ -8186,7 +8195,7 @@ stripes.forEach(s => {
       /* .style('filter', 'url(#dropshadow)'); */
     });
   } else {
-    rankingSVG.append('image').attrs({
+    rankingSVG.append('image').style('filter', 'url(#dropshadow)').attrs({
       class: 'logo',
       x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 1.1) / 2,
       y: (d, i) => y(i) - (defaults.logo.size1 * 1.1) / 2, // ojo y(d.rank)

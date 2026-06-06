@@ -9,8 +9,10 @@ export async function procesarDatos() {
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
   console.log(playoffs)
 
-  /* let torneos = [...new Set(data1.map((d) => d.torneo))]
-  data1 = data1.filter(d => d.torneo == 'Torneo Metropolitano 1977') */
+  /* let findTorneo = data1.find(d => d.torneo.includes('2023')).torneo
+  console.log(findTorneo)
+  let torneos = [...new Set(data1.map((d) => d.torneo))]
+  data1 = data1.filter(d => d.torneo == findTorneo) */
 
   // ============================================
 // 1. CALCULAR TABLA DE POSICIONES POR GRUPO
