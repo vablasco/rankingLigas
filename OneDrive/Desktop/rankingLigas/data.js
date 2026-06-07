@@ -9,7 +9,7 @@ export async function procesarDatos() {
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
   console.log(playoffs)
 
-  /* let findTorneo = data1.find(d => d.torneo.includes('2023')).torneo
+  /* let findTorneo = data1.find(d => d.torneo.includes('1996')).torneo
   console.log(findTorneo)
   let torneos = [...new Set(data1.map((d) => d.torneo))]
   data1 = data1.filter(d => d.torneo == findTorneo) */
@@ -190,10 +190,10 @@ console.log(bracket);
   year_torneo < 1996 ? (puntos_por_partido = 2) : '';
   data1[0].torneo == 'Torneo Apertura 1995' ? (puntos_por_partido = 3) : '';
 
-  /* let verEquipo = 'River Plate'
-  let grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1] */
+  /* let verEquipo = 'Argentina'
+  let grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1]
 
-  /* console.log(structuredClone(data1));
+  console.log(structuredClone(data1));
   data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
   data1.forEach((d) => {
     d.local = d.local.split('-')[0];
@@ -201,7 +201,7 @@ console.log(bracket);
   });
   console.log(structuredClone(data1)); */
 
-  let competencia = nombre_torneo.split(' ')[0];
+  let competencia = nombre_torneo
 
   /* console.log(nombre_torneo)
 
@@ -212,6 +212,8 @@ console.log(bracket);
 
   console.log(clasificados_por_competencia1()) */
 
+  console.log(competencia)
+
   const clasificados_por_competencia = {
     Campeonato: 1,
     Apertura: 8,
@@ -221,7 +223,9 @@ console.log(bracket);
     Libertadores: 2,
     Sudamericana: 2,
     argentina: 8,
-    Mundial: 2,
+    ['Mundial 2026']: 2,
+    ['Mundial 2014']: 2,
+    ['ELIMINATORIAS CONMEBOL MUNDIAL 2026']: 6
   };
 
   let clasificacion_por_grupo = clasificados_por_competencia[competencia];
@@ -353,12 +357,12 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
 
         if (p.goles_local > p.goles_visitante) {
           // Ganó el local
-          local.pts += 3;
+          local.pts += puntos_por_partido;
           local.pg++;
           visitante.pp++;
         } else if (p.goles_local < p.goles_visitante) {
           // Ganó el visitante
-          visitante.pts += 3;
+          visitante.pts += puntos_por_partido;
           visitante.pg++;
           local.pp++;
         } else {
@@ -399,7 +403,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
       tabla[p.visitante].diff += gv - gl;
 
       if (gl > gv) {
-        tabla[p.local].pts += 3;
+        tabla[p.local].pts += puntos_por_partido;
         tabla[p.local].pg++;
         tabla[p.visitante].pp++;
       } else if (gl === gv) {
@@ -408,7 +412,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
         tabla[p.local].pe++;
         tabla[p.visitante].pe++;
       } else {
-        tabla[p.visitante].pts += 3;
+        tabla[p.visitante].pts += puntos_por_partido;
         tabla[p.visitante].pg++;
         tabla[p.local].pp++;
       }
@@ -429,12 +433,12 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
         const gv = p.goles_visitante;
 
         if (gl > gv) {
-          stats[p.local].pts += 3;
+          stats[p.local].pts += puntos_por_partido;
         } else if (gl === gv) {
           stats[p.local].pts += 1;
           stats[p.visitante].pts += 1;
         } else {
-          stats[p.visitante].pts += 3;
+          stats[p.visitante].pts += puntos_por_partido;
         }
 
         stats[p.local].gf += gl;
@@ -519,13 +523,13 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   }
 
   const LAMBDAS = {
-    Mundial: { local: 1.35, visitante: 1.35 },
+    ['Mundial 2026']: { local: 1.35, visitante: 1.35 },
     argentina: { local: 1.1, visitante: 0.8 },
     Campeonato: { local: 1.1, visitante: 0.8 },
     Apertura: { local: 1.1, visitante: 0.8 },
     WorldCup: { local: 1.35, visitante: 1.35 },
     ClubWorldCup: { local: 1.35, visitante: 1.35 },
-    ELIMINATORIAS: { local: 1.4, visitante: 0.81 },
+    ['ELIMINATORIAS CONMEBOL MUNDIAL 2026']: { local: 1.4, visitante: 0.81 },
     Libertadores: { local: 1.4, visitante: 0.81 },
     Sudamericana: { local: 1.4, visitante: 0.81 },
     premierLeague: { local: 1.55, visitante: 1.15 },
@@ -783,7 +787,7 @@ function calcularYOrdenarTablaConDatos(partidos) {
     tabla[p.visitante].diff += gv - gl;
 
     if (gl > gv) {
-      tabla[p.local].pts += 3;
+      tabla[p.local].pts += puntos_por_partido;
       tabla[p.local].pg++;
       tabla[p.visitante].pp++;
     } else if (gl === gv) {
@@ -792,7 +796,7 @@ function calcularYOrdenarTablaConDatos(partidos) {
       tabla[p.local].pe++;
       tabla[p.visitante].pe++;
     } else {
-      tabla[p.visitante].pts += 3;
+      tabla[p.visitante].pts += puntos_por_partido;
       tabla[p.visitante].pg++;
       tabla[p.local].pp++;
     }
@@ -828,12 +832,12 @@ function calcularYOrdenarTablaConDatos(partidos) {
       const gv = p.goles_visitante;
 
       if (gl > gv) {
-        stats[p.local].pts += 3;
+        stats[p.local].pts += puntos_por_partido;
       } else if (gl === gv) {
         stats[p.local].pts += 1;
         stats[p.visitante].pts += 1;
       } else {
-        stats[p.visitante].pts += 3;
+        stats[p.visitante].pts += puntos_por_partido;
       }
 
       stats[p.local].gf += gl;
@@ -979,7 +983,7 @@ function calcularYOrdenarTablaConDatos(partidos) {
   simulaciones = 50_000
 ) {
   const equipos = obtenerEquipos(partidos);
-  const grupos = obtenerGrupos(data1);
+  const grupos = obtenerGrupos(partidos);
 
   const clasificaciones = {};
   const posiciones = {}; // NEW: trackear posiciones
@@ -998,9 +1002,21 @@ function calcularYOrdenarTablaConDatos(partidos) {
     const terceros = [];
 
     grupos.forEach((d) => {
-      const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
+      
+      /* const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
       const tabla = calcularYOrdenarTablaConDatos(grupo);
-      const orden = tabla.map((t) => t.equipo);
+      const orden = tabla.map((t) => t.equipo); */
+      const grupo = partidosSimulados.filter((e) => 
+        e.local.split('-')[1] === d || e.visitante.split('-')[1] === d
+      );
+      
+      const tablaCompleta = calcularYOrdenarTablaConDatos(grupo);
+      
+      // Quedarse solo con los equipos que pertenecen al grupo d
+      const tabla = tablaCompleta.filter(t => t.equipo.split('-')[1] === d);
+      const orden = tabla.map((t) => t.equipo); 
+
+      /* console.log(sim, d, grupo) */
 
       // NEW: registrar posición de cada equipo en esta simulación
       orden.forEach((eq, i) => posiciones[eq].add(i + 1));
@@ -1263,7 +1279,7 @@ data1.forEach(d => {
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 10000);
+  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 1000);
   console.table(probabilidades)
 
   /* function eliminarDuplicados(simulaciones) {
@@ -1280,9 +1296,9 @@ data1.forEach(d => {
     });
   }
 
-  const sinDuplicados1 = eliminarDuplicados(casos1); */
+  const sinDuplicados1 = eliminarDuplicados(casos1);
 
-  /* const ordenados1 = [...sinDuplicados1].sort((a, b) => {
+  const ordenados1 = [...sinDuplicados1].sort((a, b) => {
     const getPts = (sim, equipo) => sim[0].find((t) => t.equipo === equipo)?.pts ?? 0;
 
     const posRiverA = a[0].find((t) => t.equipo === verEquipo)?.pos;
@@ -1306,11 +1322,11 @@ data1.forEach(d => {
 
   let totalCasosSimulados = [];
 
-  for (let indexFor = 0; indexFor < 1; indexFor++) {
+  for (let indexFor = 0; indexFor < 1/* ordenados1.length */; indexFor++) {
 
     /* console.log(ordenados1[indexFor][1]); */
     
-    /* data1 = sinDuplicados1[4][1];
+    /* data1 = ordenados1[indexFor][1];
 
     data1.forEach(d => {
     d.goles_local = d.goles_local.toString()
@@ -1971,6 +1987,6 @@ data1.forEach(d => {
   console.log(totalCasosSimulados);
   console.log(totalCasosSimulados[0]);
 
-  window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades };
+  window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia };
   return window.__appData;
 }

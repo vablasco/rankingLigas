@@ -1,7 +1,7 @@
 import { procesarDatos } from './data.js';
 import { colores } from './colores.js';
 
-const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades } = window.__appData ?? (await procesarDatos());
+const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia } = window.__appData ?? (await procesarDatos());
 
 const index = (window.__appIndex ?? 0) % totalCasosSimulados.length;
 let index1 = 0;
@@ -43,14 +43,16 @@ let stats_on_top = false;
 let datos_totales = false;
 let repechaje = 0;
 let simular_playoffs = true;
+let neutral = true;
+let efectividadYPromedioGoles = false;
 
-let competencia = nombre_torneo.split(' ')[0];
+let competencia = nombre_torneo;
 
 if (nombre_torneo == 'Mundial 2026') {
   repechaje = 1;
 }
 
-const clasificados_por_competencia = {
+/* const clasificados_por_competencia = {
   Campeonato: 1,
   Apertura: 8,
   WorldCup: 2,
@@ -59,8 +61,9 @@ const clasificados_por_competencia = {
   Libertadores: 2,
   Sudamericana: 2,
   argentina: 8,
-  Mundial: 2,
-};
+  ['Mundial 2026']: 2,
+  ['Mundial 2014']: 2,
+}; */
 
 let clasificacion_por_grupo = clasificados_por_competencia[competencia] + repechaje;
 
@@ -201,13 +204,13 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   let equipos_por_grupos = top_n / grupos;
   let width_playoffs = heightBars * 8;
   if (simular_playoffs) {
-    width_playoffs = heightBars * 6;
+    width_playoffs = heightBars * 7;
   }
   let space_width_playoff = width_playoffs * 0.5;
   let space_height_playoff = heightBars * 0.5;
   let primera_ronda_playoff = fechas_playoff.filter((d) => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, (d) => +d.fecha.split('/')[1])).length;
   if (fechas_playoff.length == 0 && simular_playoffs) {
-    primera_ronda_playoff = clasificacion_por_grupo;
+    primera_ronda_playoff = (clasificacion_por_grupo * grupos) / 2;
   }
   let rondas_playoff = playoffs[primera_ronda_playoff];
   let distancia_entre_grupos = 0.5;
@@ -425,16 +428,18 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     const key = [...nombres].sort().join('|') + '|' + semanaMax;
     if (cacheStats.has(key)) return cacheStats.get(key);
 
+    const nombress = [...new Set(nombres)];
     const stats = {};
-    nombres.forEach((n) => {
+    nombress.forEach((n) => {
       stats[n] = { pts_directo: 0, pj_directo: 0, pg_directo: 0, pe_directo: 0, pp_directo: 0, diff_directo: 0, gf_directo: 0, gc_directo: 0 };
     });
 
-    const nombresSet = new Set(nombres);
+    const nombresSet = new Set(nombress);
     const dataRelevante = data.filter((d) => d.goles_fecha !== 99 && d.semana <= semanaMax && nombresSet.has(d.name));
 
-    nombres.forEach((nombre) => {
-      const rivales = nombres.filter((d) => d !== nombre);
+    nombress.forEach((nombre) => {
+      const rivales = [...new Set(nombress.filter((d) => d !== nombre))]
+      /* console.log(semanaMax, nombre, rivales) */
       rivales.forEach((rival) => {
         const matches = dataRelevante.filter((d) => d.name === nombre && d.vs === rival);
         matches.forEach((match) => {
@@ -1373,7 +1378,7 @@ stripes.forEach(s => {
   };
 
   function mejor_tercero(gruposPosibles, clasificados) {
-    const resultado = asignar_terceros(clasificados);
+    const resultado = nombre_torneo.includes('Mundial 2026') ? asignar_terceros(clasificados) : '';
     const partido = PARTIDOS_GRUPOS[gruposPosibles];
     return resultado[partido];
   }
@@ -1400,7 +1405,7 @@ stripes.forEach(s => {
   // Debería dar: '3D'
 
   let playoffs_spots = {
-    WorldCup: {
+    ['Mundial 2014']: {
       '1A': [0, 0],
       '2B': [0, 1],
       '1C': [1, 0],
@@ -1418,7 +1423,7 @@ stripes.forEach(s => {
       '1H': [7, 0],
       '2G': [7, 1],
     },
-    Mundial: {
+    ['Mundial 2026']: {
       '1E': [0, 0],
       [mejor_tercero('ABCDF', mejores_terceros)]: [0, 1],
 
@@ -1467,24 +1472,67 @@ stripes.forEach(s => {
       '1K': [15, 0],
       [mejor_tercero('DEIJL', mejores_terceros)]: [15, 1],
     },
-    apertura: {
-      '1A': [0, 0],
-      '2B': [0, 1],
-      '1C': [1, 0],
-      '2D': [1, 1],
-      '1E': [2, 0],
-      '2F': [2, 1],
-      '1G': [3, 0],
-      '2H': [3, 1],
-      '1B': [4, 0],
-      '2A': [4, 1],
-      '1D': [5, 0],
-      '2C': [5, 1],
-      '1F': [6, 0],
-      '2E': [6, 1],
-      '1H': [7, 0],
-      '2G': [7, 1],
+    Apertura: {
+      "1A": [0, 0],
+    "8B": [0, 1],
+
+    "2A": [1, 0],
+    "7B": [1, 1],
+
+    "3A": [2, 0],
+    "6B": [2, 1],
+
+    "4A": [3, 0],
+    "5B": [3, 1],
+
+    "5A": [4, 0],
+    "4B": [4, 1],
+
+    "6A": [5, 0],
+    "3B": [5, 1],
+
+    "7A": [6, 0],
+    "2B": [6, 1],
+
+    "8A": [7, 0],
+    "1B": [7, 1],
     },
+    Sudamericana: {
+      '1A': [0, 0],
+    '2B': [0, 1],
+    '1C': [1, 0],
+    '2D': [1, 1],
+    '1E': [2, 0],
+    '2F': [2, 1],
+    '1G': [3, 0],
+    '2H': [3, 1],
+    '1B': [4, 0],
+    '2A': [4, 1],
+    '1D': [5, 0],
+    '2C': [5, 1],
+    '1F': [6, 0],
+    '2E': [6, 1],
+    '1H': [7, 0],
+    '2G': [7, 1],
+    },
+    Libertadores: {
+      '1A': [0, 0],
+    '2B': [0, 1],
+    '1C': [1, 0],
+    '2D': [1, 1],
+    '1E': [2, 0],
+    '2F': [2, 1],
+    '1G': [3, 0],
+    '2H': [3, 1],
+    '1B': [4, 0],
+    '2A': [4, 1],
+    '1D': [5, 0],
+    '2C': [5, 1],
+    '1F': [6, 0],
+    '2E': [6, 1],
+    '1H': [7, 0],
+    '2G': [7, 1],
+    }
   };
 
   /* let positions_playoffs = {
@@ -2847,13 +2895,7 @@ stripes.forEach(s => {
       })
       .attr('style', (d) => `outline: 1px solid grey`)
       .styles({
-        fill: (d, i) => {
-          if (i % 2 === 1) {
-            return '#dddddd';
-          } else {
-            return '#c2c2c2';
-          }
-        },
+        fill: '#dddddd',
       });
 
     svg
@@ -3252,7 +3294,7 @@ stripes.forEach(s => {
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Selección - RankingFIFA - Efec. - Goles Prom. - Probabilidad Claificacón - Rango de posiciones');
+    .text('Selección - RankingFIFA - Efectividad - Promedio Goles - Probabilidad Claificacón - Rango de Posiciones');
 
     svg
     .append('text')
@@ -3699,6 +3741,8 @@ stripes.forEach(s => {
               let pts1 = yearSlice1.find((d) => d.name == nombre);
 
               let names_filter = data.filter((d) => d.name == pts1.name && d.fecha4 == pts1.fecha4);
+              let fecha_filter = data.filter((d) => d.name.split('-')[1] == names_filter[0].name.split('-')[1] && d.fecha4 == pts1.fecha4);
+              /* console.log(fecha_filter.filter(d => d.value == names_filter[0].value && d.name != names_filter[0].name)) */
 
               names_filter.forEach((team, i) => {
                 let hor = names_filter.length == 2 ? (i == 0 ? heightBars * 0.0 : i == 1 ? -heightBars * 0.3 : 0) : names_filter.length == 3 ? (i == 0 ? heightBars * 0.38 : i == 2 ? -heightBars * 0.38 : 0) : 0;
@@ -3726,7 +3770,7 @@ stripes.forEach(s => {
                       .attrs({
                         transform: `translate(${margin_left * 2}, 0)`,
                         x: x(wks) - heightBars * 0.06 + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor,
-                        y: y(rank1) - heightBars * 0.325 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
+                        y: y(rank1) + (!neutral ? - heightBars * 0.325 : - heightBars * 0.2) + (team.l_or_v == 'V' && !neutral ? heightBars * 0.65 : 0),
                       })
                       .styles({
                         fill: team.goles_fecha > team.goles_en_contra_fecha ? victoria_color : team.goles_fecha < team.goles_en_contra_fecha ? derrota_color : empate_color,
@@ -3736,7 +3780,7 @@ stripes.forEach(s => {
                         'alignment-baseline': 'central',
                       })
                       .text(`${team.l_or_v == 'V' ? (team.goles_en_contra_fecha == not_played_yet ? '' : team.goles_en_contra_fecha) : team.goles_fecha == not_played_yet ? '' : team.goles_fecha}`)
-                      .text(`${team.goles_en_contra_fecha == not_played_yet ? '' : team.l_or_v == 'V' ? team.goles_en_contra_fecha : team.goles_fecha}`)
+                      .text(`${team.goles_en_contra_fecha == not_played_yet ? '' : team.l_or_v == 'V' && !neutral ? team.goles_en_contra_fecha : team.goles_fecha}`)
                   )
 
                   .call((text) =>
@@ -3745,16 +3789,16 @@ stripes.forEach(s => {
                       .attrs({
                         transform: `translate(${margin_left * 2}, 0)`,
                         x: x(wks) + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor + hor_not_played_yet,
-                        y: y(rank1) - heightBars * 0.325 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
+                        y: y(rank1) + (!neutral ? - heightBars * 0.325 : - heightBars * 0.2) + (team.l_or_v == 'V' && !neutral ? heightBars * 0.65 : 0),
                       })
                       .styles({
                         fill: team.goles_fecha > team.goles_en_contra_fecha ? victoria_color : team.goles_fecha < team.goles_en_contra_fecha ? derrota_color : team.goles_fecha == not_played_yet ? grey_color : empate_color,
                         'font-weight': 600,
-                        'font-size': defaults.value.style.font_size,
+                        'font-size': team.goles_fecha == not_played_yet ? defaults.value.style.font_size*0.75 : defaults.value.style.font_size,
                         'text-anchor': 'middle',
                         'alignment-baseline': 'central',
                       })
-                      .text(`-`)
+                      .text(team.goles_fecha == not_played_yet ? 'vs' : '-')
                   )
 
                   .call((text) =>
@@ -3763,7 +3807,7 @@ stripes.forEach(s => {
                       .attrs({
                         transform: `translate(${margin_left * 2}, 0)`,
                         x: x(wks) + heightBars * 0.06 + i * heightBars * 1.3 - (names_filter.length - 1) * (heightBars * 0.65) + hor,
-                        y: y(rank1) - heightBars * 0.325 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
+                        y: y(rank1) + (!neutral ? - heightBars * 0.325 : - heightBars * 0.2) + (team.l_or_v == 'V' && !neutral ? heightBars * 0.65 : 0),
                       })
                       .styles({
                         fill: team.goles_fecha > team.goles_en_contra_fecha ? victoria_color : team.goles_fecha < team.goles_en_contra_fecha ? derrota_color : empate_color,
@@ -3772,30 +3816,103 @@ stripes.forEach(s => {
                         'text-anchor': 'start',
                         'alignment-baseline': 'central',
                       })
-                      .text(`${team.goles_fecha == not_played_yet ? '' : team.l_or_v == 'V' ? team.goles_fecha : team.goles_en_contra_fecha}`)
+                      .text(`${team.goles_fecha == not_played_yet ? '' : team.l_or_v == 'V' && !neutral ? team.goles_fecha : team.goles_en_contra_fecha}`)
                   )
                   .call(halo1, defaults.value.style.font_size, '#f1f1f1');
 
-                svg
+                  /* svg
                   .append('image')
                   .style('filter', 'url(#dropshadow)')
                   .attrs({
                     transform: `translate(${margin_left * 2}, 0)`,
                     class: 'line',
                     x: d => {
-                      const dir = team.l_or_v == 'V' ? -1 : 1;
+                      const dir = team.l_or_v == 'V' && !neutral ? -1 : -1;
                       let val = x(wks) + dir * heightBars * 0.3 - defaults.mini_logo.size1 / 2;
                       if (team.goles_fecha != not_played_yet) {
                         val += dir * team.goles_en_contra_fecha.toString().length * heightBars * 0.2;
                       }
                       return val;
                     },
-                    y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' ? heightBars * 0.65 : 0),
+                    y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' && !neutral ? heightBars * 0.65 : 0),
                     height: defaults.mini_logo.size1,
-                    href: pts1.vs != 'none' ? `./escudos/${team.vs.split('-')[0]}.png` : '',
-                  });
+                    href: pts1.vs != 'none' ? `./escudos/${team.name.split('-')[0]}.png` : '',
+                  }); */
+
+                  // En tu sección de defs, agregá esto:
+              const borderFilter = defs.append('filter').attr('id', 'white-border').attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
+              borderFilter.append('feMorphology').attrs({ operator: 'dilate', radius: 1.5, in: 'SourceAlpha', result: 'expanded' });
+              borderFilter.append('feFlood').attrs({ 'flood-color': 'white', result: 'color' });
+              borderFilter.append('feComposite').attrs({ in: 'color', in2: 'expanded', operator: 'in', result: 'border' });
+              borderFilter.append('feMerge').selectAll('feMergeNode').data(['border', 'SourceGraphic']).enter().append('feMergeNode').attr('in', d => d);
 
                 svg
+                  .append('image')
+                  .style('filter', 'url(#white-border)')
+                  .attrs({
+                    transform: `translate(${margin_left * 2}, 0)`,
+                    class: 'line',
+                    x: d => {
+                      const dir = team.l_or_v == 'V' && !neutral ? -1 : !neutral ? 1 : 0;
+                      let val = x(wks) + dir * heightBars * 0.3 - defaults.mini_logo.size1 / 2;
+                      if (team.goles_fecha != not_played_yet) {
+                        val += dir * team.goles_en_contra_fecha.toString().length * heightBars * 0.2;
+                      }
+                      return val;
+                    },
+                    y: y(rank1) + (!neutral ? - heightBars * 0.325 : heightBars * 0.2) - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' && !neutral ? heightBars * 0.65 : 0),
+                    height: defaults.mini_logo.size1,
+                    href: pts1.vs != 'none' ? `./escudos/${team.vs.split('-')[0]}.png` : '',
+                    /* opacity: pts1.vs != 'none' ? 0.75 : 1 */
+                  });
+
+                  // Calculá esto antes del bloque de svg.append('text')
+/* function getCriterioValor(team, names_filter, usarDirecto, ga, statsDirectos, getRankingFIFA) {
+  // Si está solo, mostrar puntos directamente
+  if (names_filter.length === 1) return team.value;
+
+  const semana = names_filter[0]?.semana; // ajustá según cómo lo tengas
+
+  // Calculá stats directos una sola vez para todos los del grupo
+  let sd = null;
+  if (usarDirecto) {
+    const empatados = names_filter.map(d => d.name);
+    sd = statsDirectos(empatados, semana); // ajustá firma según tu implementación
+  }
+
+  const teamSD = sd?.[team.name];
+
+  // Buscá el primer criterio donde team difiere de ALGUNO del grupo
+  for (const other of names_filter) {
+    if (other.name === team.name) continue;
+    const otherSD = sd?.[other.name];
+
+    if (usarDirecto && teamSD && otherSD) {
+      if (teamSD.pts_directo !== otherSD.pts_directo)
+        return teamSD.pts_directo;
+      if (teamSD.diff_directo !== otherSD.diff_directo)
+        return teamSD.diff_directo >= 0 ? `+${teamSD.diff_directo}` : teamSD.diff_directo;
+      if (teamSD.gf_directo !== otherSD.gf_directo)
+        return teamSD.gf_directo;
+    }
+
+    if (team.diferencia_de_goles !== other.diferencia_de_goles)
+      return team.diferencia_de_goles >= 0 ? `+${team.diferencia_de_goles}` : team.diferencia_de_goles;
+
+    if (team.goles !== other.goles)
+      return team.goles;
+
+    if ((team.fairPlay ?? 0) !== (other.fairPlay ?? 0))
+      return team.fairPlay ?? 0;
+  }
+
+  // Todos empatados en todo → mostrar ranking FIFA
+  return getRankingFIFA(team.name);
+}
+
+const criterioValor = getCriterioValor(team, names_filter); */
+
+                /* svg
                   .append('text')
                   .attrs({
                     transform: `translate(${margin_left * 2}, 0)`,
@@ -3803,14 +3920,50 @@ stripes.forEach(s => {
                     y: y(rank1),
                   })
                   .styles({
-                    fill: team.goles_fecha > team.goles_en_contra_fecha ? victoria_color : team.goles_fecha < team.goles_en_contra_fecha ? derrota_color : empate_color,
+                    fill: black_color,
                     'font-weight': 600,
-                    'font-size': heightBars * 0.225,
+                    'font-size': heightBars * 0.25,
                     'text-anchor': 'middle',
                     'alignment-baseline': 'central',
                   })
-                  .text(`${team.goles_fecha == not_played_yet ? '' : team.value}`)
-                  .call(halo1, heightBars * 0.225, '#f1f1f1');
+                  .text(() => {
+                    if (team.goles_fecha != not_played_yet) {
+                      if (fecha_filter.filter(d => d.value == names_filter[0].value && d.name != names_filter[0].name).length > 0) {
+
+                        if (statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].pj_directo > 0)
+                          return team.value + ' [' + statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].pts_directo +']';
+                        else
+                          return team.value + ' ' + team.diferencia_de_goles
+                      } else {
+                        return 'no pjdirecto'
+                      }
+                    }
+                  })
+                  .call(halo1, heightBars * 0.25, '#f1f1f1') */
+
+                  /* svg
+                  .append('text')
+                  .attrs({
+                    transform: `translate(${margin_left * 2}, 0)`,
+                    x: x(wks) - heightBars * 0.0 + i * heightBars * 0.8 - (names_filter.length - 1) * (heightBars * 0.4),
+                    y: y(rank1),
+                  })
+                  .styles({
+                    fill: black_color,
+                    'font-weight': 600,
+                    'font-size': heightBars * 0.25,
+                    'text-anchor': 'middle',
+                    'alignment-baseline': 'central',
+                  })
+                  .text(() => {
+                    let directos = statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name]
+                    if (team.goles_fecha != not_played_yet) {
+                      return team.value + ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + '] ' + team.diferencia_de_goles + ' ' +  team.goles
+                    }
+                  })
+                  .call(halo1, heightBars * 0.25, '#f1f1f1') */
+
+                  if (!nombre_torneo.includes('Mundial')) {
 
                 svg.append('image').attrs({
                   transform: `translate(${margin_left * 2}, 0)`,
@@ -3838,6 +3991,8 @@ stripes.forEach(s => {
                   })
                   .text(team.goles_fecha !== not_played_yet ? (team.racha1 > 2 ? team.racha1 : team.racha_derrotas1 > 2 ? team.racha_derrotas1 : team.racha_empates1 > 2 ? team.racha_empates1 : team.racha_sin_victorias1 > 2 ? team.racha_sin_victorias1 : team.racha_sin_derrotas1 > 2 ? team.racha_sin_derrotas1 : team.racha_sin_empates1 > 2 ? team.racha_sin_empates1 : '') : '')
                   .call(halo1, defaults.subValue.style.font_size, '#f1f1f1');
+                }
+                
 
                 svg.append('image').attrs({
                   transform: `translate(${margin_left * 2}, 0)`,
@@ -3866,6 +4021,8 @@ stripes.forEach(s => {
                   .call(halo1, heightBars * 0.18, '#f1f1f1');
               });
 
+              if (!nombre_torneo.includes('Mundial')) {
+
               svg
                 .append('image')
                 /* .style('filter', 'url(#dropshadow)') */
@@ -3877,6 +4034,8 @@ stripes.forEach(s => {
                   height: defaults.mini_logo.size,
                   href: pts1.campeonato_ganado_matematicamente == 1 ? `./icons/trofeo1.png` : '',
                 });
+
+              }
             } else {
               let pts1 = yearSlice1.find((d) => d.name == nombre);
               svg
@@ -3899,6 +4058,8 @@ stripes.forEach(s => {
 
             let pts1 = yearSlice1.find((d) => d.name == nombre);
 
+            if (!nombre_torneo.includes('Mundial')) {
+
             svg
               .append('text')
               .attrs({
@@ -3916,6 +4077,8 @@ stripes.forEach(s => {
               })
               .text(pts1.goles_fecha !== not_played_yet ? (pts1.semana == dates[dates.length - 2] ? (pts1.racha_sin_victorias > 2 ? pts1.racha_sin_victorias : '') : '') : '')
               .call(halo1, defaults.subValue.style.font_size, '#f1f1f1');
+
+            
 
             svg.append('image').attrs({
               transform: `translate(${margin_left * 2}, 0)`,
@@ -3979,6 +4142,8 @@ stripes.forEach(s => {
               height: defaults.mini_logo.size + defaults.subValue.style.font_size * 0.35,
               href: pts1.goles_fecha !== not_played_yet ? (pts1.semana == dates[dates.length - 2] ? (pts1.racha_sin_empates > 2 ? `./icons/racha_sin_empates2.png` : '') : '') : '',
             });
+
+          }
 
             wks++;
           });
@@ -4131,7 +4296,7 @@ stripes.forEach(s => {
               .style('stroke-width', totalWidth + 2) // un poco más ancho que la bandera
               /* .style('stroke-linejoin', 'round')
               .style('stroke-linecap', 'round') */
-              .style('filter', 'blur(1px)')/* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
+              .style('filter', 'blur(1px)')/* .attr('opacity', d => { if (club != 'Vélez Sarsfield' && club != `Newell's Old Boys`) return 0 }) */;
 
             // ── FRANJAS ─────────────────────────────────────────
             colors.forEach((color, i) => {
@@ -4141,7 +4306,7 @@ stripes.forEach(s => {
               const offsetPts = offsetPoints(points, offset);
               const pathD = pathLine(offsetPts);
 
-              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round')/* .style('stroke-linecap', 'round') *//* .attr('opacity', d => { if (club != 'River Plate') return 0 }) */;
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round')/* .style('stroke-linecap', 'round') *//* .attr('opacity', d => { if (club != 'Vélez Sarsfield' && club != `Newell's Old Boys`) return 0 }) */;
             });
           }
 
@@ -4545,6 +4710,32 @@ stripes.forEach(s => {
     height: heightBars * 0.75,
     href: `./escudos/${nombre_torneo}.png`,
   });
+
+  let partidos_siumaldos = data.find(d => d.simulado)
+
+  if (partidos_siumaldos) {
+
+    svg.append('image').attrs({
+      x: margin_left * 1.5 - (heightBars * 0.7) / 2,
+      y: margin.top * 0.3 - (heightBars * 0.7) / 2,
+      height: heightBars * 0.7,
+      href: `./icons/simulated.png`,
+    });
+  
+    svg.append('text').attrs({
+      x: margin_left * 1.55 + heightBars * 0.7 / 2,
+      y: margin.top * 0.3,
+    })
+    .styles({
+        fill: '#f1f1f1',
+        'font-size': margin.top * 0.2,
+        'font-weight': 600,
+        'text-anchor': 'start',
+        'alignment-baseline': 'central',
+      })
+    .text(index1+1 + '/' + totalCasosSimulados.length);
+  }
+
 
   if (datos_totales) {
     // ── Variables comunes ─────────────────────────────────────────────────────────
@@ -5810,7 +6001,7 @@ stripes.forEach(s => {
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+              .text((d) => efectividadYPromedioGoles ? (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`) : '')
           )
 
           .call((text) =>
@@ -5831,13 +6022,13 @@ stripes.forEach(s => {
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) =>
+              .text((d) => efectividadYPromedioGoles ?
                 d.partidos_jugados == 0
                   ? ''
                   : ` (${d3
                       .format('.1f')(d.goles / d.partidos_jugados)
                       .replace('.', ',')})`
-              )
+              : '')
           )
 
           /* .call((text) =>
@@ -8166,6 +8357,7 @@ stripes.forEach(s => {
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
         .style('filter', 'url(#dropshadow)')
+        .style('filter', 'url(#white-border)')
         .attrs({
           class: 'logo',
           x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 1.1) / 2,
@@ -8174,18 +8366,20 @@ stripes.forEach(s => {
           height: defaults.logo.size1 * 1.1,
         });
 
-      rankingSVG
+      /* rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('circle')
         .attrs({
           cx: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + (defaults.logo.size1 * 1.1) / 3,
           cy: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + (defaults.logo.size1 * 1.1) / 3, //ojo d.rank
-          r: defaults.logo.size1 * 0.225,
-        });
+          r: defaults.logo.size1 * 0.235,
+          fill: '#f1f1f1'
+        }); */
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
         .append('image')
+        .style('filter', 'url(#white-border)')
         .attrs({
           x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1) / 3,
           y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - (defaults.logo.size1 * 0.4) / 2 + (defaults.logo.size1 * 1.1) / 3, //ojo d.rank
@@ -8414,8 +8608,8 @@ stripes.forEach(s => {
 render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
 
 /* const timer = d3.interval((e) => {
-  render(totalCasosSimulados[index1], nombre_torneo, puntos_por_partido, probabilidades);
+  render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
   index1++
   console.log(index1, totalCasosSimulados.length-1)
   if (index1 >= totalCasosSimulados.length-1) timer.stop(); // Stop after 5 seconds
-}, 100); */
+}, 200); */
