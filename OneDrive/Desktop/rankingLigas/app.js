@@ -1472,7 +1472,7 @@ stripes.forEach(s => {
       '1K': [15, 0],
       [mejor_tercero('DEIJL', mejores_terceros)]: [15, 1],
     },
-    Apertura: {
+    ['Apertura 2025']: {
       "1A": [0, 0],
     "8B": [0, 1],
 
@@ -3424,6 +3424,8 @@ stripes.forEach(s => {
     Sarmiento: ['#1B5E20', '#FFFFFF', '#1B5E20'],
     'Central Córdoba': ['#000000', '#FFFFFF', '#000000'],
     'Independiente Rivadavia': ['#003DA5', '#FFFFFF', '#003DA5'],
+    Aldosivi: ['green', 'yellow'],
+    'San Martín (SJ)': ['green', 'black'],
   };
   const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
 
@@ -3798,7 +3800,7 @@ stripes.forEach(s => {
                         'text-anchor': 'middle',
                         'alignment-baseline': 'central',
                       })
-                      .text(team.goles_fecha == not_played_yet ? 'vs' : '-')
+                      .text(team.goles_fecha == not_played_yet ? '-' : '-')
                   )
 
                   .call((text) =>
@@ -4735,6 +4737,19 @@ const criterioValor = getCriterioValor(team, names_filter); */
       })
     .text(index1+1 + '/' + totalCasosSimulados.length);
   }
+
+  /* svg.append('text').attrs({
+      x: margin_left * 1.55 + heightBars * 0.7 / 2,
+      y: margin.top * 0.3,
+    })
+    .styles({
+        fill: '#f1f1f1',
+        'font-size': margin.top * 0.2,
+        'font-weight': 600,
+        'text-anchor': 'start',
+        'alignment-baseline': 'central',
+      })
+    .text(index1+1 + '/' + totalCasosSimulados.length); */
 
 
   if (datos_totales) {
@@ -8285,6 +8300,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
             (d) => diffColor(d.diferencia_de_goles),
             (d) => ' ' + signedDiff(d.diferencia_de_goles)
           );
+          tspan(text, black_color, (d) => '\xa0\xa0\xa0' + d.fairPlay);
 
           // --- Bloque stats fase 1 [ ... ] ---
           tspan(text, null, (d) => show1(d, '\xa0\xa0\xa0['));

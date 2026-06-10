@@ -6,6 +6,8 @@ export async function procesarDatos() {
     repechaje = 8
   }
 
+  console.log(repechaje)
+
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
   console.log(playoffs)
 
@@ -216,7 +218,7 @@ console.log(bracket);
 
   const clasificados_por_competencia = {
     Campeonato: 1,
-    Apertura: 8,
+    ['Apertura 2025']: 8,
     WorldCup: 2,
     ClubWorldCup: 2,
     ELIMINATORIAS: 7,
@@ -526,7 +528,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     ['Mundial 2026']: { local: 1.35, visitante: 1.35 },
     argentina: { local: 1.1, visitante: 0.8 },
     Campeonato: { local: 1.1, visitante: 0.8 },
-    Apertura: { local: 1.1, visitante: 0.8 },
+    ['Apertura 2025']: { local: 1.1, visitante: 0.8 },
     WorldCup: { local: 1.35, visitante: 1.35 },
     ClubWorldCup: { local: 1.35, visitante: 1.35 },
     ['ELIMINATORIAS CONMEBOL MUNDIAL 2026']: { local: 1.4, visitante: 0.81 },
@@ -572,6 +574,29 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     goles_local: poisson(lambdaL),
     goles_visitante: poisson(lambdaV),
   };
+}
+
+function generarTarjetas() {
+  // Promedios históricos por equipo por partido (aprox. Mundial)
+  // ~3.5 amarillas totales por partido, ~0.15 rojas totales
+  const tarjetas = (lado) => {
+    const amarillas          = poissonRandom(1.7);   // ~1.7 por equipo
+    const rojas_indirectas   = poissonRandom(0.04);  // doble amarilla
+    const rojas_directas     = poissonRandom(0.05);  // roja directa
+    const amarilla_mas_roja  = poissonRandom(0.02);  // amarilla + roja directa
+
+    return { amarillas, rojas_indirectas, rojas_directas, amarilla_mas_roja };
+  };
+
+  return { local: tarjetas('local'), visitante: tarjetas('visitante') };
+}
+
+// Distribución de Poisson — ideal para eventos raros por partido
+function poissonRandom(lambda) {
+  const L = Math.exp(-lambda);
+  let k = 0, p = 1;
+  do { k++; p *= Math.random(); } while (p > L);
+  return k - 1;
 }
 
   /* function calcularLambdas(data) {
@@ -760,7 +785,62 @@ function calcularYOrdenarTablaConDatos(partidos) {
     tabla[equipoConGrupo].rankingFIFA = rankingFIFA2026[nombre] || 999;
 });
 
-  partidos.forEach((p) => {
+partidos.forEach((p) => {
+    if (!p.jugado) return;
+
+    [p.local, p.visitante].forEach((equipo) => {
+      if (!tabla[equipo]) {
+        tabla[equipo] = {
+          pts: 0, pj: 0, pg: 0, pe: 0, pp: 0,
+          gf: 0, gc: 0, diff: 0,
+          fairPlay: 0,
+          rankingFIFA: 0
+        };
+      }
+    });
+
+    const gl = p.goles_local;
+    const gv = p.goles_visitante;
+
+    tabla[p.local].pj++;
+    tabla[p.visitante].pj++;
+    tabla[p.local].gf += gl;
+    tabla[p.local].gc += gv;
+    tabla[p.local].diff += gl - gv;
+    tabla[p.visitante].gf += gv;
+    tabla[p.visitante].gc += gl;
+    tabla[p.visitante].diff += gv - gl;
+
+    if (gl > gv) {
+      tabla[p.local].pts += puntos_por_partido;
+      tabla[p.local].pg++;
+      tabla[p.visitante].pp++;
+    } else if (gl === gv) {
+      tabla[p.local].pts += 1;
+      tabla[p.visitante].pts += 1;
+      tabla[p.local].pe++;
+      tabla[p.visitante].pe++;
+    } else {
+      tabla[p.visitante].pts += puntos_por_partido;
+      tabla[p.visitante].pg++;
+      tabla[p.local].pp++;
+    }
+
+    // --- Fair Play ---
+    tabla[p.local].fairPlay +=
+      (p.amarillas_local             || 0) * 1 +
+      (p.rojas_indirectas_local      || 0) * 3 +
+      (p.rojas_directas_local        || 0) * 4 +
+      (p.amarilla_mas_roja_local     || 0) * 5;
+
+    tabla[p.visitante].fairPlay +=
+      (p.amarillas_visitante         || 0) * 1 +
+      (p.rojas_indirectas_visitante  || 0) * 3 +
+      (p.rojas_directas_visitante    || 0) * 4 +
+      (p.amarilla_mas_roja_visitante || 0) * 5;
+  });
+
+  /* partidos.forEach((p) => {
     if (!p.jugado) return;
 
     [p.local, p.visitante].forEach((equipo) => {
@@ -815,7 +895,7 @@ function calcularYOrdenarTablaConDatos(partidos) {
         tabla[equipo].fairPlay += (t.amarilla_y_roja || 0) * 5;     // -5 c/u
       });
     }
-  });
+  }); */
 
   // --- 2. Stats de enfrentamientos directos entre un subconjunto ---
   function statsDirectos(equiposEnDisputa) {
@@ -996,7 +1076,22 @@ function calcularYOrdenarTablaConDatos(partidos) {
     const partidosSimulados = partidos.map((p) => {
       if (p.jugado) return { ...p, simulados: false, id: sim };
       const resultado = generarResultado(competencia, null, p.local, p.visitante);
-      return { ...p, ...resultado, jugado: true, simulados: true, id: sim };
+      const tarjetas  = generarTarjetas(); 
+      return {
+        ...p,
+        ...resultado,
+        amarillas_local:              tarjetas.local.amarillas,
+        rojas_indirectas_local:       tarjetas.local.rojas_indirectas,
+        rojas_directas_local:         tarjetas.local.rojas_directas,
+        amarilla_mas_roja_local:      tarjetas.local.amarilla_mas_roja,
+        amarillas_visitante:          tarjetas.visitante.amarillas,
+        rojas_indirectas_visitante:   tarjetas.visitante.rojas_indirectas,
+        rojas_directas_visitante:     tarjetas.visitante.rojas_directas,
+        amarilla_mas_roja_visitante:  tarjetas.visitante.amarilla_mas_roja,
+        jugado: true,
+        simulados: true,
+        id: sim
+      };
     });
 
     const terceros = [];
@@ -1372,6 +1467,16 @@ data1.forEach(d => {
       }
       d.goles_local = +d.goles_local.split('[')[0];
       d.goles_visitante = +d.goles_visitante.split('[')[0];
+
+      d.amarillas_local = +d.amarillas_local
+      d.rojas_indirectas_local = +d.rojas_indirectas_local
+      d.rojas_directas_local = +d.rojas_directas_local
+      d.amarilla_mas_roja_local = +d.amarilla_mas_roja_local
+      d.amarillas_visitante = +d.amarillas_visitante
+      d.rojas_indirectas_visitante = +d.rojas_indirectas_visitante
+      d.rojas_directas_visitante = +d.rojas_directas_visitante
+      d.amarilla_mas_roja_visitante = +d.amarilla_mas_roja_visitante
+
       d.pts_local = d.goles_local > d.goles_visitante ? puntos_por_partido : d.goles_local < d.goles_visitante ? 0 : 1;
       d.pts_visitante = d.goles_visitante > d.goles_local ? puntos_por_partido : d.goles_visitante < d.goles_local ? 0 : 1;
       d.dia = new Date(+d.dia.split(' ')[2], mes(d.dia.split(' ')[0]), +d.dia.split(' ')[1]);
@@ -1567,7 +1672,11 @@ data1.forEach(d => {
           penales: d.penales_local,
           penales_en_contra: d.penales_visitante,
           n_partidos: partidos_n,
-          simulado: d.simulados
+          simulado: d.simulados,
+          amarillas: d.amarillas_local,
+          rojas_indirectas: d.rojas_indirectas_local,
+          rojas_directas: d.rojas_directas_local,
+          amarilla_mas_roja: d.amarilla_mas_roja_local,
         });
         final_list.push({
           dia: d.dia,
@@ -1584,7 +1693,11 @@ data1.forEach(d => {
           goles_en_contra: d.goles_local,
           penales: d.penales_local,
           penales_en_contra: d.penales_visitante,
-          simulado: d.simulados
+          simulado: d.simulados,
+          amarillas: d.amarillas_visitante,
+          rojas_indirectas: d.rojas_indirectas_visitante,
+          rojas_directas: d.rojas_directas_visitante,
+          amarilla_mas_roja: d.amarilla_mas_roja_visitante,
         });
       });
       let clubes_semana1 = new Set(semana_filter.map((d) => d.local));
@@ -1627,6 +1740,8 @@ data1.forEach(d => {
       let victoria_casa = 0;
       let empate_casa = 0;
       let derrota_casa = 0;
+
+      let fairPlay = 0;
 
       let pts1 = 0;
       let goles1 = 0;
@@ -1736,7 +1851,8 @@ data1.forEach(d => {
             goleadas: goleadas,
             goleadas_en_contra: goleadas_en_contra,
             valla_invicta: valla_invicta,
-            simulado: d.simulado
+            simulado: d.simulado,
+            fairPlay: fairPlay,
           });
         } else {
           let may_deducted = deducted.filter((e) => e.name == d.name && e.dia == d.dia)[0];
@@ -1767,6 +1883,11 @@ data1.forEach(d => {
           d.goles_en_contra - d.goles >= 3 ? goleadas_en_contra++ : '';
           d.vs != 'none' ? partidos_jugados++ : '';
           d.pts == puntos_por_partido ? partidos_ganados++ : d.pts == 1 ? partidos_empatados++ : d.vs != 'none' ? partidos_perdidos++ : '';
+          fairPlay +=
+      (d.amarillas             || 0) * 1 +
+      (d.rojas_indirectas     || 0) * 3 +
+      (d.rojas_directas       || 0) * 4 +
+      (d.amarilla_mas_roja   || 0) * 5;
 
           if (d.vs != 'none') {
             if (d.pts == puntos_por_partido) {
@@ -1865,7 +1986,8 @@ data1.forEach(d => {
             victoria_casa: victoria_casa,
             empate_casa: empate_casa,
             derrota_casa: derrota_casa,
-            simulado: d.simulado
+            simulado: d.simulado,
+            fairPlay: fairPlay,
           });
         }
       });
@@ -1905,7 +2027,8 @@ data1.forEach(d => {
         diferencia_de_goles1: final_list1[final_list1.length - 1].diferencia_de_goles1,
         goleadas: final_list1[final_list1.length - 1].goleadas,
         goleadas_en_contra: final_list1[final_list1.length - 1].goleadas_en_contra,
-        simulado: final_list1[final_list1.length - 1].simulado
+        simulado: final_list1[final_list1.length - 1].simulado,
+        fairPlay: final_list1[final_list1.length - 1].fairPlay,
       });
     });
 
@@ -1945,7 +2068,8 @@ data1.forEach(d => {
       racha_sin_victorias: 0,
       racha_sin_derrotas: 0,
       racha_sin_empates: 0,
-      simulado: false
+      simulado: false,
+      fairPlay: 0,
     });
 
     const filtrado = final_list1.filter((e) => e.vs != 'none');
