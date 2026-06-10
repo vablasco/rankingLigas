@@ -726,7 +726,7 @@ stripes.forEach(s => {
       if (b.goles !== a.goles) return b.goles - a.goles;
 
       // 6º Fair Play (menor = mejor)
-      if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+      if ((b.fairPlay ?? 0) !== (a.fairPlay ?? 0)) return (b.fairPlay ?? 0) - (a.fairPlay ?? 0);
 
       // 7º Ranking FIFA (menor = mejor)
       return getRankingFIFA(a.name) - getRankingFIFA(b.name);
@@ -757,7 +757,7 @@ stripes.forEach(s => {
       if (b.goles !== a.goles) return b.goles - a.goles;
 
       // 4º Fair Play (menor = mejor)
-      if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+      if ((b.fairPlay ?? 0) !== (a.fairPlay ?? 0)) return (b.fairPlay ?? 0) - (a.fairPlay ?? 0);
 
       // 5º Ranking FIFA (menor = mejor)
       return getRankingFIFA(a.name) - getRankingFIFA(b.name);
@@ -3283,6 +3283,26 @@ stripes.forEach(s => {
     .attrs({
       class: 'years',
       x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
+      y: margin.top * 0.5,
+      transform: `translate(${margin_left * 2}, 0)`,
+      'clip-path': `url(#ellipse-clip-margin-left)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.2,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('Criterios de desempate: pts > [Enfrentamientos directos: pts > dif > gf] > dif > gf > FairPlay > RankingFIFA')
+    /* .text('Criterios de desempate: Paso 0: pts / Paso 1: [Enfrentamientos directos: pts > dif > gf] / Paso 2: dif > gf > FairPlay / Paso 3: RankingFIFA') */
+    /* .text('Criterios de desempate: Paso 0: pts. Paso 1: [Enfrentamientos directos: pts -> dif -> gf] Paso 2: dif -> gf -> FairPlay. Paso 3: RankingFIFA') */;
+
+  svg
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
       y: margin.top * 0.75,
       transform: `translate(${margin_left * 2}, 0)`,
       'clip-path': `url(#ellipse-clip-margin-left)`,
@@ -3312,7 +3332,7 @@ stripes.forEach(s => {
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Puntos - Partidos: Jugados / Ganados / Empatados / Perdidos - Goles: A Favor / En Contra / Diferencia');
+    .text('Puntos - Partidos: Jugados / Ganados / Empatados / Perdidos - Goles: A Favor / En Contra / Diferencia - FairPlay');
 
   var defs = svg.append('defs');
 
@@ -8300,7 +8320,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
             (d) => diffColor(d.diferencia_de_goles),
             (d) => ' ' + signedDiff(d.diferencia_de_goles)
           );
-          tspan(text, black_color, (d) => '\xa0\xa0\xa0' + d.fairPlay);
+          tspan(text, 'purple', (d) => '\xa0\xa0\xa0' + d.fairPlay);
 
           // --- Bloque stats fase 1 [ ... ] ---
           tspan(text, null, (d) => show1(d, '\xa0\xa0\xa0['));

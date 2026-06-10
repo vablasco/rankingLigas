@@ -700,6 +700,7 @@ console.table(resultado); */
   /* console.log(generarResultado('mundial'))        // { goles_local: 1, goles_visitante: 2 }
 console.log(generarResultado('ligaArgentina'))  // { goles_local: 0, goles_visitante: 0 }
 console.log(generarResultado('bundesliga'))  */
+console.log(generarTarjetas())
 
 
 const rankingFIFA2026 = {
@@ -780,11 +781,6 @@ function calcularYOrdenarTablaConDatos(partidos) {
   // --- 1. Construir tabla general desde partidos ---
   const tabla = {};
 
-  Object.keys(tabla).forEach((equipoConGrupo) => {
-    const nombre = equipoConGrupo.replace(/-[A-L]$/, "");
-    tabla[equipoConGrupo].rankingFIFA = rankingFIFA2026[nombre] || 999;
-});
-
 partidos.forEach((p) => {
     if (!p.jugado) return;
 
@@ -827,18 +823,23 @@ partidos.forEach((p) => {
     }
 
     // --- Fair Play ---
-    tabla[p.local].fairPlay +=
+    tabla[p.local].fairPlay -=
       (p.amarillas_local             || 0) * 1 +
       (p.rojas_indirectas_local      || 0) * 3 +
       (p.rojas_directas_local        || 0) * 4 +
       (p.amarilla_mas_roja_local     || 0) * 5;
 
-    tabla[p.visitante].fairPlay +=
+    tabla[p.visitante].fairPlay -=
       (p.amarillas_visitante         || 0) * 1 +
       (p.rojas_indirectas_visitante  || 0) * 3 +
       (p.rojas_directas_visitante    || 0) * 4 +
       (p.amarilla_mas_roja_visitante || 0) * 5;
   });
+
+  Object.keys(tabla).forEach((equipoConGrupo) => {
+    const nombre = equipoConGrupo.replace(/-[A-L]$/, "");
+    tabla[equipoConGrupo].rankingFIFA = rankingFIFA2026[nombre] || 999;
+});
 
   /* partidos.forEach((p) => {
     if (!p.jugado) return;
@@ -934,6 +935,8 @@ partidos.forEach((p) => {
     const sa = tabla[a];
     const sb = tabla[b];
 
+    /* console.log(a, sa, sa.rankingFIFA) */
+
     // 1º–3º Enfrentamientos directos entre TODOS los empatados
     const directos = statsDirectos(empatados);
     const da = directos[a];
@@ -950,7 +953,7 @@ partidos.forEach((p) => {
     if (sa.gf !== sb.gf) return sb.gf - sa.gf;
 
     // 6º Fair Play (menor = mejor, así que el que tenga menos va primero)
-    if (sa.fairPlay !== sb.fairPlay) return sa.fairPlay - sb.fairPlay;
+    if (sb.fairPlay !== sa.fairPlay) return sb.fairPlay - sa.fairPlay;
 
     // 7º Ranking FIFA (menor número = mejor posición en el ranking)
     if (sa.rankingFIFA !== sb.rankingFIFA) return sa.rankingFIFA - sb.rankingFIFA;
@@ -1106,6 +1109,10 @@ partidos.forEach((p) => {
       );
       
       const tablaCompleta = calcularYOrdenarTablaConDatos(grupo);
+
+      /* if (d == 'A') {
+        console.table(tablaCompleta)
+      } */
       
       // Quedarse solo con los equipos que pertenecen al grupo d
       const tabla = tablaCompleta.filter(t => t.equipo.split('-')[1] === d);
@@ -1130,7 +1137,7 @@ partidos.forEach((p) => {
         if (b.pts !== a.pts) return b.pts - a.pts;
         if (b.diff !== a.diff) return b.diff - a.diff;
         if (b.gf !== a.gf) return b.gf - a.gf;
-        if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
+        if ((b.fairPlay ?? 0) !== (a.fairPlay ?? 0)) return (b.fairPlay ?? 0) - (a.fairPlay ?? 0);
         const rankA = rankingFIFA2026[a.equipo.replace(/-[A-L]$/, "")] || 999;
         const rankB = rankingFIFA2026[b.equipo.replace(/-[A-L]$/, "")] || 999;
         return rankA - rankB;
@@ -1883,7 +1890,7 @@ data1.forEach(d => {
           d.goles_en_contra - d.goles >= 3 ? goleadas_en_contra++ : '';
           d.vs != 'none' ? partidos_jugados++ : '';
           d.pts == puntos_por_partido ? partidos_ganados++ : d.pts == 1 ? partidos_empatados++ : d.vs != 'none' ? partidos_perdidos++ : '';
-          fairPlay +=
+          fairPlay -=
       (d.amarillas             || 0) * 1 +
       (d.rojas_indirectas     || 0) * 3 +
       (d.rojas_directas       || 0) * 4 +
