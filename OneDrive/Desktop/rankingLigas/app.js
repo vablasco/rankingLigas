@@ -34,8 +34,12 @@ let derrota_color = '#cc2900';
 let grey_color = '#616161';
 let black_color = '#202020';
 
+let primer_puesto = '#76c476';
+let segundo_puesto = '#94e694';
+let tercer_puesto = '#e3ffb5';
+
 let not_played_yet = 99;
-let not_played_yet_x = 0.5;
+let not_played_yet_x = 0.4;
 let fechas_not_played = 1;
 
 let localia = false;
@@ -778,7 +782,10 @@ stripes.forEach(s => {
   let mejores_terceros = mejores_terceros_sort(yearSlice.filter((d) => d.rankInGroup == 2))
     .slice(0, 8)
     .map((d) => d.position[1]);
-  console.log(mejores_terceros);
+
+  let mejores = mejores_terceros_sort([...yearSlice]).map((d) => d.name);
+
+  console.log(mejores);
 
   svg
     .append('clipPath')
@@ -2880,12 +2887,11 @@ stripes.forEach(s => {
           ); */
     }
 
-    svg
+    /* svg
       .selectAll('.rect')
       .data(d3.range(primera_ronda_playoff * 2))
       .enter()
       .append('rect')
-      /* .style('filter', 'url(#dropshadow)') */
       .attrs({
         class: 'playoffs_names',
         x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
@@ -2896,7 +2902,8 @@ stripes.forEach(s => {
       .attr('style', (d) => `outline: 1px solid grey`)
       .styles({
         fill: '#dddddd',
-      });
+      }); */
+
 
     svg
       .selectAll('.rect')
@@ -3042,6 +3049,34 @@ stripes.forEach(s => {
     });
 
     const keysSet = new Set(Object.keys(positions_playoffs));
+
+    svg
+      .selectAll('.rect')
+      .data(yearSlice.filter((d, i) => (d.rankInGroup >= 0 && d.rankInGroup <= clasificacion_por_grupo - 1) || (d.rankInGroup >= equipos_por_grupos && d.rankInGroup <= equipos_por_grupos + clasificacion_por_grupo - 1)).filter((d) => keysSet.has(d.position)))
+      .enter()
+      .append('rect')
+      .attrs({
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
+       /*  x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
+        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2, */
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        opacity: 1,
+        fill: d => {
+          if (d.position.split('')[0] == '1') {
+            return '#dddddd'
+          } else if (d.position.split('')[0] == '2') {
+            return '#dddddd'
+          } else if (d.position.split('')[0] == '3') {
+            return '#dddddd'
+          }
+        }
+      })
+      /* .style('filter', 'url(#dropshadow)'); */
 
     svg
       .selectAll('.image')
@@ -3278,17 +3313,48 @@ stripes.forEach(s => {
               .replace('Post.', d)
     );
 
+    svg
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: margin.left * 0.05,
+      y: margin.top * 0.1,
+    })
+    .styles({
+      'font-size': heightBars * 0.25,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('Probabilidad*: 100.000 Simulaciones. (100%) = Clasificado a próxima fase a efectos prácticos. (0%) = Afuera.')
+
+    svg
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: margin.left * 0.05,
+      y: margin.top * 0.225,
+    })
+    .styles({
+      'font-size': heightBars * 0.25,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('Fairplay*: Sistema de puntos en base a las tarjetas. Amarilla: -1, Roja indirecta: -3, Roja directa: -4, Amarilla + Roja directa: -5.')
+    
+
   svg
     .append('text')
     .attrs({
       class: 'years',
-      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
-      y: margin.top * 0.5,
-      transform: `translate(${margin_left * 2}, 0)`,
-      'clip-path': `url(#ellipse-clip-margin-left)`,
+      x: margin.left * 0.05,
+      y: margin.top * 0.35,
     })
     .styles({
-      'font-size': heightBars * 0.2,
+      'font-size': heightBars * 0.25,
       fill: 'grey',
       'font-weight': 600,
       'text-anchor': 'start',
@@ -3303,20 +3369,20 @@ stripes.forEach(s => {
     .attrs({
       class: 'years',
       x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
-      y: margin.top * 0.75,
+      y: margin.top * 0.725,
       transform: `translate(${margin_left * 2}, 0)`,
       'clip-path': `url(#ellipse-clip-margin-left)`,
     })
     .styles({
-      'font-size': heightBars * 0.2,
+      'font-size': heightBars * 0.25,
       fill: 'grey',
       'font-weight': 600,
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Selección - RankingFIFA - Efectividad - Promedio Goles - Probabilidad Claificacón - Rango de Posiciones');
+    .text('Selección - RankingFIFA - Probabilidad* - Rango de posiciones posibles');
 
-    svg
+    /* svg
     .append('text')
     .attrs({
       class: 'years',
@@ -3332,7 +3398,80 @@ stripes.forEach(s => {
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Puntos - Partidos: Jugados / Ganados / Empatados / Perdidos - Goles: A Favor / En Contra / Diferencia - FairPlay');
+    .text('Puntos - Partidos: Jugados / Ganados / Empatados / Perdidos - Goles: A Favor / En Contra / Diferencia - FairPlay'); */
+
+    svg
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
+      y: margin.top * 0.85,
+      transform: `translate(${margin_left * 2}, 0)`,
+      'clip-path': `url(#ellipse-clip-margin-left)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.25,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('PTS - PJ - PG - PE - PP - GF - GC - DIF - FairPlay*');
+    /* .text('Pts - Pj - Pg - Pe - Pp - Gf - Gc - Dif - FairPlay*'); */
+    /* .text('Puntos - Partidos: Jugados - Ganados - Empatados - Perdidos - Goles: A Favor - En Contra - Diferencia - FairPlay*'); */
+
+    /* svg
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
+      y: margin.top * 0.85,
+      transform: `translate(${margin_left * 2}, 0)`,
+      'clip-path': `url(#ellipse-clip-margin-left)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.2,
+      fill: 'grey',
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text('Puntos Partidos: Jugados {Ganados Empatados Perdidos} AFavor EnContra Diferencia FairPlay'); */
+
+     /* const labelGroup = svg
+  .append('text')
+  .attrs({
+    class: 'years',
+    x: fechasNotPlayed(dates.length - 1) + defaults.logo.size / 2,
+    y: margin.top * 0.85,
+    transform: `translate(${margin_left * 2}, 0)`,
+    'clip-path': `url(#ellipse-clip-margin-left)`,
+  })
+  .styles({
+    'font-size': heightBars * 0.2,
+    'font-weight': 600,
+    'text-anchor': 'start',
+    'alignment-baseline': 'central',
+  });
+
+const segments = [
+  { text: 'Puntos - Partidos: Jugados / ', fill: 'grey' },
+  { text: 'Ganados',                       fill: '#22c55e' },  // verde
+  { text: ' / ',                           fill: 'grey' },
+  { text: 'Empatados',                     fill: '#eab308' },  // amarillo
+  { text: ' / ',                           fill: 'grey' },
+  { text: 'Perdidos',                      fill: '#ef4444' },  // rojo
+  { text: ' - Goles: ',                    fill: 'grey' },
+  { text: 'A Favor',                       fill: '#22c55e' },  // verde
+  { text: ' / ',                           fill: 'grey' },
+  { text: 'En Contra',                     fill: '#ef4444' },  // rojo
+  { text: ' / Diferencia - ',              fill: 'grey' },
+  { text: 'FairPlay',                      fill: '#a855f7' },  // violeta
+];
+
+segments.forEach(({ text, fill }) => {
+  labelGroup.append('tspan').style('fill', fill).text(text);
+}); */
 
   var defs = svg.append('defs');
 
@@ -3498,17 +3637,125 @@ stripes.forEach(s => {
         .append('text')
         .attrs({
           class: 'name',
-          x: weeks,
+          x: margin_left/2,
           y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
         })
         .styles({
           fill: defaults.name.style.fill,
           'font-size': defaults.name.style.font_size,
           'font-weight': defaults.name.style.font_weight,
-          'text-anchor': defaults.name.style.text_anchor,
+          'text-anchor': 'middle',
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
-        .text('Grupo ' + grupo);
+        .text(grupo);
+
+        svg
+    .selectAll('.text')
+    .data(dates.slice(0, -1))
+    .enter()
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) =>
+        fechasNotPlayed(i) -
+        (d < 10 ? heightBars * 0.05 : 0) -
+        (d == dates[dates.length - 1]
+          ? 'Final'
+          : d == dates[0]
+            ? d
+            : data
+                .filter((e) => e.semana == d && e.vs != 'none')[0]
+                .fecha2.split(' ')[1]
+                .replace('Def.', '')
+                .replace('Post.', d)
+        )
+          .toString()
+          .replace('.', '').length *
+          heightBars *
+          0.175,
+      y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
+      transform: `translate(${margin_left * 2}, 0)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.25,
+      fill: black_color,
+      'font-weight': 600,
+      'text-anchor': 'end',
+      'alignment-baseline': 'central',
+    })
+    .text((semana) => {
+      let filterr = data.filter((d) => d.semana == semana && d.name.split('-')[1] == grupo && d.vs != 'none' && d.goles_fecha !== not_played_yet);
+      return filterr.length > 0 ? filterr.length / 2 : '';
+    });
+
+  svg
+    .selectAll('.text')
+    .data(dates.slice(0, -1))
+    .enter()
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) =>
+        fechasNotPlayed(i) +
+        (d < 10 ? heightBars * 0.05 : 0) +
+        (d == dates[dates.length - 1]
+          ? 'Final'
+          : d == dates[0]
+            ? d
+            : data
+                .filter((e) => e.semana == d && e.vs != 'none')[0]
+                .fecha2.split(' ')[1]
+                .replace('Def.', '')
+                .replace('Post.', d)
+        )
+          .toString()
+          .replace('.', '').length *
+          heightBars *
+          0.175,
+      y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
+      transform: `translate(${margin_left * 2}, 0)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.25,
+      fill: black_color,
+      'font-weight': 600,
+      'text-anchor': 'start',
+      'alignment-baseline': 'central',
+    })
+    .text((semana) => {
+      let filterr = data.filter((d) => d.semana == semana && d.name.split('-')[1] == grupo && d.vs != 'none' && d.goles_fecha !== not_played_yet);
+      return filterr.length > 0 ? ('(' + d3.format(',.1f')(d3.sum(filterr, (d) => d.goles_fecha) / (filterr.length / 2)) + ')').replace('.', ',') : '';
+    });
+
+  svg
+    .selectAll('.text')
+    .data(dates)
+    .enter()
+    .append('text')
+    .attrs({
+      class: 'years',
+      x: (d, i) => fechasNotPlayed(i),
+      y: y(offsetGrupo + 0.75) - (y(1) - y(0)),
+      transform: `translate(${margin_left * 2}, 0)`,
+    })
+    .styles({
+      'font-size': heightBars * 0.4,
+      fill: black_color,
+      'font-weight': 600,
+      'text-anchor': 'middle',
+      'alignment-baseline': 'central',
+    })
+    .text((d) =>
+      d == dates[dates.length - 1]
+        ? 'Final'
+        : d == dates[0]
+          ? d
+          : data
+              .filter((e) => e.semana == d && e.vs != 'none')[0]
+              .fecha2.split(' ')[1]
+              .replace('Def.', '')
+              .replace('Post.', d)
+    );
 
       // Rects equipos
       svg
@@ -3530,16 +3777,16 @@ stripes.forEach(s => {
         .style('fill', (d, i) => {
           if (i < clasificacion_por_grupo - repechaje) {
             if (i % 2 === 1) {
-              return '#94e694';
+              return segundo_puesto;
             } else {
-              return '#76c476';
+              return primer_puesto;
             }
           } else if (i < clasificacion_por_grupo && mejores_terceros.includes(d.position[1])) {
             console.log(mejores_terceros);
             if (i % 2 === 1) {
               return '#d8ffb8';
             } else {
-              return '#e3ffb5';
+              return tercer_puesto;
             }
           } else {
             if (i % 2 === 1) {
@@ -3549,6 +3796,50 @@ stripes.forEach(s => {
             }
           }
         });
+
+      /* svg
+        .selectAll('.text')
+        .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
+        .enter()
+        .append('text')
+        .attrs({
+          x: barWidth - margin_left*1.5,
+          y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo),
+        })
+        .styles({
+          fill: grey_color,
+          'font-size': heightBars * 0.5,
+          'alignment-baseline': 'central',
+          'text-anchor': 'middle',
+          'font-weight': 600,
+        })
+        .text((d, i) => {
+          let mt = (mejores_terceros.indexOf(d.position[1])+1)
+          let r;
+          r = mt == 0 ? '' : i == 2 ? ''+mt+ '°' : ''
+          return r;
+          });
+
+          svg
+        .selectAll('.text')
+        .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
+        .enter()
+        .append('text')
+        .attrs({
+          x: barWidth - margin_left/2,
+          y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo),
+        })
+        .styles({
+          fill: grey_color,
+          'font-size': heightBars * 0.5,
+          'alignment-baseline': 'central',
+          'text-anchor': 'middle',
+          'font-weight': 600,
+        })
+        .text((d, i) => {
+          let m = mejores.indexOf(d.name)+1
+          return m;
+          }); */
 
       // Líneas verticales de fechas
       svg
@@ -4726,12 +5017,12 @@ const criterioValor = getCriterioValor(team, names_filter); */
     href: `./country-flags/flag-of-${data1[0].pais}.png`,
   }); */
 
-  svg.append('image').attrs({
+  /* svg.append('image').attrs({
     x: margin_left * 0.5 - (heightBars * 0.75) / 2,
     y: margin.top * 0.3 - (heightBars * 0.75) / 2,
     height: heightBars * 0.75,
     href: `./escudos/${nombre_torneo}.png`,
-  });
+  }); */
 
   let partidos_siumaldos = data.find(d => d.simulado)
 
@@ -6015,7 +6306,23 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => ' #' + getRankingFIFA1(d.name) + '')
+              .text((d) => ' #' + getRankingFIFA1(d.name))
+          )
+
+          .call((text) =>
+            text
+              .append('tspan')
+              .attrs({
+                class: 'campeon',
+              })
+              .styles({
+                fill: black_color,
+                'font-size': heightBars * 0.275,
+                'font-weight': 600,
+                'text-anchor': defaults.value.style.text_anchor,
+                'alignment-baseline': defaults.value.style.alignment_baseline,
+              })
+              .text((d, i) => ' #' + (mejores.indexOf(d.name)+1) + (i == 2 ? ((mejores_terceros.indexOf(d.position[1])+1) !== 0 ? (' (' + (mejores_terceros.indexOf(d.position[1])+1)+'/8)'): '') : ''))
           )
 
           .call((text) =>
@@ -8320,7 +8627,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
             (d) => diffColor(d.diferencia_de_goles),
             (d) => ' ' + signedDiff(d.diferencia_de_goles)
           );
-          tspan(text, 'purple', (d) => '\xa0\xa0\xa0' + d.fairPlay);
+          /* tspan(text, 'purple', (d) => '\xa0\xa0\xa0' + d.fairPlay); */
 
           // --- Bloque stats fase 1 [ ... ] ---
           tspan(text, null, (d) => show1(d, '\xa0\xa0\xa0['));
@@ -8358,6 +8665,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
             (d) => sd(d, signedDiff(v(d).diff_directo))
           );
           tspan(text, null, (d) => sd(d, ']'));
+          tspan(text, 'purple', (d) => '\xa0\xa0\xa0' + d.fairPlay);
         })
         .call(halo1, heightBars * 0.2, '#f1f1f1');
 
