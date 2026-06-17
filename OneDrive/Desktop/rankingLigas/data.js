@@ -1,6 +1,9 @@
 export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/mundial2026.csv');
 
+  let simular_grupo_de = ''
+  let simular = false;
+
   let repechaje = 0
   if (data1[0].torneo == 'Mundial 2026') {
     repechaje = 8
@@ -192,16 +195,20 @@ console.log(bracket);
   year_torneo < 1996 ? (puntos_por_partido = 2) : '';
   data1[0].torneo == 'Torneo Apertura 1995' ? (puntos_por_partido = 3) : '';
 
-  /* let verEquipo = 'Argentina'
-  let grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1]
+  let verEquipo = ''
+  let grupoDeVerEquipo = ''
 
-  console.log(structuredClone(data1));
-  data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
-  data1.forEach((d) => {
-    d.local = d.local.split('-')[0];
-    d.visitante = d.visitante.split('-')[0];
-  });
-  console.log(structuredClone(data1)); */
+  if (simular_grupo_de != '') {
+    simular = true;
+    verEquipo = simular_grupo_de
+    grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1]
+    data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
+    data1.forEach((d) => {
+      d.local = d.local.split('-')[0];
+      d.visitante = d.visitante.split('-')[0];
+    });
+  }
+
 
   let competencia = nombre_torneo
 
@@ -217,7 +224,7 @@ console.log(bracket);
   console.log(competencia)
 
   const clasificados_por_competencia = {
-    Campeonato: 1,
+    ['Campeonato 2024']: 1,
     ['Apertura 2025']: 8,
     WorldCup: 2,
     ClubWorldCup: 2,
@@ -234,6 +241,80 @@ console.log(bracket);
 
   let formatDateLarge = d3.utcFormat('%b %d');
   let formatDate = d3.utcFormat('%Y-%m-%d');
+
+  const rankingFIFA2026 = {
+  // Grupo A
+  "México": 15,
+  "Sudáfrica": 60,
+  "Corea del Sur": 25,
+  "República Checa": 41,
+
+  // Grupo B
+  "Canadá": 30,
+  "Bosnia y Herzegovina": 65,
+  "Qatar": 55,
+  "Suiza": 19,
+
+  // Grupo C
+  "Brasil": 6,
+  "Marruecos": 8,
+  "Haití": 83,
+  "Escocia": 43,
+
+  // Grupo D
+  "Estados Unidos": 16,
+  "Paraguay": 40,
+  "Australia": 27,
+  "Turquía": 22,
+
+  // Grupo E
+  "Alemania": 10,
+  "Curazao": 82,
+  "Costa de Marfil": 34,
+  "Ecuador": 23,
+
+  // Grupo F
+  "Países Bajos": 7,
+  "Japón": 18,
+  "Suecia": 38,
+  "Túnez": 44,
+
+  // Grupo G
+  "Bélgica": 9,
+  "Egipto": 29,
+  "Irán": 21,
+  "Nueva Zelanda": 85,
+
+  // Grupo H
+  "España": 2,
+  "Cabo Verde": 68,
+  "Arabia Saudita": 61,
+  "Uruguay": 17,
+
+  // Grupo I
+  "Francia": 1,
+  "Senegal": 14,
+  "Irak": 57,
+  "Noruega": 31,
+
+  // Grupo J
+  "Argentina": 3,
+  "Argelia": 28,
+  "Austria": 24,
+  "Jordania": 64,
+
+  // Grupo K
+  "Portugal": 5,
+  "RD de Congo": 46,
+  "Uzbekistán": 50,
+  "Colombia": 13,
+
+  // Grupo L
+  "Inglaterra": 4,
+  "Croacia": 11,
+  "Ghana": 74,
+  "Panamá": 33
+};
 
   /* data1.forEach(d => {
     if (d.fecha == 'Fecha 3') {
@@ -527,7 +608,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   const LAMBDAS = {
     ['Mundial 2026']: { local: 1.35, visitante: 1.35 },
     argentina: { local: 1.1, visitante: 0.8 },
-    Campeonato: { local: 1.1, visitante: 0.8 },
+    ['Campeonato 2024']: { local: 1.1, visitante: 0.8 },
     ['Apertura 2025']: { local: 1.1, visitante: 0.8 },
     WorldCup: { local: 1.35, visitante: 1.35 },
     ClubWorldCup: { local: 1.35, visitante: 1.35 },
@@ -539,14 +620,113 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     bundesliga: { local: 1.65, visitante: 1.2 },
   };
 
-  /* function generarResultado(liga = 'argentina', override = null) {
-    const config = override ?? LAMBDAS[liga];
-    return {
-      goles_local: poisson(config.local),
-      goles_visitante: poisson(config.visitante),
-    };
-  } */
+  // ─────────────────────────────────────────────────────────────
+// RENDIMIENTO RECIENTE  (últimos 5 partidos)
+// Devuelve un score de 0-100 para un equipo dado
+// ─────────────────────────────────────────────────────────────
+function calcularRendimientoReciente(equipo, historialPartidos) {
+  // Filtrar partidos jugados donde participó el equipo, más recientes primero
+  const jugados = historialPartidos
+    .filter(p => p.jugado && (p.local === equipo || p.visitante === equipo))
+    .slice(-5); // últimos 5
 
+  if (jugados.length === 0) return 50; // sin historial → rendimiento neutro
+
+  let puntosGanados = 0;
+  let puntosPosibles = 0;
+  let golesFavor = 0;
+  let golesContra = 0;
+
+  jugados.forEach(p => {
+    const esLocal = p.local === equipo;
+    const gf = esLocal ? p.goles_local     : p.goles_visitante;
+    const gc = esLocal ? p.goles_visitante  : p.goles_local;
+
+    golesFavor  += gf;
+    golesContra += gc;
+
+    // Puntos (usamos puntos_por_partido para respetar la config global)
+    if (gf > gc) puntosGanados += puntos_por_partido;
+    else if (gf === gc) puntosGanados += 1;
+
+    puntosPosibles += puntos_por_partido;
+  });
+
+  const n = jugados.length;
+
+  // ── Efectividad (0-1) ──────────────────────────────────────
+  const efectividad = puntosGanados / puntosPosibles; // 0 a 1
+
+  // ── GF promedio, normalizado a [0-1] con techo en 3 goles ─
+  const gfProm = golesFavor / n;
+  const scoreGF = Math.min(gfProm / 3, 1);
+
+  // ── GC promedio, normalizado a [0-1] con techo en 3 goles ─
+  // 0 gc = score 1 | 3+ gc = score 0
+  const gcProm = golesContra / n;
+  const scoreGC = Math.max(1 - gcProm / 3, 0);
+
+  // ── Score final ponderado (0-100) ─────────────────────────
+  // 50% efectividad | 30% GF | 20% GC
+  const score = (efectividad * 0.5 + scoreGF * 0.3 + scoreGC * 0.2) * 100;
+
+  return Math.round(score);
+}
+
+// ─────────────────────────────────────────────────────────────
+// AJUSTE DE LAMBDA por rendimiento reciente
+// score 50 → sin cambio | 100 → +15% | 0 → -15%
+// ─────────────────────────────────────────────────────────────
+function ajustarLambdaPorRendimiento(lambdaBase, score) {
+  // Mapea [0, 100] → [-0.15, +0.15] de forma lineal centrada en 50
+  const factor = 1 + ((score - 50) / 50) * 0.5;
+  return Math.max(0.4, Math.min(2.8, lambdaBase * factor));
+}
+
+// ─────────────────────────────────────────────────────────────
+// generarResultado — con rendimiento reciente integrado
+// Agregar `historialPartidos` como parámetro opcional
+// ─────────────────────────────────────────────────────────────
+function generarResultado(
+  liga = 'argentina',
+  override = null,
+  equipoLocal = null,
+  equipoVisitante = null,
+  historialPartidos = []   // ← NUEVO
+) {
+  const config = override ?? LAMBDAS[liga];
+  let lambdaL = config.local;
+  let lambdaV = config.visitante;
+
+  // ── Ajuste por ranking FIFA ────────────────────────────────
+  if (equipoLocal && equipoVisitante) {
+    const rankL = rankingFIFA2026[equipoLocal.replace(/-[A-L]$/, "")]  || 50;
+    const rankV = rankingFIFA2026[equipoVisitante.replace(/-[A-L]$/, "")] || 50;
+
+    const diff   = rankV - rankL;
+    const k      = 0.022;
+    const ajuste = k * diff;
+
+    lambdaL = Math.max(0.4, Math.min(2.8, lambdaL + ajuste / 2));
+    lambdaV = Math.max(0.4, Math.min(2.8, lambdaV - ajuste / 2));
+  }
+
+  // ── Ajuste por rendimiento reciente ───────────────────────
+  if (historialPartidos.length > 0 && equipoLocal && equipoVisitante) {
+    const scoreL = calcularRendimientoReciente(equipoLocal,    historialPartidos);
+    console.log(equipoLocal, scoreL)
+    const scoreV = calcularRendimientoReciente(equipoVisitante, historialPartidos);
+
+    lambdaL = ajustarLambdaPorRendimiento(lambdaL, scoreL);
+    lambdaV = ajustarLambdaPorRendimiento(lambdaV, scoreV);
+  }
+
+  return {
+    goles_local:      poisson(lambdaL),
+    goles_visitante:  poisson(lambdaV),
+  };
+}
+/* 
     function generarResultado(liga = 'argentina', override = null, equipoLocal = null, equipoVisitante = null) {
   const config = override ?? LAMBDAS[liga];
   let lambdaL = config.local;
@@ -562,7 +742,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
 
     // k controla cuánto pesa el ranking (ajustá a gusto)
     // 0.008 = leve | 0.012 = moderado | 0.018 = agresivo
-    const k = 0.012;
+    const k = 0.022;
     const ajuste = k * diff;
 
     // Se suma/resta simétrico → el total de goles esperados se mantiene igual
@@ -574,7 +754,7 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
     goles_local: poisson(lambdaL),
     goles_visitante: poisson(lambdaV),
   };
-}
+} */
 
 function generarTarjetas() {
   // Promedios históricos por equipo por partido (aprox. Mundial)
@@ -598,184 +778,6 @@ function poissonRandom(lambda) {
   do { k++; p *= Math.random(); } while (p > L);
   return k - 1;
 }
-
-  /* function calcularLambdas(data) {
-  let sumLocal = 0, sumVisitante = 0, n = 0;
-
-  for (const partido of data) {
-    const gl = +partido.goles_local;
-    const gv = +partido.goles_visitante;
-
-    if (gl == 99 || gl === null || gl === undefined) continue;
-
-    sumLocal     += gl;
-    sumVisitante += gv;
-    n++;
-  }
-
-  return {
-    local:     parseFloat((sumLocal / n).toFixed(3)),
-    visitante: parseFloat((sumVisitante / n).toFixed(3)),
-    promedio:  parseFloat(((sumLocal + sumVisitante) / n).toFixed(3)),
-    partidos:  n,
-  };
-} */
-
-  // Uso:
-  /* const lambdas = calcularLambdas(data1); */
-
-  /* function generarResultado(liga = 'argentina', override = null) {
-    const config = override ?? LAMBDAS[liga];
-    return {
-      goles_local: poisson(config.local),
-      goles_visitante: poisson(config.visitante),
-    };
-  } */
-
-  /* function simular(liga = 'ligaArgentina', n = 50000) {
-  const conteo = {};
-
-  for (let i = 0; i < n; i++) {
-    const { goles_local, goles_visitante } = generarResultado(liga);
-    const key = `${goles_local}-${goles_visitante}`;
-    conteo[key] = (conteo[key] ?? 0) + 1;
-  }
-
-  return Object.entries(conteo)
-    .map(([resultado, veces]) => ({
-      resultado,
-      veces,
-      porcentaje: ((veces / n) * 100).toFixed(2) + '%',
-    }))
-    .sort((a, b) => b.veces - a.veces);
-}
-
-// Uso:
-const tabla = simular('mundial', 50000);
-console.table(tabla); // top 15 */
-
-  /* function simularGrupo(partidos, equipos, n = 100000) {
-  const campeon = {};
-
-  for (let i = 0; i < n; i++) {
-    // puntos de cada equipo en esta simulación
-    const puntos = Object.fromEntries(equipos.map(e => [e, 0]));
-
-    for (const { local, visitante, liga } of partidos) {
-      const { goles_local, goles_visitante } = generarResultado(liga);
-
-      if (goles_local > goles_visitante)       puntos[local]    += 3;
-      else if (goles_local < goles_visitante)  puntos[visitante] += 3;
-      else { puntos[local] += 1; puntos[visitante] += 1; }
-    }
-
-    // el que más puntos tiene gana el grupo
-    const ganador = Object.entries(puntos).sort((a, b) => b[1] - a[1])[0][0];
-    campeon[ganador] = (campeon[ganador] ?? 0) + 1;
-  }
-
-  return Object.entries(campeon)
-    .map(([equipo, veces]) => ({
-      equipo,
-      chances: ((veces / n) * 100).toFixed(2) + '%',
-    }))
-    .sort((a, b) => parseFloat(b.chances) - parseFloat(a.chances));
-}
-
-// Ejemplo: grupo con 3 partidos pendientes
-const partidos1 = [
-  { local: 'River',   visitante: 'Boca',      liga: 'ligaArgentina' },
-  { local: 'Racing',  visitante: 'River',     liga: 'ligaArgentina' },
-  { local: 'Boca',    visitante: 'Racing',    liga: 'ligaArgentina' },
-];
-
-const equipos = ['River', 'Boca', 'Racing'];
-
-const resultado = simularGrupo(partidos1, equipos, 1);
-console.table(resultado); */
-  // Con override para un partido específico (River vs equipo chico)
-  /* generarResultado('ligaArgentina', { local: 1.6, visitante: 0.6 }) */
-
-  // Uso:
-  /* console.log(generarResultado('mundial'))        // { goles_local: 1, goles_visitante: 2 }
-console.log(generarResultado('ligaArgentina'))  // { goles_local: 0, goles_visitante: 0 }
-console.log(generarResultado('bundesliga'))  */
-console.log(generarTarjetas())
-
-
-const rankingFIFA2026 = {
-  // Grupo A
-  "México": 15,
-  "Sudáfrica": 60,
-  "Corea del Sur": 25,
-  "República Checa": 41,
-
-  // Grupo B
-  "Canadá": 30,
-  "Bosnia y Herzegovina": 65,
-  "Qatar": 55,
-  "Suiza": 19,
-
-  // Grupo C
-  "Brasil": 6,
-  "Marruecos": 8,
-  "Haití": 83,
-  "Escocia": 43,
-
-  // Grupo D
-  "Estados Unidos": 16,
-  "Paraguay": 40,
-  "Australia": 27,
-  "Turquía": 22,
-
-  // Grupo E
-  "Alemania": 10,
-  "Curazao": 82,
-  "Costa de Marfil": 34,
-  "Ecuador": 23,
-
-  // Grupo F
-  "Países Bajos": 7,
-  "Japón": 18,
-  "Suecia": 38,
-  "Túnez": 44,
-
-  // Grupo G
-  "Bélgica": 9,
-  "Egipto": 29,
-  "Irán": 21,
-  "Nueva Zelanda": 85,
-
-  // Grupo H
-  "España": 2,
-  "Cabo Verde": 68,
-  "Arabia Saudita": 61,
-  "Uruguay": 17,
-
-  // Grupo I
-  "Francia": 1,
-  "Senegal": 14,
-  "Irak": 57,
-  "Noruega": 31,
-
-  // Grupo J
-  "Argentina": 3,
-  "Argelia": 28,
-  "Austria": 24,
-  "Jordania": 64,
-
-  // Grupo K
-  "Portugal": 5,
-  "RD de Congo": 46,
-  "Uzbekistán": 50,
-  "Colombia": 13,
-
-  // Grupo L
-  "Inglaterra": 4,
-  "Croacia": 11,
-  "Ghana": 74,
-  "Panamá": 33
-};
 
 function calcularYOrdenarTablaConDatos(partidos) {
   // --- 1. Construir tabla general desde partidos ---
@@ -840,63 +842,6 @@ partidos.forEach((p) => {
     const nombre = equipoConGrupo.replace(/-[A-L]$/, "");
     tabla[equipoConGrupo].rankingFIFA = rankingFIFA2026[nombre] || 999;
 });
-
-  /* partidos.forEach((p) => {
-    if (!p.jugado) return;
-
-    [p.local, p.visitante].forEach((equipo) => {
-      if (!tabla[equipo]) {
-        tabla[equipo] = {
-          pts: 0, pj: 0, pg: 0, pe: 0, pp: 0,
-          gf: 0, gc: 0, diff: 0,
-          fairPlay: 0,    // puntos disciplinarios (menor = mejor)
-          rankingFIFA: 0   // se puede inyectar desde fuera
-        };
-      }
-    });
-
-    const gl = p.goles_local;
-    const gv = p.goles_visitante;
-
-    tabla[p.local].pj++;
-    tabla[p.visitante].pj++;
-    tabla[p.local].gf += gl;
-    tabla[p.local].gc += gv;
-    tabla[p.local].diff += gl - gv;
-    tabla[p.visitante].gf += gv;
-    tabla[p.visitante].gc += gl;
-    tabla[p.visitante].diff += gv - gl;
-
-    if (gl > gv) {
-      tabla[p.local].pts += puntos_por_partido;
-      tabla[p.local].pg++;
-      tabla[p.visitante].pp++;
-    } else if (gl === gv) {
-      tabla[p.local].pts += 1;
-      tabla[p.visitante].pts += 1;
-      tabla[p.local].pe++;
-      tabla[p.visitante].pe++;
-    } else {
-      tabla[p.visitante].pts += puntos_por_partido;
-      tabla[p.visitante].pg++;
-      tabla[p.local].pp++;
-    }
-
-    // --- Fair Play: acumular puntos disciplinarios ---
-    // Cada partido puede tener arrays de tarjetas por equipo
-    // amarillas, dbl_amarillas, rojas_directas, amarilla_y_roja
-    if (p.tarjetas) {
-      ['local', 'visitante'].forEach((lado) => {
-        const t = p.tarjetas[lado];
-        if (!t) return;
-        const equipo = p[lado];
-        tabla[equipo].fairPlay += (t.amarillas || 0) * 1;           // -1 c/u
-        tabla[equipo].fairPlay += (t.dbl_amarillas || 0) * 3;       // -3 c/u
-        tabla[equipo].fairPlay += (t.rojas_directas || 0) * 4;      // -4 c/u
-        tabla[equipo].fairPlay += (t.amarilla_y_roja || 0) * 5;     // -5 c/u
-      });
-    }
-  }); */
 
   // --- 2. Stats de enfrentamientos directos entre un subconjunto ---
   function statsDirectos(equiposEnDisputa) {
@@ -988,77 +933,6 @@ partidos.forEach((p) => {
   }));
 }
 
-
-/* function calcularProbabilidades(
-  partidos,
-  cantidadClassif = 2,
-  mejoresTerceros = 8,    // Mundial 2026: 8 mejores terceros
-  simulaciones = 50_000
-) {
-  const equipos = obtenerEquipos(partidos);
-  const grupos = obtenerGrupos(data1);
-
-  const clasificaciones = {};
-  equipos.forEach((e) => (clasificaciones[e] = 0));
-
-  for (let sim = 0; sim < simulaciones; sim++) {
-    const partidosSimulados = partidos.map((p) => {
-      if (p.jugado) return { ...p, simulados: false, id: sim };
-      const resultado = generarResultado(competencia, null, p.local, p.visitante);
-      return { ...p, ...resultado, jugado: true, simulados: true, id: sim };
-    });
-
-    const terceros = [];
-
-    // PASO 1: Resolver todos los grupos
-    grupos.forEach((d) => {
-      const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
-      const tabla = calcularYOrdenarTablaConDatos(grupo);
-      const orden = tabla.map((t) => t.equipo);
-
-      // Clasificación directa (1ro, 2do)
-      orden.slice(0, cantidadClassif).forEach((eq) => clasificaciones[eq]++);
-
-      // Guardar el tercero con todos sus datos para comparar después
-      if (mejoresTerceros > 0 && tabla.length > cantidadClassif) {
-        terceros.push(tabla[cantidadClassif]); // el 3ro con sus stats completos
-      }
-
-      casos1.push([tabla, grupo]);
-    });
-
-    // PASO 2: Comparar terceros entre TODOS los grupos (criterios FIFA 2026)
-    if (mejoresTerceros > 0 && terceros.length > 0) {
-      terceros.sort((a, b) => {
-      if (b.pts !== a.pts) return b.pts - a.pts;
-      if (b.diff !== a.diff) return b.diff - a.diff;
-      if (b.gf !== a.gf) return b.gf - a.gf;
-      if ((a.fairPlay ?? 0) !== (b.fairPlay ?? 0)) return (a.fairPlay ?? 0) - (b.fairPlay ?? 0);
-      // ← ESTE es el que falta:
-      const rankA = rankingFIFA2026[a.equipo.replace(/-[A-L]$/, "")] || 999;
-      const rankB = rankingFIFA2026[b.equipo.replace(/-[A-L]$/, "")] || 999;
-      return rankA - rankB;
-    });
-
-      terceros
-        .slice(0, mejoresTerceros)
-        .forEach((t) => clasificaciones[t.equipo]++);
-    }
-  }
-
-  const resultado = {};
-  equipos.forEach((equipo) => {
-    resultado[equipo] = {
-      clasificaciones: clasificaciones[equipo],
-      probabilidad: Number(
-        ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)
-      ),
-    };
-  });
-
-  return resultado;
-} */
-
   function calcularProbabilidades(
   partidos,
   cantidadClassif = 2,
@@ -1078,7 +952,13 @@ partidos.forEach((p) => {
   for (let sim = 0; sim < simulaciones; sim++) {
     const partidosSimulados = partidos.map((p) => {
       if (p.jugado) return { ...p, simulados: false, id: sim };
-      const resultado = generarResultado(competencia, null, p.local, p.visitante);
+      const resultado = generarResultado(
+        competencia,
+        null,
+        p.local,
+        p.visitante,
+        partidos.filter(h => h.jugado)  // solo partidos reales ya disputados
+      );
       const tarjetas  = generarTarjetas(); 
       return {
         ...p,
@@ -1100,25 +980,15 @@ partidos.forEach((p) => {
     const terceros = [];
 
     grupos.forEach((d) => {
-      
-      /* const grupo = partidosSimulados.filter((e) => e.local.split('-')[1] === d);
-      const tabla = calcularYOrdenarTablaConDatos(grupo);
-      const orden = tabla.map((t) => t.equipo); */
       const grupo = partidosSimulados.filter((e) => 
         e.local.split('-')[1] === d || e.visitante.split('-')[1] === d
       );
       
       const tablaCompleta = calcularYOrdenarTablaConDatos(grupo);
-
-      /* if (d == 'A') {
-        console.table(tablaCompleta)
-      } */
       
       // Quedarse solo con los equipos que pertenecen al grupo d
       const tabla = tablaCompleta.filter(t => t.equipo.split('-')[1] === d);
       const orden = tabla.map((t) => t.equipo); 
-
-      /* console.log(sim, d, grupo) */
 
       // NEW: registrar posición de cada equipo en esta simulación
       orden.forEach((eq, i) => posiciones[eq].add(i + 1));
@@ -1384,7 +1254,7 @@ data1.forEach(d => {
   let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 1000);
   console.table(probabilidades)
 
-  /* function eliminarDuplicados(simulaciones) {
+  function eliminarDuplicados(simulaciones) {
     const vistas = new Set();
 
     return simulaciones.filter((sim) => {
@@ -1420,20 +1290,23 @@ data1.forEach(d => {
     const difB = riverB - bajoB;
 
     return difB - difA; // ← mayor diferencia primero
-  }); */
+  });
+
+  console.log(ordenados1)
 
   let totalCasosSimulados = [];
 
-  for (let indexFor = 0; indexFor < 1/* ordenados1.length */; indexFor++) {
+  for (let indexFor = 0; indexFor < (simular ? ordenados1.length : 1); indexFor++) {
 
     /* console.log(ordenados1[indexFor][1]); */
     
-    /* data1 = ordenados1[indexFor][1];
-
+    if (simular) {
+      data1 = ordenados1[indexFor][1];
+    }
     data1.forEach(d => {
-    d.goles_local = d.goles_local.toString()
-    d.goles_visitante = d.goles_visitante.toString()
-    }) */
+      d.goles_local = d.goles_local.toString()
+      d.goles_visitante = d.goles_visitante.toString()
+    })
 
     let fecha_adicional = 'Def.';
 

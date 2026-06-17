@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraguay — Caminos de Clasificación | Mundial 2026</title>
+    <meta name="description" content="Árbol radial interactivo de todos los escenarios posibles para la clasificación de Paraguay en el Grupo D del Mundial FIFA 2026.">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #06060f;
+            --bg-secondary: #0c0c1e;
+            --bg-card: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.06);
+            --text-primary: #e8e8f0;
+            --text-muted: #6b6b80;
+            --par-red: #CE1126;
+            --par-blue: #002A8F;
+            --green: #22c55e;
+            --lime: #84cc16;
+            --yellow: #eab308;
+            --orange: #f97316;
+            --red: #ef4444;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* ─── FLAG BAR ─── */
+        .flag-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--par-red) 0%, var(--par-red) 33.3%, #fff 33.3%, #fff 66.6%, var(--par-blue) 66.6%, var(--par-blue) 100%);
+        }
+        /* ─── HEADER ─── */
+        .header {
+            text-align: center;
+            padding: 2.5rem 1rem 1.5rem;
+            background: linear-gradient(180deg, rgba(12,12,30,0.8) 0%, var(--bg-primary) 100%);
+        }
+        .header h1 {
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--par-red), #fff 50%, var(--par-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+        }
+        .header p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            letter-spacing: 0.02em;
+        }
+        /* ─── INFO GRID ─── */
+        .info-grid {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 0 1.5rem;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto 1.5rem;
+        }
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem 1.6rem;
+            backdrop-filter: blur(12px);
+            flex: 1;
+            min-width: 280px;
+        }
+        .info-card h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .standings-table td {
+            padding: 0.35rem 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .standings-table tr:last-child td { border: none; }
+        .standings-table .pos { color: var(--text-muted); width: 24px; font-weight: 700; }
+        .standings-table .team { font-weight: 500; }
+        .standings-table .pts { text-align: right; font-weight: 700; color: var(--yellow); }
+        .standings-table .gd { text-align: right; color: var(--text-muted); font-size: 0.8rem; }
+        .standings-table tr.highlight { background: rgba(206,17,38,0.08); }
+        .standings-table tr.highlight .team { color: var(--par-red); }
+        .match-result {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.4rem 0;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .match-result:last-child { border: none; }
+        .match-result .score {
+            font-weight: 800;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            font-size: 0.8rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .match-result .vs { color: var(--text-muted); font-size: 0.75rem; }
+        .match-future {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .match-future:last-child { border: none; }
+        .match-future .fecha-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.06);
+            margin-right: 0.4rem;
+            font-weight: 600;
+        }
+        /* ─── STATS BAR ─── */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 1rem 1rem;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .stat-card {
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 110px;
+            border: 1px solid;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-number { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .stat-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.15rem; font-weight: 500; }
+        .stat-pct { font-size: 0.7rem; margin-top: 0.1rem; font-weight: 300; }
+        /* ─── LEGEND ─── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            padding: 0.8rem 1rem;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        /* ─── TREE ─── */
+        .tree-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .tree-controls {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            z-index: 10;
+        }
+        .tree-controls button {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(12,12,30,0.9);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .tree-controls button:hover { background: rgba(30,30,60,0.9); border-color: rgba(255,255,255,0.15); }
+        #tree-svg {
+            cursor: grab;
+        }
+        #tree-svg:active { cursor: grabbing; }
+        .link { fill: none; transition: stroke-opacity 0.3s, stroke-width 0.3s; }
+        .node circle { transition: all 0.3s; cursor: pointer; }
+        /* ─── TOOLTIP ─── */
+        .tooltip {
+            position: fixed;
+            background: rgba(10,10,22,0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 1000;
+            backdrop-filter: blur(16px);
+            max-width: 320px;
+            line-height: 1.5;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+        .tooltip hr {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin: 6px 0;
+        }
+        .tooltip .path-step {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 1px 0;
+        }
+        .tooltip .path-step .match-name {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+        .tooltip .path-step .result {
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .tooltip .standing-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            font-size: 0.75rem;
+        }
+        .tooltip .standing-row.par { font-weight: 700; color: var(--par-red); }
+        /* ─── LEVEL LABELS ─── */
+        .level-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 0 1rem 1rem;
+            flex-wrap: wrap;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .level-tag {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .level-tag .ring-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        /* ─── FOOTER ─── */
+        .footer {
+            text-align: center;
+            padding: 1.5rem 1rem 2rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+        .footer p {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .info-card, .stat-card { animation: fadeInUp 0.6s ease both; }
+        .info-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.05s; }
+        .stat-card:nth-child(3) { animation-delay: 0.1s; }
+        .stat-card:nth-child(4) { animation-delay: 0.15s; }
+        .stat-card:nth-child(5) { animation-delay: 0.2s; }
+        .stat-card:nth-child(6) { animation-delay: 0.25s; }
+    </style>
+</head>
+<body>
+    <div class="flag-bar"></div>
+    <header class="header">
+        <h1>🇵🇾 Paraguay — Caminos de Clasificación</h1>
+        <p>Mundial FIFA 2026 · Grupo D · 81 escenarios posibles</p>
+    </header>
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>📊 Tabla actual — Después de Fecha 1</h3>
+            <table class="standings-table">
+                <tr><td class="pos">1.</td><td class="team">🇺🇸 Estados Unidos</td><td class="pts">3 pts</td><td class="gd">+3</td></tr>
+                <tr><td class="pos">2.</td><td class="team">🇦🇺 Australia</td><td class="pts">3 pts</td><td class="gd">+2</td></tr>
+                <tr><td class="pos">3.</td><td class="team">🇹🇷 Turquía</td><td class="pts">0 pts</td><td class="gd">−2</td></tr>
+                <tr class="highlight"><td class="pos">4.</td><td class="team">🇵🇾 Paraguay</td><td class="pts">0 pts</td><td class="gd">−3</td></tr>
+            </table>
+        </div>
+        <div class="info-card">
+            <h3>⚽ Resultados y partidos restantes</h3>
+            <div class="match-result">
+                <span>🇺🇸 Estados Unidos</span>
+                <span class="score">4 – 1</span>
+                <span>Paraguay 🇵🇾</span>
+            </div>
+            <div class="match-result">
+                <span>🇦🇺 Australia</span>
+                <span class="score">2 – 0</span>
+                <span>Turquía 🇹🇷</span>
+            </div>
+            <div class="match-future"><span class="fecha-badge">F2</span> 🇺🇸 EEUU vs Australia 🇦🇺 · 🇹🇷 Turquía vs Paraguay 🇵🇾</div>
+            <div class="match-future"><span class="fecha-badge">F3</span> 🇵🇾 Paraguay vs Australia 🇦🇺 · 🇹🇷 Turquía vs EEUU 🇺🇸</div>
+        </div>
+    </div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>Clasifica (1° o 2°)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--lime)"></div>Muy probable (3° ≥ 4pts)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Posible (3° = 3pts)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Difícil (3° ≤ 2pts)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Eliminado (4°)</div>
+        <div class="legend-item" style="margin-left:1rem;padding-left:1rem;border-left:1px solid var(--border);">
+            <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="#888" stroke-width="2"/></svg>Partido de PAR
+        </div>
+        <div class="legend-item">
+            <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="#888" stroke-width="1.5" stroke-dasharray="4,2"/></svg>Otro partido
+        </div>
+    </div>
+    <div class="level-info">
+        <div class="level-tag"><div class="ring-num">1</div>Turquía vs Paraguay (F2)</div>
+        <div class="level-tag"><div class="ring-num">2</div>Paraguay vs Australia (F3)</div>
+        <div class="level-tag"><div class="ring-num">3</div>EEUU vs Australia (F2)</div>
+        <div class="level-tag"><div class="ring-num">4</div>Turquía vs EEUU (F3)</div>
+    </div>
+    <div class="tree-wrapper">
+        <div class="tree-controls">
+            <button id="zoom-in" title="Acercar">+</button>
+            <button id="zoom-out" title="Alejar">−</button>
+            <button id="zoom-reset" title="Restablecer">⟲</button>
+        </div>
+        <div id="tree-container"></div>
+    </div>
+    <footer class="footer">
+        <p>
+            Nota: Los marcadores se simplifican a 1-0 / 0-0 / 0-1 para calcular diferencia de gol.
+            La clasificación como «mejor tercero» depende de los resultados de los otros 11 grupos.
+            8 de 12 terceros clasifican, haciendo que un 3° con ≥ 3 pts tenga buenas chances.
+            Desempate: Puntos → Diferencia de gol → Goles a favor → Ranking FIFA.
+        </p>
+    </footer>
+    <div class="tooltip" id="tooltip"></div>
+    <script>
+    // ═══════════════════════════════════════════════════════════════
+    //  CONSTANTS & INITIAL STATE
+    // ═══════════════════════════════════════════════════════════════
+    const initial = {
+        'EEUU': { pts: 3, gf: 4, ga: 1 },
+        'AUS':  { pts: 3, gf: 2, ga: 0 },
+        'TUR':  { pts: 0, gf: 0, ga: 2 },
+        'PAR':  { pts: 0, gf: 1, ga: 4 }
+    };
+    const fifaRank = { 'EEUU': 15, 'AUS': 25, 'TUR': 35, 'PAR': 50 };
+    const teamNames = { 'EEUU': 'Estados Unidos', 'AUS': 'Australia', 'TUR': 'Turquía', 'PAR': 'Paraguay' };
+    const teamFlags = { 'EEUU': '🇺🇸', 'AUS': '🇦🇺', 'TUR': '🇹🇷', 'PAR': '🇵🇾' };
+    // Matches in tree level order — Paraguay's matches first
+    const matches = [
+        {
+            home: 'TUR', away: 'PAR',
+            label: 'Turquía vs Paraguay',
+            isParaguay: true,
+            outcomes: [
+                { type: 'away', label: 'GANA', color: '#22c55e' },
+                { type: 'draw', label: 'EMPATA',    color: '#eab308' },
+                { type: 'home', label: 'PIERDE', color: '#ef4444' }
+            ]
+        },
+        {
+            home: 'PAR', away: 'AUS',
+            label: 'Paraguay vs Australia',
+            isParaguay: true,
+            outcomes: [
+                { type: 'home', label: 'GANA', color: '#22c55e' },
+                { type: 'draw', label: 'EMPATA',    color: '#eab308' },
+                { type: 'away', label: 'PIERDE', color: '#ef4444' }
+            ]
+        },
+        {
+            home: 'EEUU', away: 'AUS',
+            label: 'EEUU vs Australia',
+            isParaguay: false,
+            outcomes: [
+                { type: 'home', label: '🇺🇸 Gana', color: '#818cf8' },
+                { type: 'draw', label: 'Empate',    color: '#a78bfa' },
+                { type: 'away', label: '🇦🇺 Gana', color: '#6366f1' }
+            ]
+        },
+        {
+            home: 'TUR', away: 'EEUU',
+            label: 'Turquía vs EEUU',
+            isParaguay: false,
+            outcomes: [
+                { type: 'home', label: '🇹🇷 Gana', color: '#818cf8' },
+                { type: 'draw', label: 'Empate',    color: '#a78bfa' },
+                { type: 'away', label: '🇺🇸 Gana', color: '#6366f1' }
+            ]
+        }
+    ];
+    // ═══════════════════════════════════════════════════════════════
+    //  HELPERS
+    // ═══════════════════════════════════════════════════════════════
+    function clone(o) { return JSON.parse(JSON.stringify(o)); }
+    function applyResult(state, match, outcomeType) {
+        const s = clone(state);
+        if (outcomeType === 'home') {
+            s[match.home].pts += 3;
+            s[match.home].gf  += 1;
+            s[match.away].ga  += 1;
+        } else if (outcomeType === 'draw') {
+            s[match.home].pts += 1;
+            s[match.away].pts += 1;
+            // 0-0 draw
+        } else {
+            s[match.away].pts += 3;
+            s[match.away].gf  += 1;
+            s[match.home].ga  += 1;
+        }
+        return s;
+    }
+    function standings(state) {
+        return Object.entries(state)
+            .map(([team, s]) => ({ team, pts: s.pts, gd: s.gf - s.ga, gf: s.gf, rank: fifaRank[team] }))
+            .sort((a, b) => {
+                if (b.pts !== a.pts) return b.pts - a.pts;
+                if (b.gd  !== a.gd)  return b.gd  - a.gd;
+                if (b.gf  !== a.gf)  return b.gf  - a.gf;
+                return a.rank - b.rank;
+            });
+    }
+    function classify(pos, pts) {
+        if (pos <= 2) return { status: 'classify',   color: '#22c55e', label: 'CLASIFICA',           emoji: '✅' };
+        if (pos === 3 && pts >= 4) return { status: 'likely',  color: '#84cc16', label: 'Muy probable (3°)', emoji: '🟢' };
+        if (pos === 3 && pts >= 3) return { status: 'possible', color: '#eab308', label: 'Posible (3°)',      emoji: '🟡' };
+        if (pos === 3)            return { status: 'unlikely', color: '#f97316', label: 'Difícil (3°)',      emoji: '🟠' };
+        return { status: 'eliminated', color: '#ef4444', label: 'ELIMINADO',          emoji: '❌' };
+    }
+    // ═══════════════════════════════════════════════════════════════
+    //  BUILD TREE
+    // ═══════════════════════════════════════════════════════════════
+    function buildTree(matchIdx, state) {
+        const match = matches[matchIdx];
+        return match.outcomes.map(oc => {
+            const newState = applyResult(state, match, oc.type);
+            const node = {
+                name: oc.label,
+                edgeColor: oc.color,
+                matchLabel: match.label,
+                matchIsParaguay: match.isParaguay,
+                depth: matchIdx + 1
+            };
+            if (matchIdx === matches.length - 1) {
+                const table = standings(newState);
+                const parIdx = table.findIndex(t => t.team === 'PAR');
+                const par = table[parIdx];
+                const cls = classify(parIdx + 1, par.pts);
+                node.isLeaf       = true;
+                node.position     = parIdx + 1;
+                node.pts          = par.pts;
+                node.gd           = par.gd;
+                node.gf           = par.gf;
+                node.classification = cls;
+                node.standings    = table;
+            } else {
+                node.children = buildTree(matchIdx + 1, newState);
+            }
+            return node;
+        });
+    }
+    const treeData = {
+        name: '🇵🇾',
+        matchLabel: 'Paraguay — Grupo D',
+        depth: 0,
+        children: buildTree(0, clone(initial))
+    };
+    // ═══════════════════════════════════════════════════════════════
+    //  STATISTICS
+    // ═══════════════════════════════════════════════════════════════
+    function countLeaves(node) {
+        if (node.isLeaf) {
+            const s = node.classification.status;
+            return { classify: s==='classify'?1:0, likely: s==='likely'?1:0, possible: s==='possible'?1:0, unlikely: s==='unlikely'?1:0, eliminated: s==='eliminated'?1:0, total: 1 };
+        }
+        return (node.children||[]).reduce((a, c) => {
+            const r = countLeaves(c);
+            return { classify: a.classify+r.classify, likely: a.likely+r.likely, possible: a.possible+r.possible, unlikely: a.unlikely+r.unlikely, eliminated: a.eliminated+r.eliminated, total: a.total+r.total };
+        }, { classify:0, likely:0, possible:0, unlikely:0, eliminated:0, total:0 });
+    }
+    const counts = countLeaves(treeData);
+    // Render stats bar
+    const favorable = counts.classify + counts.likely + counts.possible;
+    const statsData = [
+        { n: counts.classify,   pct: ((counts.classify/counts.total)*100).toFixed(1), label: 'Clasifica directo', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.25)' },
+        { n: counts.likely,     pct: ((counts.likely/counts.total)*100).toFixed(1),   label: 'Muy probable 3°',   color: '#84cc16', bg: 'rgba(132,204,22,0.08)', border: 'rgba(132,204,22,0.25)' },
+        { n: counts.possible,   pct: ((counts.possible/counts.total)*100).toFixed(1), label: 'Posible 3°',        color: '#eab308', bg: 'rgba(234,179,8,0.08)',  border: 'rgba(234,179,8,0.25)' },
+        { n: counts.unlikely,   pct: ((counts.unlikely/counts.total)*100).toFixed(1), label: 'Difícil 3°',        color: '#f97316', bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.25)' },
+        { n: counts.eliminated, pct: ((counts.eliminated/counts.total)*100).toFixed(1), label: 'Eliminado',       color: '#ef4444', bg: 'rgba(239,68,68,0.08)',  border: 'rgba(239,68,68,0.25)' },
+        { n: counts.total,      pct: '',                                                label: 'Escenarios',      color: '#e8e8f0', bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)' }
+    ];
+    document.getElementById('stats-bar').innerHTML = statsData.map(s =>
+        `<div class="stat-card" style="background:${s.bg};border-color:${s.border}">
+            <div class="stat-number" style="color:${s.color}">${s.n}</div>
+            <div class="stat-label" style="color:${s.color}">${s.label}</div>
+            ${s.pct ? `<div class="stat-pct" style="color:${s.color}">${s.pct}%</div>` : ''}
+        </div>`
+    ).join('');
+    // ═══════════════════════════════════════════════════════════════
+    //  D3 RADIAL TREE
+    // ═══════════════════════════════════════════════════════════════
+    const width  = 1300;
+    const height = 1300;
+    const radius = 540;
+    const svg = d3.select('#tree-container')
+        .append('svg')
+        .attr('id', 'tree-svg')
+        .attr('viewBox', [-width/2, -height/2, width, height])
+        .attr('width', '10000px')
+        .style('max-width', width + 'px')
+        .style('height', 'auto')
+        .style('max-height', '90vh');
+    // Glow filter
+    const defs = svg.append('defs');
+    const filter = defs.append('filter').attr('id', 'glow');
+    filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur');
+    filter.append('feMerge').selectAll('feMergeNode')
+        .data(['blur', 'SourceGraphic']).join('feMergeNode')
+        .attr('in', d => d);
+    const g = svg.append('g');
+    // Zoom
+    const zoomBehavior = d3.zoom()
+        .scaleExtent([0.3, 5])
+        .on('zoom', e => g.attr('transform', e.transform));
+    svg.call(zoomBehavior);
+    document.getElementById('zoom-in').addEventListener('click', () => svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.4));
+    document.getElementById('zoom-out').addEventListener('click', () => svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7));
+    document.getElementById('zoom-reset').addEventListener('click', () => svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity));
+    // D3 hierarchy
+    const root = d3.hierarchy(treeData);
+    const treeLayout = d3.tree()
+        .size([2 * Math.PI, radius])
+        .separation((a, b) => (a.parent === b.parent ? 1 : 1.5) / a.depth);
+    treeLayout(root);
+    // Compute qualify rate and descendant counts (bottom-up)
+    root.eachAfter(d => {
+        if (!d.children) {
+            const st = d.data.classification?.status;
+            d.qualifyRate = (st === 'classify' || st === 'likely') ? 1 : (st === 'possible') ? 0.6 : (st === 'unlikely') ? 0.2 : 0;
+            d.counts = { classify: st==='classify'?1:0, likely: st==='likely'?1:0, possible: st==='possible'?1:0, unlikely: st==='unlikely'?1:0, eliminated: st==='eliminated'?1:0, total: 1 };
+        } else {
+            d.qualifyRate = d3.mean(d.children, c => c.qualifyRate);
+            d.counts = { classify:0, likely:0, possible:0, unlikely:0, eliminated:0, total:0 };
+            d.children.forEach(c => Object.keys(d.counts).forEach(k => d.counts[k] += c.counts[k]));
+        }
+    });
+    // Color scale for links based on qualify rate
+    const qColorScale = d3.scaleLinear()
+        .domain([0, 0.35, 0.65, 1])
+        .range(['#ef4444', '#f97316', '#84cc16', '#22c55e'])
+        .interpolate(d3.interpolateRgb);
+    // ─── Level ring guides ───
+    const levelRadii = [1, 2, 3, 4].map(d => d * radius / 4);
+    const levelLabels = ['Turquía vs Paraguay', 'Paraguay vs Australia', 'EEUU vs Australia', 'Turquía vs EEUU'];
+    g.selectAll('.level-ring')
+        .data(levelRadii)
+        .join('circle')
+        .attr('class', 'level-ring')
+        .attr('r', d => d)
+        .attr('fill', 'none')
+        .attr('stroke', 'rgba(255,255,255,0.04)')
+        .attr('stroke-dasharray', '3,5');
+    // Ring labels (at top)
+    g.selectAll('.ring-label')
+        .data(levelRadii)
+        .join('text')
+        .attr('x', 0)
+        .attr('y', (d, i) => -d - 6)
+        .attr('text-anchor', 'middle')
+        .text((d, i) => levelLabels[i])
+        .style('fill', 'rgba(255,255,255,0.15)')
+        .style('font-size', '8px')
+        .style('font-weight', 500)
+        .style('letter-spacing', '0.5px');
+    // ─── Links ───
+    const linkSel = g.selectAll('.link')
+        .data(root.links())
+        .join('path')
+        .attr('class', 'link')
+        .attr('d', d3.linkRadial().angle(d => d.x).radius(d => d.y))
+        .attr('stroke', d => qColorScale(d.target.qualifyRate))
+        .attr('stroke-opacity', d => d.source.depth < 2 ? 0.55 : 0.3)
+        .attr('stroke-width', d => d.source.depth < 2 ? 2.5 : 1.5)
+        .attr('stroke-dasharray', d => d.source.depth < 2 ? 'none' : '4,2');
+    // ─── Nodes ───
+    const nodeSel = g.selectAll('.node')
+        .data(root.descendants())
+        .join('g')
+        .attr('class', 'node')
+        .attr('transform', d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`);
+    // Root node
+    nodeSel.filter(d => d.depth === 0)
+        .append('circle')
+        .attr('r', 16)
+        .attr('fill', '#CE1126')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 2.5)
+        .attr('filter', 'url(#glow)');
+    nodeSel.filter(d => d.depth === 0)
+        .append('text')
+        .attr('dy', '-26')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(90)')
+        .text('🇵🇾 Paraguay')
+        .style('font-size', '13px')
+        .style('font-weight', 800)
+        .style('fill', '#fff')
+        .style('text-shadow', '0 0 12px rgba(206,17,38,0.6)');
+    // Internal nodes (levels 1-3)
+    nodeSel.filter(d => d.depth > 0 && d.depth < 4)
+        .append('circle')
+        .attr('r', d => d.depth === 1 ? 5 : d.depth === 2 ? 3.5 : 2.5)
+        .attr('fill', d => {
+            const rate = d.qualifyRate;
+            return d3.interpolateRgb('#1a1a2e', qColorScale(rate))(0.3);
+        })
+        .attr('stroke', d => qColorScale(d.qualifyRate))
+        .attr('stroke-width', d => d.depth === 1 ? 2 : 1.5)
+        .attr('stroke-opacity', 0.7);
+    // Leaf nodes (level 4)
+    const leaves = nodeSel.filter(d => d.depth === 4);
+    leaves.append('circle')
+        .attr('r', 5)
+        .attr('fill', d => d.data.classification.color)
+        .attr('stroke', d => d.data.classification.color)
+        .attr('stroke-width', 1.5)
+        .attr('fill-opacity', 0.25)
+        .attr('stroke-opacity', 0.8);
+    // Leaf position labels
+    leaves.append('text')
+        .attr('dy', '0.35em')
+        .attr('x', d => d.x < Math.PI ? 10 : -10)
+        .attr('text-anchor', d => d.x < Math.PI ? 'start' : 'end')
+        .attr('transform', d => d.x >= Math.PI ? 'rotate(180)' : null)
+        .text(d => `${d.data.position}° · ${d.data.pts}pts`)
+        .style('font-size', '7px')
+        .style('font-weight', 600)
+        .style('fill', d => d.data.classification.color)
+        .style('opacity', 0.85);
+    // ─── Level 1 edge labels (Paraguay vs Turkey results) ───
+    root.children.forEach(child => {
+        const r   = child.y * 0.5;
+        const cx  = r * Math.sin(child.x);
+        const cy  = -r * Math.cos(child.x);
+        const ang = child.x * 180 / Math.PI;
+        const labelG = g.append('g')
+            .attr('transform', `translate(${cx},${cy})`);
+        // Background pill
+        const text = child.data.name;
+        const textW = text.length * 5.5 + 16;
+        labelG.append('rect')
+            .attr('x', -textW / 2)
+            .attr('y', -10)
+            .attr('width', textW)
+            .attr('height', 20)
+            .attr('rx', 10)
+            .attr('fill', 'rgba(6,6,15,0.92)')
+            .attr('stroke', child.data.edgeColor)
+            .attr('stroke-width', 1)
+            .attr('stroke-opacity', 0.6);
+        labelG.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dy', '0.35em')
+            .text(text)
+            .style('font-size', '9px')
+            .style('font-weight', 700)
+            .style('fill', child.data.edgeColor);
+    });
+    // ─── Level 2 edge labels (compact) ───
+    root.children.forEach(child => {
+        child.children.forEach(grandchild => {
+            const sr = child.y, sa = child.x;
+            const tr = grandchild.y, ta = grandchild.x;
+            const sx = sr * Math.sin(sa), sy = -sr * Math.cos(sa);
+            const tx = tr * Math.sin(ta), ty = -tr * Math.cos(ta);
+            const mx = (sx + tx) / 2, my = (sy + ty) / 2;
+            const labelG = g.append('g')
+                .attr('transform', `translate(${mx},${my})`);
+            const text = grandchild.data.name;
+            const textW = text.length * 4.5 + 10;
+            labelG.append('rect')
+                .attr('x', -textW / 2).attr('y', -7)
+                .attr('width', textW).attr('height', 14)
+                .attr('rx', 7)
+                .attr('fill', 'rgba(6,6,15,0.88)')
+                .attr('stroke', grandchild.data.edgeColor)
+                .attr('stroke-width', 0.5)
+                .attr('stroke-opacity', 0.4);
+            labelG.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', '0.32em')
+                .text(text)
+                .style('font-size', '7px')
+                .style('font-weight', 600)
+                .style('fill', grandchild.data.edgeColor)
+                .style('opacity', 0.8);
+        });
+    });
+    // ═══════════════════════════════════════════════════════════════
+    //  INTERACTIVITY
+    // ═══════════════════════════════════════════════════════════════
+    const tooltip = d3.select('#tooltip');
+    function getPath(d) {
+        const path = [];
+        let cur = d;
+        while (cur.parent) {
+            path.unshift({ matchLabel: cur.data.matchLabel, name: cur.data.name, color: cur.data.edgeColor });
+            cur = cur.parent;
+        }
+        return path;
+    }
+    function tooltipHTML(d) {
+        if (d.depth === 0) {
+            return `<strong style="font-size:1rem">🇵🇾 Paraguay — Grupo D</strong><br>
+                <span style="color:#888">Situación actual: 4° con 0 pts · DG: −3</span><br>
+                <span style="color:#888">Necesita ganar ambos partidos y esperar resultados favorables.</span>`;
+        }
+        const path = getPath(d);
+        let html = '<div style="margin-bottom:4px">';
+        path.forEach(p => {
+            html += `<div class="path-step">
+                <span class="match-name">${p.matchLabel}:</span>
+                <span class="result" style="color:${p.color}">${p.name}</span>
+            </div>`;
+        });
+        html += '</div>';
+        if (d.data.isLeaf) {
+            html += `<hr>`;
+            html += `<div style="font-size:0.9rem;font-weight:700;color:${d.data.classification.color};margin:4px 0">
+                ${d.data.classification.emoji} ${d.data.classification.label} — ${d.data.position}°
+            </div>`;
+            html += `<div style="color:#888;font-size:0.72rem;margin-bottom:4px">PAR: ${d.data.pts} pts · DG: ${d.data.gd >= 0 ? '+' : ''}${d.data.gd} · GF: ${d.data.gf}</div>`;
+            html += `<hr>`;
+            html += `<div style="font-size:0.7rem;color:#666;margin-bottom:2px">Tabla final del grupo:</div>`;
+            d.data.standings.forEach((t, i) => {
+                const isPar = t.team === 'PAR';
+                html += `<div class="standing-row ${isPar ? 'par' : ''}" style="${isPar ? '' : 'color:#ccc'}">
+                    <span>${i+1}. ${teamFlags[t.team]} ${teamNames[t.team]}</span>
+                    <span>${t.pts}pts · ${t.gd >= 0 ? '+' : ''}${t.gd}</span>
+                </div>`;
+            });
+        } else {
+            html += `<hr>`;
+            const c = d.counts;
+            html += `<div style="font-size:0.72rem;color:#888;margin-bottom:3px">De ${c.total} escenarios:</div>`;
+            if (c.classify)   html += `<div style="color:#22c55e;font-size:0.75rem">✅ ${c.classify} clasifica directo</div>`;
+            if (c.likely)     html += `<div style="color:#84cc16;font-size:0.75rem">🟢 ${c.likely} muy probable</div>`;
+            if (c.possible)   html += `<div style="color:#eab308;font-size:0.75rem">🟡 ${c.possible} posible</div>`;
+            if (c.unlikely)   html += `<div style="color:#f97316;font-size:0.75rem">🟠 ${c.unlikely} difícil</div>`;
+            if (c.eliminated) html += `<div style="color:#ef4444;font-size:0.75rem">❌ ${c.eliminated} eliminado</div>`;
+        }
+        return html;
+    }
+    nodeSel.on('mouseover', function(event, d) {
+        // Highlight path
+        const ancestors = new Set();
+        let cur = d;
+        while (cur) { ancestors.add(cur); cur = cur.parent; }
+        linkSel
+            .attr('stroke-opacity', l => ancestors.has(l.target) && ancestors.has(l.source) ? 1 : 0.06)
+            .attr('stroke-width', l => ancestors.has(l.target) && ancestors.has(l.source) ? (l.source.depth < 2 ? 4 : 3) : (l.source.depth < 2 ? 2.5 : 1.5));
+        nodeSel.selectAll('circle')
+            .attr('opacity', n => ancestors.has(n) ? 1 : 0.15);
+        // Tooltip
+        tooltip.html(tooltipHTML(d))
+            .style('opacity', 1);
+        const rect = tooltip.node().getBoundingClientRect();
+        let left = event.clientX + 16;
+        let top  = event.clientY - 10;
+        if (left + rect.width > window.innerWidth - 10) left = event.clientX - rect.width - 16;
+        if (top + rect.height > window.innerHeight - 10) top = window.innerHeight - rect.height - 10;
+        if (top < 10) top = 10;
+        tooltip.style('left', left + 'px').style('top', top + 'px');
+    })
+    .on('mousemove', function(event) {
+        const rect = tooltip.node().getBoundingClientRect();
+        let left = event.clientX + 16;
+        let top  = event.clientY - 10;
+        if (left + rect.width > window.innerWidth - 10) left = event.clientX - rect.width - 16;
+        if (top + rect.height > window.innerHeight - 10) top = window.innerHeight - rect.height - 10;
+        if (top < 10) top = 10;
+        tooltip.style('left', left + 'px').style('top', top + 'px');
+    })
+    .on('mouseout', function() {
+        linkSel
+            .attr('stroke-opacity', d => d.source.depth < 2 ? 0.55 : 0.3)
+            .attr('stroke-width', d => d.source.depth < 2 ? 2.5 : 1.5);
+        nodeSel.selectAll('circle').attr('opacity', 1);
+        tooltip.style('opacity', 0);
+    });
+    // ═══════════════════════════════════════════════════════════════
+    //  ENTRANCE ANIMATION
+    // ═══════════════════════════════════════════════════════════════
+    linkSel
+        .attr('stroke-dashoffset', function() { return this.getTotalLength(); })
+        .attr('stroke-dasharray', function() {
+            const len = this.getTotalLength();
+            const d = d3.select(this).datum();
+            return d.source.depth < 2 ? `${len}` : `4,2`;
+        })
+        .transition()
+        .duration(1200)
+        .delay((d, i) => d.source.depth * 200 + i * 8)
+        .attr('stroke-dashoffset', 0)
+        .on('end', function() {
+            const d = d3.select(this).datum();
+            d3.select(this).attr('stroke-dasharray', d.source.depth < 2 ? 'none' : '4,2');
+        });
+    nodeSel.selectAll('circle')
+        .attr('r', 0)
+        .transition()
+        .duration(400)
+        .delay((d) => {
+            const node = d3.select(this.parentNode).datum ? d3.select(this.parentNode).datum() : d;
+            return 300;
+        })
+        .attr('r', function() {
+            const d = d3.select(this.parentNode).datum();
+            if (d.depth === 0) return 16;
+            if (d.depth === 4) return 5;
+            if (d.depth === 1) return 5;
+            if (d.depth === 2) return 3.5;
+            return 2.5;
+        });
+    console.log(`🇵🇾 Paraguay — Análisis completo: ${counts.total} escenarios`);
+    console.log(`   ✅ Clasifica: ${counts.classify} (${((counts.classify/counts.total)*100).toFixed(1)}%)`);
+    console.log(`   🟢 Muy probable: ${counts.likely} (${((counts.likely/counts.total)*100).toFixed(1)}%)`);
+    console.log(`   🟡 Posible: ${counts.possible} (${((counts.possible/counts.total)*100).toFixed(1)}%)`);
+    console.log(`   🟠 Difícil: ${counts.unlikely} (${((counts.unlikely/counts.total)*100).toFixed(1)}%)`);
+    console.log(`   ❌ Eliminado: ${counts.eliminated} (${((counts.eliminated/counts.total)*100).toFixed(1)}%)`);
+    </script>
+</body>
+</html>
