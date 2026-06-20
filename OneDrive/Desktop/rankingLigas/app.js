@@ -33,6 +33,7 @@ let empate_color = '#cc9900';
 let derrota_color = '#cc2900';
 let grey_color = '#616161';
 let black_color = '#202020';
+let grey1_color = '#b5b5b5';
 
 let primer_puesto = '#76c476';
 let segundo_puesto = '#94e694';
@@ -42,6 +43,7 @@ let not_played_yet = 99;
 let not_played_yet_x = 0.4;
 let fechas_not_played = 1;
 
+let ingles = true
 let localia = false;
 let stats_on_top = false;
 let datos_totales = false;
@@ -51,6 +53,8 @@ let neutral = true;
 let efectividadYPromedioGoles = false;
 
 let competencia = nombre_torneo;
+
+let punctuation_translation = ['.', ingles ? '.' : ',']
 
 if (nombre_torneo == 'Mundial 2026') {
   repechaje = 1;
@@ -154,6 +158,8 @@ const getFlag = (raw) => {
 const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabilidades) => {
   console.log(data, fechas_playoff);
 
+  /* ingles ? nombre_torneo = 'World Cup 2026' : nombre_torneo */
+
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
 
@@ -177,7 +183,19 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     1: 1,
   };
 
-  let playoffs_names = {
+  let playoffs_names = {}
+
+  if (ingles) {
+    playoffs_names = {
+    32: 'Round of 64',
+    16: 'Round of 32',
+    8: 'Round of 16',
+    4: 'Quarterfinals',
+    2: 'Semifinals',
+    1: 'Final',
+} } else {
+
+  playoffs_names = {
     32: '32avos',
     16: 'Dieciseisavos',
     8: 'Octavos',
@@ -185,6 +203,16 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     2: 'Semifinales',
     1: 'Final',
   };
+}
+
+  /* let playoffs_names = {
+    32: 'Round of 64',
+    16: 'Round of 32',
+    8: 'Round of 16',
+    4: 'Quarterfinals',
+    2: 'Semifinals',
+    1: 'Final',
+}; */
 
   /* let playoffs_names = {
     32: '32avos',
@@ -304,7 +332,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
       'text-anchor': 'middle',
       'alignment-baseline': 'central',
     })
-    .text(nombre_torneo.replace('_', '/'));
+    .text((ingles ? 'World Cup 2026' : nombre_torneo).replace('_', '/'));
 
   svg
     .append('text')
@@ -717,7 +745,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     Panamá: 'Panama',
   };
 
-  return map[name] || name;
+  return (ingles ? map[name] || name : name);
 }
 
   function getRankingFIFA1(name) {
@@ -846,12 +874,18 @@ stripes.forEach(s => {
 
   let mejores = mejores_terceros_sort([...yearSlice]).map((d) => d.name);
 
-  let mejores_num = Object.fromEntries(
-  Array.from({ length: equipos_por_grupos }, (_, i) => [
-    i,
-    mejores_terceros_sort([...yearSlice]).filter((d) => d.rankInGroup == i).map((d) => d.name)
-  ])
-);
+  let mejores_num = {}
+  if (grupos > 1) {
+
+    mejores_num = Object.fromEntries(
+      Array.from({ length: equipos_por_grupos }, (_, i) => [
+        i,
+        mejores_terceros_sort([...yearSlice]).filter((d) => d.rankInGroup == i).map((d) => d.name)
+      ])
+    );
+  }
+
+  console.log(mejores_num)
 
   svg
     .append('clipPath')
@@ -3046,6 +3080,24 @@ stripes.forEach(s => {
         fill: '#dddddd',
       });
 
+      /* svg
+      .selectAll('.rect')
+      .data(d3.range(primera_ronda_playoff * 2))
+      .enter()
+      .append('rect')
+      .attrs({
+        class: 'playoffs_names',
+        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 5 + width_playoffs * 4,
+        y: (d, i) =>
+          yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2 + height/3,
+        width: width_playoffs,
+        height: heightBars,
+      })
+      .attr('style', (d) => `outline: 1px solid grey`)
+      .styles({
+        fill: '#dddddd',
+      }); */
+
     arr.forEach((dd) => {
       /* svg
         .selectAll('.rect')
@@ -3190,7 +3242,7 @@ stripes.forEach(s => {
         'alignment-baseline': defaults.name.style.alignment_baseline,
         opacity: 0.7,
       })
-      .text((d) => d.name.split('-')[0]);
+      .text((d) => countryToEnglish(d.name.split('-')[0]));
 
     svg
       .selectAll('.text')
@@ -3356,7 +3408,7 @@ stripes.forEach(s => {
     })
     .text((semana) => {
       let filterr = data.filter((d) => d.semana == semana && d.vs != 'none' && d.goles_fecha !== not_played_yet);
-      return filterr.length > 0 ? ('(' + d3.format(',.1f')(d3.sum(filterr, (d) => d.goles_fecha) / (filterr.length / 2)) + ')').replace('.', ',') : '';
+      return filterr.length > 0 ? ('(' + d3.format(',.1f')(d3.sum(filterr, (d) => d.goles_fecha) / (filterr.length / 2)) + ')').replace(punctuation_translation[0], punctuation_translation[1]) : '';
     });
 
   svg
@@ -3380,7 +3432,7 @@ stripes.forEach(s => {
     })
     .text((d) =>
       d == dates[dates.length - 1]
-        ? 'F'
+        ? 'F.'
         : d == dates[0]
           ? d
           : data
@@ -3404,7 +3456,7 @@ stripes.forEach(s => {
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text('Probabilidad*: 100.000 Simulaciones. (100%) = Clasificado a próxima fase a efectos prácticos. (0%) = Afuera.')
+    .text('Probabilidad*: 100.000 Simulaciones. (100%) = Clasificado. (0%) = Afuera.')
 
     svg
     .append('text')
@@ -3489,7 +3541,7 @@ stripes.forEach(s => {
     'text-anchor': 'start',
     'alignment-baseline': 'central',
   })
-  .text('Probability*: 100,000 Simulations. (100%) = Qualified for next round for all practical purposes. (0%) = Eliminated.')
+  .text(ingles ? 'Probability*: 100,000 Simulations. (100%) = Qualified. (0%) = Eliminated.' : 'Probabilidad*: 100.000 Simulaciones. (100%) = Clasificado. (0%) = Afuera.')
 
 svg
   .append('text')
@@ -3505,7 +3557,7 @@ svg
     'text-anchor': 'start',
     'alignment-baseline': 'central',
   })
-  .text('Fair Play*: Points system based on cards. Yellow: -1, Indirect red: -3, Direct red: -4, Yellow + Direct red: -5.')
+  .text(ingles ? 'Fair Play*: Points system based on cards. Yellow: -1, Indirect red: -3, Direct red: -4, Yellow + Direct red: -5.' : 'Fairplay*: Sistema de puntos en base a las tarjetas. Amarilla: -1, Roja indirecta: -3, Roja directa: -4, Amarilla + Roja directa: -5.')
 
 svg
   .append('text')
@@ -3521,7 +3573,7 @@ svg
     'text-anchor': 'start',
     'alignment-baseline': 'central',
   })
-  .text('Tiebreakers: PTS > [Head-to-head: PTS > GD > GF] > GD > GF > Fair Play > FIFA Ranking')
+  .text(ingles ? 'Tiebreakers: PTS > [Head-to-head: PTS > GD > GF] > GD > GF > Fair Play > FIFA Ranking' : 'Criterios de desempate: PTS > [Enfrentamientos directos: PTS > DIF > GF] > DIF > GF > FairPlay > RankingFIFA')
 
 svg
   .append('text')
@@ -3533,13 +3585,13 @@ svg
     'clip-path': `url(#ellipse-clip-margin-left)`,
   })
   .styles({
-    'font-size': heightBars * 0.25,
+    'font-size': heightBars * 0.24,
     fill: 'grey',
     'font-weight': 600,
     'text-anchor': 'start',
     'alignment-baseline': 'central',
   })
-  .text('Team - FIFA Ranking - Probability* - Possible position range')
+  .text(ingles ? 'Team - FIFA Ranking - Probability* - Possible position range' : 'Selección - RankingFIFA - Probabilidad* - Posiciones posibles.')
 
   /* svg
   .append('text')
@@ -3569,13 +3621,13 @@ svg
     'clip-path': `url(#ellipse-clip-margin-left)`,
   })
   .styles({
-    'font-size': heightBars * 0.25,
+    'font-size': heightBars * 0.24,
     fill: 'grey',
     'font-weight': 600,
     'text-anchor': 'start',
     'alignment-baseline': 'central',
   })
-  .text('PTS - MP - W - D - L - GF - GA - GD - Fair Play*')
+  .text(ingles ? 'PTS - MP - W - D - L - GF - GA - GD - Fair Play*' : 'PTS - PJ - PG - PE - PP - GF - GC - DIF - FairPlay*')
 
      /* const labelGroup = svg
   .append('text')
@@ -3635,7 +3687,8 @@ segments.forEach(({ text, fill }) => {
     Paraguay: ['#D52B1E', '#FFFFFF', '#0038A8'],
     Uruguay: ['#6da9f1', '#FFFFFF', '#6da9f1', '#FFFFFF', '#6da9f1'],
     // ─── CONCACAF ──────────────────────────────────────────────────
-    'Estados Unidos': ['#B31942', '#FFFFFF', '#0A3161'],
+    /* 'Estados Unidos': ['#B31942', '#FFFFFF', '#0A3161'], */
+    'Estados Unidos': ['#FFFFFF', '#B31942', '#FFFFFF', '#B31942', '#FFFFFF'],
     México: ['#006341', '#FFFFFF', '#CE1126'],
     Canadá: ['#FF0000', '#FFFFFF', '#FF0000', '#FFFFFF', '#FF0000'],
     Panamá: ['#FFFFFF', '#D21034', '#005DA6', '#FFFFFF'],
@@ -3645,7 +3698,7 @@ segments.forEach(({ text, fill }) => {
     Francia: ['#002395', '#FFFFFF', '#ED2939'],
     Inglaterra: ['#FFFFFF', '#CE1124', '#FFFFFF'],
     Alemania: ['#000000', '#DD0000', '#FFCC00'],
-    España: ['#AA151B', '#F1BF00', '#AA151B'],
+    España: ['#ff0028', '#F1BF00', '#ff0028'],
     'Países Bajos': ['#AE1C28', '#FFFFFF', '#21468B'],
     Portugal: ['#006600', '#006600', '#FF0000', '#FF0000', '#FF0000'],
     Bélgica: ['#000000', '#FDDA24', '#EF3340'],
@@ -3653,7 +3706,8 @@ segments.forEach(({ text, fill }) => {
     Austria: ['#ED2939', '#FFFFFF', '#ED2939'],
     Suiza: ['#FF0000', '#FFFFFF', '#FF0000'],
     Suecia: ['#006AA7', '#FECC02', '#006AA7'],
-    Noruega: ['#EF2B2D', '#FFFFFF', '#002868'],
+    /* Noruega: ['#EF2B2D', '#FFFFFF', '#002868'], */
+    Noruega: ['#EF2B2D', '#EF2B2D', '#FFFFFF', '#002868', '#002868', '#FFFFFF', '#EF2B2D', '#EF2B2D'],
     Dinamarca: ['#C8102E', '#FFFFFF', '#C8102E'],
     Escocia: ['#003399', '#FFFFFF', '#003399'],
     Turquía: ['#E30A17', '#FFFFFF', '#E30A17'],
@@ -3661,8 +3715,8 @@ segments.forEach(({ text, fill }) => {
     'República Checa': ['#FFFFFF', '#11457E', '#D7141A'],
     // ─── AFC ──────────────────────────────────────────────────────
     Japón: ['#FFFFFF', '#BC002D', '#FFFFFF'],
-    'Corea del Sur': ['#FFFFFF', '#CD2E3A', '#0047A0'],
-    Australia: ['#002868', '#FFCD00', '#002868'],
+    'Corea del Sur': ['#FFFFFF', '#FFFFFF', '#CD2E3A', '#0047A0', '#FFFFFF', '#FFFFFF'],
+    Australia: ['#FFCD00', '#006C35', '#FFCD00'],
     'Arabia Saudita': ['#006C35', '#FFFFFF', '#006C35'],
     Irán: ['#239F40', '#FFFFFF', '#DA0000'],
     Irak: ['#CE1126', '#FFFFFF', '#000000'],
@@ -3675,10 +3729,13 @@ segments.forEach(({ text, fill }) => {
     Nigeria: ['#008751', '#FFFFFF', '#008751'],
     Egipto: ['#CE1126', '#FFFFFF', '#000000'],
     'Costa de Marfil': ['#FF8200', '#FFFFFF', '#009A44'],
-    Sudáfrica: ['#007749', '#FFB81C', '#000000', '#FFFFFF', '#002395', '#DE3831'],
-    'RD de Congo': ['#007FFF', '#F7D618', '#CE1021'],
+    /* Sudáfrica: ['#007749', '#FFB81C', '#000000', '#FFFFFF', '#002395', '#DE3831'], */
+    Sudáfrica: ['#DE3831', '#DE3831', '#FFFFFF', '#007749', '#007749', '#FFFFFF', '#002395', '#002395'],
+    /* 'RD de Congo': ['#007FFF', '#F7D618', '#CE1021'], */
+    'RD de Congo': ['#007FFF', '#007FFF', '#f7d617', '#CE1021', '#CE1021', '#f7d617', '#007FFF', '#007FFF'],
     Ghana: ['#EF3340', '#FCD116', '#006B3F'],
-    Argelia: ['#006233', '#FFFFFF', '#D21034'],
+    /* Argelia: ['#006233', '#FFFFFF', '#D21034'], */
+    Argelia: ['#006233', '#FFFFFF'],
     Túnez: ['#E70013', '#FFFFFF', '#E70013'],
     'Cabo Verde': ['#003893', '#003893', '#FFFFFF', '#CE1126', '#FFFFFF'],
     // ─── OFC ──────────────────────────────────────────────────────
@@ -3746,13 +3803,61 @@ segments.forEach(({ text, fill }) => {
     y: margin.top * 0.85,
   })
   .styles({
-    'font-size': heightBars * 0.25,
+    'font-size': heightBars * 0.24,
     fill: 'grey',
     'font-weight': 600,
     'text-anchor': 'end',
     'alignment-baseline': 'central',
   })
-  .text('Grp. · InterGrp. · Total')
+  .text(ingles ? 'Inter Group - Overall' : 'Inter Grupo - General')
+
+   svg
+  .append('text')
+  .attrs({
+    class: 'years',
+    x: margin_left/2,
+    y: margin.top * 0.725,
+  })
+  .styles({
+    'font-size': heightBars * 0.24,
+    fill: 'grey',
+    'font-weight': 600,
+    'text-anchor': 'middle',
+    'alignment-baseline': 'central',
+  })
+  .text((ingles ? 'of ' : 'de ') + equipos_por_grupos)
+
+  svg
+  .append('text')
+  .attrs({
+    class: 'years',
+    x: margin_left/2,
+    y: margin.top * 0.85,
+  })
+  .styles({
+    'font-size': heightBars * 0.24,
+    fill: 'grey',
+    'font-weight': 600,
+    'text-anchor': 'middle',
+    'alignment-baseline': 'central',
+  })
+  .text(ingles ? 'Group' : 'Grupo')
+
+  svg
+  .append('text')
+  .attrs({
+    class: 'years',
+    x: barWidth - heightBars*0.1,
+    y: margin.top * 0.725,
+  })
+  .styles({
+    'font-size': heightBars * 0.24,
+    fill: 'grey',
+    'font-weight': 600,
+    'text-anchor': 'end',
+    'alignment-baseline': 'central',
+  })
+  .text((ingles ? 'of ' : 'de ') + grupos + (ingles ? ' - of ' : ' - de ') + names_1.length)
 
     svg
       .append('rect')
@@ -3879,7 +3984,7 @@ segments.forEach(({ text, fill }) => {
     })
     .text((semana) => {
       let filterr = data.filter((d) => d.semana == semana && d.name.split('-')[1] == grupo && d.vs != 'none' && d.goles_fecha !== not_played_yet);
-      return filterr.length > 0 ? ('(' + d3.format(',.1f')(d3.sum(filterr, (d) => d.goles_fecha) / (filterr.length / 2)) + ')').replace('.', ',') : '';
+      return filterr.length > 0 ? ('(' + d3.format(',.1f')(d3.sum(filterr, (d) => d.goles_fecha) / (filterr.length / 2)) + ')').replace(punctuation_translation[0], punctuation_translation[1]) : '';
     });
 
   svg
@@ -3902,7 +4007,7 @@ segments.forEach(({ text, fill }) => {
     })
     .text((d) =>
       d == dates[dates.length - 1]
-        ? 'F'
+        ? 'F.'
         : d == dates[0]
           ? d
           : data
@@ -3943,6 +4048,12 @@ segments.forEach(({ text, fill }) => {
             } else {
               return tercer_puesto;
             }
+          } else if (probabilidad(d.name).probabilidad == 0) {
+            if (i % 2 === 1) {
+              return '#ffadad';
+            } else {
+              return '#ff5f5f';
+            }
           } else {
             if (i % 2 === 1) {
               return '#dddddd';
@@ -3968,7 +4079,7 @@ segments.forEach(({ text, fill }) => {
           'text-anchor': 'middle',
           'font-weight': 600,
         })
-        .text((d) => d);
+        .text((d) => d).call(halo1, heightBars * 0.225, 'white');
 
       /* svg
         .selectAll('.text')
@@ -4024,7 +4135,7 @@ segments.forEach(({ text, fill }) => {
         })
         .styles({
           fill: grey_color,
-          'font-size': heightBars * 0.3,
+          'font-size': heightBars * 0.325,
           'alignment-baseline': 'central',
           'text-anchor': 'end',
           'font-weight': 600,
@@ -4033,7 +4144,7 @@ segments.forEach(({ text, fill }) => {
           let grupo = i+1
           let interGroup = mejores_num[i].indexOf(d.name)+1
           let overall = mejores.indexOf(d.name)+1
-          return grupo + ' · ' + interGroup + ' · ' + overall + '';
+          return '' + interGroup + '' + '\xa0\xa0\xa0' + (overall) + '';
           }).call(halo1, heightBars * 0.225, 'white');
 
       // Líneas verticales de fechas
@@ -5287,7 +5398,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
     const pctPE = d3.format('.0f')((totalPE / totalPJ) * 100);
     const avgG = d3
       .format('.1f')((totalGF + totalGF1) / totalPJ)
-      .replace('.', ',');
+      .replace(punctuation_translation[0], punctuation_translation[1]);
 
     // ── Helper común ──────────────────────────────────────────────────────────────
     const dv = defaults.value.style;
@@ -5328,10 +5439,10 @@ const criterioValor = getCriterioValor(team, names_filter); */
       const winText_V = `${winsBy('V')} (${d3.format('.0%')(winsBy('V') / totalPJ)})\xa0\xa0 `;
       const goalText_L = `${goalsBy('L')} (${d3
         .format('.1f')(goalsBy('L') / totalPJ)
-        .replace('.', ',')}) `;
+        .replace(punctuation_translation[0], punctuation_translation[1])}) `;
       const goalText_V = `${goalsBy('V')} (${d3
         .format('.1f')(goalsBy('V') / totalPJ)
-        .replace('.', ',')})  `;
+        .replace(punctuation_translation[0], punctuation_translation[1])})  `;
 
       const tspanSub = (text, { fill, dy, dx = 0, text: label }) => tspan(text, { fill, size: margin.top * 0.2, attrs: { dy, ...(dx ? { dx } : {}) }, text: label });
 
@@ -5379,7 +5490,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
             'text-anchor': defaults.name.style.text_anchor,
             'alignment-baseline': defaults.name.style.alignment_baseline,
           })
-          .text((d) => d.name.split('-')[0])
+          .text((d) => countryToEnglish(d.name.split('-')[0]))
 
           .call((text) =>
             text
@@ -5399,7 +5510,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+              .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace(punctuation_translation[0], punctuation_translation[1])}%)`))
           )
 
           .call((text) =>
@@ -5502,7 +5613,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                         ) *
                           puntos_por_partido)) *
                         100
-                    ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+                    ).replace(punctuation_translation[0], punctuation_translation[1])}%)`.replace('NaN%', 'ND')
               )
           )
 
@@ -5523,7 +5634,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       ) *
                         puntos_por_partido)) *
                       100
-                  ).replace('.', ',')}%)`
+                  ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                     .replace('NaN%', 'ND')
                     .toString().length *
                   defaults.value.style.font_size *
@@ -5624,7 +5735,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                         ) *
                           puntos_por_partido)) *
                         100
-                    ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+                    ).replace(punctuation_translation[0], punctuation_translation[1])}%)`.replace('NaN%', 'ND')
               )
           )
 
@@ -5646,7 +5757,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       ) *
                         puntos_por_partido)) *
                       100
-                  ).replace('.', ',')}%)`
+                  ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                     .replace('NaN%', 'ND')
                     .toString().length *
                     defaults.value.style.font_size *
@@ -5664,7 +5775,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                         ) *
                           puntos_por_partido)) *
                         100
-                    ).replace('.', ',')}%)`
+                    ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                       .replace('NaN%', 'ND')
                       .toString().length,
                     `(${formatEfec(
@@ -5678,7 +5789,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                         ) *
                           puntos_por_partido)) *
                         100
-                    ).replace('.', ',')}%)`
+                    ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                       .replace('NaN%', 'ND')
                       .toString().length,
                   ]) *
@@ -5703,7 +5814,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                   ? ''
                   : ` (${d3
                       .format('.1f')(d.goles / d.partidos_jugados)
-                      .replace('.', ',')})`
+                      .replace(punctuation_translation[0], punctuation_translation[1])})`
               )
           )
 
@@ -5799,7 +5910,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                             (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
                           )
                       )
-                      .replace('.', ',')
+                      .replace(punctuation_translation[0], punctuation_translation[1])
                       .replace('NaN', 'ND')})`
               )
           )
@@ -5897,7 +6008,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                             (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
                           )
                       )
-                      .replace('.', ',')
+                      .replace(punctuation_translation[0], punctuation_translation[1])
                       .replace('NaN', 'ND')})`
               )
           )
@@ -5920,7 +6031,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+              .text((d) => ' (' + probabilidad(d.name).probabilidad.toString().replace(punctuation_translation[0], punctuation_translation[1]) + '%) ' + probabilidad(d.name).posicion + '°')
           )
           .call(halo1, heightBars * 0.2, '#f1f1f1');
       });
@@ -5940,7 +6051,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
           'text-anchor': defaults.name.style.text_anchor,
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
-        .text((d) => d.name.split('-')[0])
+        .text((d) => countryToEnglish(d.name.split('-')[0]))
 
         .call((text) =>
           text
@@ -5960,7 +6071,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
               'text-anchor': defaults.value.style.text_anchor,
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
-            .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+            .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace(punctuation_translation[0], punctuation_translation[1])}%)`))
         )
 
         .call((text) =>
@@ -6063,7 +6174,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       ) *
                         puntos_por_partido)) *
                       100
-                  ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+                  ).replace(punctuation_translation[0], punctuation_translation[1])}%)`.replace('NaN%', 'ND')
             )
         )
 
@@ -6084,7 +6195,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                     ) *
                       puntos_por_partido)) *
                     100
-                ).replace('.', ',')}%)`
+                ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                   .replace('NaN%', 'ND')
                   .toString().length *
                 defaults.value.style.font_size *
@@ -6185,7 +6296,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       ) *
                         puntos_por_partido)) *
                       100
-                  ).replace('.', ',')}%)`.replace('NaN%', 'ND')
+                  ).replace(punctuation_translation[0], punctuation_translation[1])}%)`.replace('NaN%', 'ND')
             )
         )
 
@@ -6207,7 +6318,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                     ) *
                       puntos_por_partido)) *
                     100
-                ).replace('.', ',')}%)`
+                ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                   .replace('NaN%', 'ND')
                   .toString().length *
                   defaults.value.style.font_size *
@@ -6225,7 +6336,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       ) *
                         puntos_por_partido)) *
                       100
-                  ).replace('.', ',')}%)`
+                  ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                     .replace('NaN%', 'ND')
                     .toString().length,
                   `(${formatEfec(
@@ -6239,7 +6350,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       ) *
                         puntos_por_partido)) *
                       100
-                  ).replace('.', ',')}%)`
+                  ).replace(punctuation_translation[0], punctuation_translation[1])}%)`
                     .replace('NaN%', 'ND')
                     .toString().length,
                 ]) *
@@ -6264,7 +6375,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 ? ''
                 : ` (${d3
                     .format('.1f')(d.goles / d.partidos_jugados)
-                    .replace('.', ',')})`
+                    .replace(punctuation_translation[0], punctuation_translation[1])})`
             )
         )
 
@@ -6360,7 +6471,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                           (e) => (e.l_or_v == 'L' && e.goles_fecha !== not_played_yet ? 1 : 0)
                         )
                     )
-                    .replace('.', ',')
+                    .replace(punctuation_translation[0], punctuation_translation[1])
                     .replace('NaN', 'ND')})`
             )
         )
@@ -6458,7 +6569,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                           (e) => (e.l_or_v == 'V' && e.goles_fecha !== not_played_yet ? 1 : 0)
                         )
                     )
-                    .replace('.', ',')
+                    .replace(punctuation_translation[0], punctuation_translation[1])
                     .replace('NaN', 'ND')})`
             )
         )
@@ -6481,7 +6592,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
               'text-anchor': defaults.value.style.text_anchor,
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
-            .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+            .text((d) => ' (' + probabilidad(d.name).probabilidad.toString().replace(punctuation_translation[0], punctuation_translation[1]) + '%) ' + probabilidad(d.name).posicion + '°')
         )
         .call(halo1, heightBars * 0.2, '#f1f1f1');
     }
@@ -6555,7 +6666,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => efectividadYPromedioGoles ? (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`) : '')
+              .text((d) => efectividadYPromedioGoles ? (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace(punctuation_translation[0], punctuation_translation[1])}%)`) : '')
           )
 
           .call((text) =>
@@ -6581,7 +6692,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                   ? ''
                   : ` (${d3
                       .format('.1f')(d.goles / d.partidos_jugados)
-                      .replace('.', ',')})`
+                      .replace(punctuation_translation[0], punctuation_translation[1])})`
               : '')
           )
 
@@ -6619,7 +6730,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+              .text((d) => ' (' + probabilidad(d.name).probabilidad.toString().replace(punctuation_translation[0], punctuation_translation[1]) + '%) ' + probabilidad(d.name).posicion + '°')
           )
           .call(halo1, heightBars * 0.2, '#f1f1f1');
       });
@@ -6638,7 +6749,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
           'text-anchor': defaults.name.style.text_anchor,
           'alignment-baseline': defaults.name.style.alignment_baseline,
         })
-        .text((d) => d.name.split('-')[0])
+        .text((d) => countryToEnglish(d.name.split('-')[0]))
 
         .call((text) =>
           text
@@ -6658,7 +6769,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
               'text-anchor': defaults.value.style.text_anchor,
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
-            .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace('.', ',')}%)`))
+            .text((d) => (d.partidos_jugados == 0 ? '' : ` (${formatEfec((d.value / (d.partidos_jugados * puntos_por_partido)) * 100).replace(punctuation_translation[0], punctuation_translation[1])}%)`))
         )
 
         .call((text) =>
@@ -6684,7 +6795,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
                 ? ''
                 : ` (${d3
                     .format('.1f')(d.goles / d.partidos_jugados)
-                    .replace('.', ',')})`
+                    .replace(punctuation_translation[0], punctuation_translation[1])})`
             )
         )
 
@@ -6706,7 +6817,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
               'text-anchor': defaults.value.style.text_anchor,
               'alignment-baseline': defaults.value.style.alignment_baseline,
             })
-            .text((d) => ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°')
+            .text((d) => ' (' + probabilidad(d.name).probabilidad.toString().replace(punctuation_translation[0], punctuation_translation[1]) + '%) ' + probabilidad(d.name).posicion + '°')
         )
         .call(halo1, heightBars * 0.2, '#f1f1f1');
 
@@ -9167,8 +9278,8 @@ if (totalCasosSimulados.length > 1) {
 
   const timer = d3.interval((e) => {
     render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
-    index1++
     console.log(index1, totalCasosSimulados.length-1)
-    if (index1 >= totalCasosSimulados.length-1) timer.stop(); // Stop after 5 seconds
-  }, 200);
+    index1++
+    if (index1 >= totalCasosSimulados.length) timer.stop(); // Stop after 5 seconds
+  }, 400);
 }

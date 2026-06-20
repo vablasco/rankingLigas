@@ -1,5 +1,6 @@
 export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/mundial2026.csv');
+  let numero_de_simulaciones = 1000;
 
   let simular_grupo_de = ''
   let simular = false;
@@ -621,111 +622,202 @@ data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
   };
 
   // ─────────────────────────────────────────────────────────────
-// RENDIMIENTO RECIENTE  (últimos 5 partidos)
-// Devuelve un score de 0-100 para un equipo dado
+// Ventana de rendimiento por simulación
+// Mantiene los últimos 5 resultados (reales + simulados) por equipo,
+// SOLO dentro de la simulación actual (id = sim)
 // ─────────────────────────────────────────────────────────────
-function calcularRendimientoReciente(equipo, historialPartidos) {
-  // Filtrar partidos jugados donde participó el equipo, más recientes primero
-  const jugados = historialPartidos
-    .filter(p => p.jugado && (p.local === equipo || p.visitante === equipo))
-    .slice(-5); // últimos 5
 
-  if (jugados.length === 0) return 50; // sin historial → rendimiento neutro
-
+const CALIBRACION = {
+  // GF promedio de un equipo individual por partido.
+  // Un equipo "típico" ronda 1.3 (mitad del promedio combinado ~2.65).
+  // El techo de score=100 lo fijamos en 2.7, el máximo histórico sostenido
+  // por una selección (Hungría años 50), no en un número arbitrario.
+  GF_PROMEDIO_TIPICO: 1.3,
+  GF_TECHO_SCORE_100: 2.7,
+ 
+  // GC promedio de un equipo individual por partido.
+  // score=100 (mejor posible) en GC=0; score=0 (peor) lo fijamos en 2.7
+  // por simetría con el techo ofensivo, en vez de también usar 3 a ojo.
+  GC_PISO_SCORE_100: 0,
+  GC_TECHO_SCORE_0: 2.7,
+ 
+  // Peso del ajuste de rendimiento sobre el lambda base (decidido: ±15%)
+  PESO_AJUSTE_LAMBDA: 0.15,
+ 
+  // Tamaño de ventana de partidos recientes
+  VENTANA_PARTIDOS: 5,
+};
+ 
+// ─────────────────────────────────────────────────────────────────────
+// PONDERACIÓN INTERNA DEL SCORE DE RENDIMIENTO (decidido: 50/30/20)
+// ─────────────────────────────────────────────────────────────────────
+const PESOS_SCORE = {
+  efectividad: 0.50,
+  golesFavor: 0.30,
+  golesContra: 0.20,
+};
+ 
+/* ════════════════════════════════════════════════════════════════════
+   NOTA SOBRE REDUNDANCIA CON RANKING FIFA (ver metodología, sección 4)
+   ════════════════════════════════════════════════════════════════════
+   El ranking FIFA ya incorpora resultados recientes en su cálculo oficial,
+   por lo que ajustar el lambda por ranking FIFA y por rendimiento-últimos-5
+   de forma totalmente independiente corre el riesgo de contar la misma
+   señal dos veces (doble conteo) y sobre-amplificar a equipos en racha.
+ 
+   Se aplica un AMORTIGUADOR: cuando ambas señales apuntan en la MISMA
+   dirección (ej. equipo bien rankeado Y en buena racha), el ajuste de
+   rendimiento se reduce a la mitad, porque gran parte de esa información
+   ya fue capturada por el ranking. Cuando las señales DIVERGEN (ej. equipo
+   mal rankeado pero en gran racha reciente, o viceversa), el ajuste de
+   rendimiento se aplica completo, porque ahí es donde aporta información
+   NUEVA que el ranking todavía no refleja.
+   ════════════════════════════════════════════════════════════════════ */
+ 
+function calcularFactorAmortiguador(scoreRendimiento, rankingPropio, rankingRival) {
+  // ¿El ranking ya favorece a este equipo? (rankingRival - rankingPropio > 0
+  // significa que el rival está peor rankeado, o sea este equipo es favorito)
+  const rankingFavorece = rankingRival > rankingPropio;
+  const rendimientoFavorece = scoreRendimiento > 50;
+ 
+  const mismaDirec = rankingFavorece === rendimientoFavorece;
+ 
+  // Si coinciden → amortiguar a la mitad (evitar doble conteo)
+  // Si divergen   → aplicar completo (información nueva)
+  return mismaDirec ? 0.5 : 1.0;
+}
+ 
+// ─────────────────────────────────────────────────────────────────────
+// SCORE DE RENDIMIENTO RECIENTE (0-100) a partir de una ventana de
+// hasta 5 partidos ya jugados (reales o simulados previamente)
+// ─────────────────────────────────────────────────────────────────────
+function scoreDesdeVentana(ventana, puntosPorPartido) {
+  if (ventana.length === 0) return 50; // sin historial → neutro
+ 
   let puntosGanados = 0;
   let puntosPosibles = 0;
   let golesFavor = 0;
   let golesContra = 0;
-
-  jugados.forEach(p => {
-    const esLocal = p.local === equipo;
-    const gf = esLocal ? p.goles_local     : p.goles_visitante;
-    const gc = esLocal ? p.goles_visitante  : p.goles_local;
-
-    golesFavor  += gf;
+ 
+  ventana.forEach(({ gf, gc }) => {
+    golesFavor += gf;
     golesContra += gc;
-
-    // Puntos (usamos puntos_por_partido para respetar la config global)
-    if (gf > gc) puntosGanados += puntos_por_partido;
+    if (gf > gc) puntosGanados += puntosPorPartido;
     else if (gf === gc) puntosGanados += 1;
-
-    puntosPosibles += puntos_por_partido;
+    puntosPosibles += puntosPorPartido;
   });
-
-  const n = jugados.length;
-
-  // ── Efectividad (0-1) ──────────────────────────────────────
+ 
+  const n = ventana.length;
+ 
   const efectividad = puntosGanados / puntosPosibles; // 0 a 1
-
-  // ── GF promedio, normalizado a [0-1] con techo en 3 goles ─
+ 
   const gfProm = golesFavor / n;
-  const scoreGF = Math.min(gfProm / 3, 1);
-
-  // ── GC promedio, normalizado a [0-1] con techo en 3 goles ─
-  // 0 gc = score 1 | 3+ gc = score 0
+  const scoreGF = Math.min(gfProm / CALIBRACION.GF_TECHO_SCORE_100, 1);
+ 
   const gcProm = golesContra / n;
-  const scoreGC = Math.max(1 - gcProm / 3, 0);
-
-  // ── Score final ponderado (0-100) ─────────────────────────
-  // 50% efectividad | 30% GF | 20% GC
-  const score = (efectividad * 0.5 + scoreGF * 0.3 + scoreGC * 0.2) * 100;
-
+  const scoreGC = Math.max(
+    1 - gcProm / CALIBRACION.GC_TECHO_SCORE_0,
+    0
+  );
+ 
+  const score =
+    (efectividad * PESOS_SCORE.efectividad +
+      scoreGF * PESOS_SCORE.golesFavor +
+      scoreGC * PESOS_SCORE.golesContra) *
+    100;
+ 
   return Math.round(score);
 }
-
-// ─────────────────────────────────────────────────────────────
-// AJUSTE DE LAMBDA por rendimiento reciente
-// score 50 → sin cambio | 100 → +15% | 0 → -15%
-// ─────────────────────────────────────────────────────────────
-function ajustarLambdaPorRendimiento(lambdaBase, score) {
-  // Mapea [0, 100] → [-0.15, +0.15] de forma lineal centrada en 50
-  const factor = 1 + ((score - 50) / 50) * 0.5;
+ 
+// ─────────────────────────────────────────────────────────────────────
+// Ajusta el lambda base aplicando el score de rendimiento Y el
+// amortiguador anti-doble-conteo respecto al ranking FIFA
+// ─────────────────────────────────────────────────────────────────────
+function ajustarLambdaPorRendimiento(
+  lambdaBase,
+  scoreRendimiento,
+  rankingPropio,
+  rankingRival
+) {
+  const amortiguador = calcularFactorAmortiguador(
+    scoreRendimiento,
+    rankingPropio,
+    rankingRival
+  );
+ 
+  // Mapeo lineal centrado en 50: score 100 → +15% | score 0 → -15%
+  const desviacion = (scoreRendimiento - 50) / 50; // -1 a +1
+  const factor = 1 + desviacion * CALIBRACION.PESO_AJUSTE_LAMBDA * amortiguador;
+ 
   return Math.max(0.4, Math.min(2.8, lambdaBase * factor));
 }
-
-// ─────────────────────────────────────────────────────────────
-// generarResultado — con rendimiento reciente integrado
-// Agregar `historialPartidos` como parámetro opcional
-// ─────────────────────────────────────────────────────────────
+ 
+// ─────────────────────────────────────────────────────────────────────
+// Ventanas de rendimiento — una por simulación, para no mezclar
+// universos simulados distintos
+// ─────────────────────────────────────────────────────────────────────
+function inicializarVentanas(equipos, partidosReales) {
+  const ventanas = {};
+  equipos.forEach((eq) => {
+    ventanas[eq] = partidosReales
+      .filter((p) => p.jugado && (p.local === eq || p.visitante === eq))
+      .slice(-CALIBRACION.VENTANA_PARTIDOS)
+      .map((p) => ({
+        gf: p.local === eq ? p.goles_local : p.goles_visitante,
+        gc: p.local === eq ? p.goles_visitante : p.goles_local,
+      }));
+  });
+  return ventanas;
+}
+ 
+function actualizarVentana(ventanas, equipo, gf, gc) {
+  const v = ventanas[equipo];
+  v.push({ gf, gc });
+  if (v.length > CALIBRACION.VENTANA_PARTIDOS) v.shift();
+}
+ 
+/* ════════════════════════════════════════════════════════════════════
+   generarResultado — integrando ranking FIFA + rendimiento amortiguado
+   ════════════════════════════════════════════════════════════════════ */
 function generarResultado(
-  liga = 'argentina',
+  liga = "argentina",
   override = null,
   equipoLocal = null,
   equipoVisitante = null,
-  historialPartidos = []   // ← NUEVO
+  rendimiento = null // { scoreL, scoreV } ya calculados desde la ventana
 ) {
   const config = override ?? LAMBDAS[liga];
   let lambdaL = config.local;
   let lambdaV = config.visitante;
-
-  // ── Ajuste por ranking FIFA ────────────────────────────────
+ 
+  let rankL = 50;
+  let rankV = 50;
+ 
+  // ── Ajuste por ranking FIFA ──────────────────────────────────────
   if (equipoLocal && equipoVisitante) {
-    const rankL = rankingFIFA2026[equipoLocal.replace(/-[A-L]$/, "")]  || 50;
-    const rankV = rankingFIFA2026[equipoVisitante.replace(/-[A-L]$/, "")] || 50;
-
-    const diff   = rankV - rankL;
-    const k      = 0.022;
+    rankL = rankingFIFA2026[equipoLocal.replace(/-[A-L]$/, "")] || 50;
+    rankV = rankingFIFA2026[equipoVisitante.replace(/-[A-L]$/, "")] || 50;
+ 
+    const diff = rankV - rankL;
+    const k = 0.022;
     const ajuste = k * diff;
-
+ 
     lambdaL = Math.max(0.4, Math.min(2.8, lambdaL + ajuste / 2));
     lambdaV = Math.max(0.4, Math.min(2.8, lambdaV - ajuste / 2));
   }
-
-  // ── Ajuste por rendimiento reciente ───────────────────────
-  if (historialPartidos.length > 0 && equipoLocal && equipoVisitante) {
-    const scoreL = calcularRendimientoReciente(equipoLocal,    historialPartidos);
-    console.log(equipoLocal, scoreL)
-    const scoreV = calcularRendimientoReciente(equipoVisitante, historialPartidos);
-
-    lambdaL = ajustarLambdaPorRendimiento(lambdaL, scoreL);
-    lambdaV = ajustarLambdaPorRendimiento(lambdaV, scoreV);
+ 
+  // ── Ajuste por rendimiento reciente (con amortiguador anti-doble-conteo) ─
+  if (rendimiento) {
+    lambdaL = ajustarLambdaPorRendimiento(lambdaL, rendimiento.scoreL, rankL, rankV);
+    lambdaV = ajustarLambdaPorRendimiento(lambdaV, rendimiento.scoreV, rankV, rankL);
   }
-
+ 
   return {
-    goles_local:      poisson(lambdaL),
-    goles_visitante:  poisson(lambdaV),
+    goles_local: poisson(lambdaL),
+    goles_visitante: poisson(lambdaV),
   };
 }
+
 /* 
     function generarResultado(liga = 'argentina', override = null, equipoLocal = null, equipoVisitante = null) {
   const config = override ?? LAMBDAS[liga];
@@ -933,7 +1025,7 @@ partidos.forEach((p) => {
   }));
 }
 
-  function calcularProbabilidades(
+function calcularProbabilidades(
   partidos,
   cantidadClassif = 2,
   mejoresTerceros = 8,
@@ -941,67 +1033,75 @@ partidos.forEach((p) => {
 ) {
   const equipos = obtenerEquipos(partidos);
   const grupos = obtenerGrupos(partidos);
-
+ 
   const clasificaciones = {};
-  const posiciones = {}; // NEW: trackear posiciones
+  const posiciones = {};
   equipos.forEach((e) => {
     clasificaciones[e] = 0;
-    posiciones[e] = new Set(); // NEW
+    posiciones[e] = new Set();
   });
-
+ 
   for (let sim = 0; sim < simulaciones; sim++) {
+    // Ventanas frescas por simulación, arrancan con historial REAL
+    const ventanas = inicializarVentanas(equipos, partidos);
+ 
     const partidosSimulados = partidos.map((p) => {
-      if (p.jugado) return { ...p, simulados: false, id: sim };
-      const resultado = generarResultado(
-        competencia,
-        null,
-        p.local,
-        p.visitante,
-        partidos.filter(h => h.jugado)  // solo partidos reales ya disputados
-      );
-      const tarjetas  = generarTarjetas(); 
+      if (p.jugado) {
+        actualizarVentana(ventanas, p.local, p.goles_local, p.goles_visitante);
+        actualizarVentana(ventanas, p.visitante, p.goles_visitante, p.goles_local);
+        return { ...p, simulados: false, id: sim };
+      }
+ 
+      const scoreL = scoreDesdeVentana(ventanas[p.local], puntos_por_partido);
+      const scoreV = scoreDesdeVentana(ventanas[p.visitante], puntos_por_partido);
+ 
+      const resultado = generarResultado(competencia, null, p.local, p.visitante, {
+        scoreL,
+        scoreV,
+      });
+      const tarjetas = generarTarjetas();
+ 
+      actualizarVentana(ventanas, p.local, resultado.goles_local, resultado.goles_visitante);
+      actualizarVentana(ventanas, p.visitante, resultado.goles_visitante, resultado.goles_local);
+ 
       return {
         ...p,
         ...resultado,
-        amarillas_local:              tarjetas.local.amarillas,
-        rojas_indirectas_local:       tarjetas.local.rojas_indirectas,
-        rojas_directas_local:         tarjetas.local.rojas_directas,
-        amarilla_mas_roja_local:      tarjetas.local.amarilla_mas_roja,
-        amarillas_visitante:          tarjetas.visitante.amarillas,
-        rojas_indirectas_visitante:   tarjetas.visitante.rojas_indirectas,
-        rojas_directas_visitante:     tarjetas.visitante.rojas_directas,
-        amarilla_mas_roja_visitante:  tarjetas.visitante.amarilla_mas_roja,
+        amarillas_local: tarjetas.local.amarillas,
+        rojas_indirectas_local: tarjetas.local.rojas_indirectas,
+        rojas_directas_local: tarjetas.local.rojas_directas,
+        amarilla_mas_roja_local: tarjetas.local.amarilla_mas_roja,
+        amarillas_visitante: tarjetas.visitante.amarillas,
+        rojas_indirectas_visitante: tarjetas.visitante.rojas_indirectas,
+        rojas_directas_visitante: tarjetas.visitante.rojas_directas,
+        amarilla_mas_roja_visitante: tarjetas.visitante.amarilla_mas_roja,
         jugado: true,
         simulados: true,
-        id: sim
+        id: sim,
       };
     });
-
+ 
     const terceros = [];
-
+ 
     grupos.forEach((d) => {
-      const grupo = partidosSimulados.filter((e) => 
-        e.local.split('-')[1] === d || e.visitante.split('-')[1] === d
+      const grupo = partidosSimulados.filter(
+        (e) => e.local.split("-")[1] === d || e.visitante.split("-")[1] === d
       );
-      
+ 
       const tablaCompleta = calcularYOrdenarTablaConDatos(grupo);
-      
-      // Quedarse solo con los equipos que pertenecen al grupo d
-      const tabla = tablaCompleta.filter(t => t.equipo.split('-')[1] === d);
-      const orden = tabla.map((t) => t.equipo); 
-
-      // NEW: registrar posición de cada equipo en esta simulación
+      const tabla = tablaCompleta.filter((t) => t.equipo.split("-")[1] === d);
+      const orden = tabla.map((t) => t.equipo);
+ 
       orden.forEach((eq, i) => posiciones[eq].add(i + 1));
-
       orden.slice(0, cantidadClassif).forEach((eq) => clasificaciones[eq]++);
-
+ 
       if (mejoresTerceros > 0 && tabla.length > cantidadClassif) {
         terceros.push(tabla[cantidadClassif]);
       }
-
+ 
       casos1.push([tabla, grupo]);
     });
-
+ 
     if (mejoresTerceros > 0 && terceros.length > 0) {
       terceros.sort((a, b) => {
         if (b.pts !== a.pts) return b.pts - a.pts;
@@ -1012,29 +1112,24 @@ partidos.forEach((p) => {
         const rankB = rankingFIFA2026[b.equipo.replace(/-[A-L]$/, "")] || 999;
         return rankA - rankB;
       });
-
-      terceros
-        .slice(0, mejoresTerceros)
-        .forEach((t) => clasificaciones[t.equipo]++);
+ 
+      terceros.slice(0, mejoresTerceros).forEach((t) => clasificaciones[t.equipo]++);
     }
   }
-
+ 
   const resultado = {};
   equipos.forEach((equipo) => {
     const posArr = [...posiciones[equipo]].sort((a, b) => a - b);
-    const posStr = posArr.length === 1
-      ? `${posArr[0]}`
-      : `${posArr[0]}-${posArr[posArr.length - 1]}`;
-
+    const posStr =
+      posArr.length === 1 ? `${posArr[0]}` : `${posArr[0]}-${posArr[posArr.length - 1]}`;
+ 
     resultado[equipo] = {
       clasificaciones: clasificaciones[equipo],
-      probabilidad: Number(
-        ((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)
-      ),
-      posicion: posStr, // NEW
+      probabilidad: Number(((clasificaciones[equipo] / simulaciones) * 100).toFixed(1)),
+      posicion: posStr,
     };
   });
-
+ 
   return resultado;
 }
   
@@ -1251,7 +1346,7 @@ data1.forEach(d => {
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, 1000);
+  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, numero_de_simulaciones);
   console.table(probabilidades)
 
   function eliminarDuplicados(simulaciones) {
