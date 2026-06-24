@@ -3,6 +3,13 @@ export async function procesarDatos() {
   let numero_de_simulaciones = 1000;
 
   let simular_grupo_de = ''
+  let clasifica_simulador = false;
+  let filtrar_simulador = false;
+
+  let clasifica = 1
+  let filtrador = 'pos'
+  let filtrador_valor = 3
+
   let simular = false;
 
   let repechaje = 0
@@ -203,11 +210,13 @@ console.log(bracket);
     simular = true;
     verEquipo = simular_grupo_de
     grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1]
-    data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
+    verEquipo = simular_grupo_de+'-'+grupoDeVerEquipo
+
+    /* data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
     data1.forEach((d) => {
       d.local = d.local.split('-')[0];
       d.visitante = d.visitante.split('-')[0];
-    });
+    }); */
   }
 
 
@@ -245,76 +254,76 @@ console.log(bracket);
 
   const rankingFIFA2026 = {
   // Grupo A
-  "México": 15,
-  "Sudáfrica": 60,
-  "Corea del Sur": 25,
-  "República Checa": 41,
-
+  "México": 14,          // antes 15
+  "Sudáfrica": 60,        // sin cambio
+  "Corea del Sur": 25,    // antes 25 -> confirmado igual
+  "República Checa": 40,  // antes 41
+ 
   // Grupo B
-  "Canadá": 30,
-  "Bosnia y Herzegovina": 65,
-  "Qatar": 55,
-  "Suiza": 19,
-
+  "Canadá": 30,           // sin cambio
+  "Bosnia y Herzegovina": 64, // antes 65
+  "Qatar": 56,            // antes 55
+  "Suiza": 19,            // sin cambio
+ 
   // Grupo C
-  "Brasil": 6,
-  "Marruecos": 8,
-  "Haití": 83,
-  "Escocia": 43,
-
+  "Brasil": 6,            // sin cambio
+  "Marruecos": 7,         // antes 8
+  "Haití": 83,            // sin cambio
+  "Escocia": 42,          // antes 43
+ 
   // Grupo D
-  "Estados Unidos": 16,
-  "Paraguay": 40,
-  "Australia": 27,
-  "Turquía": 22,
-
+  "Estados Unidos": 17,   // antes 16
+  "Paraguay": 41,         // antes 40
+  "Australia": 27,        // sin cambio
+  "Turquía": 22,          // sin cambio
+ 
   // Grupo E
-  "Alemania": 10,
-  "Curazao": 82,
-  "Costa de Marfil": 34,
-  "Ecuador": 23,
-
+  "Alemania": 10,         // sin cambio
+  "Curazao": 82,          // sin cambio
+  "Costa de Marfil": 33,  // antes 34
+  "Ecuador": 23,          // sin cambio
+ 
   // Grupo F
-  "Países Bajos": 7,
-  "Japón": 18,
-  "Suecia": 38,
-  "Túnez": 44,
-
+  "Países Bajos": 8,      // antes 7
+  "Japón": 18,            // sin cambio
+  "Suecia": 38,           // sin cambio
+  "Túnez": 45,            // antes 44
+ 
   // Grupo G
-  "Bélgica": 9,
-  "Egipto": 29,
-  "Irán": 21,
-  "Nueva Zelanda": 85,
-
+  "Bélgica": 9,           // sin cambio
+  "Egipto": 29,           // sin cambio
+  "Irán": 20,             // antes 21
+  "Nueva Zelanda": 85,    // sin cambio
+ 
   // Grupo H
-  "España": 2,
-  "Cabo Verde": 68,
-  "Arabia Saudita": 61,
-  "Uruguay": 17,
-
+  "España": 2,            // sin cambio
+  "Cabo Verde": 67,       // antes 68
+  "Arabia Saudita": 61,   // sin cambio
+  "Uruguay": 16,          // antes 17
+ 
   // Grupo I
-  "Francia": 1,
-  "Senegal": 14,
-  "Irak": 57,
-  "Noruega": 31,
-
+  "Francia": 3,           // antes 1
+  "Senegal": 15,          // antes 14
+  "Irak": 57,             // sin cambio
+  "Noruega": 31,          // sin cambio
+ 
   // Grupo J
-  "Argentina": 3,
-  "Argelia": 28,
-  "Austria": 24,
-  "Jordania": 64,
-
+  "Argentina": 1,         // antes 3 (ahora 1° del ranking mundial)
+  "Argelia": 28,          // sin cambio
+  "Austria": 24,          // sin cambio
+  "Jordania": 63,         // antes 64
+ 
   // Grupo K
-  "Portugal": 5,
-  "RD de Congo": 46,
-  "Uzbekistán": 50,
-  "Colombia": 13,
-
+  "Portugal": 5,          // sin cambio
+  "RD de Congo": 46,      // sin cambio
+  "Uzbekistán": 50,       // sin cambio
+  "Colombia": 13,         // sin cambio
+ 
   // Grupo L
-  "Inglaterra": 4,
-  "Croacia": 11,
-  "Ghana": 74,
-  "Panamá": 33
+  "Inglaterra": 4,        // sin cambio
+  "Croacia": 11,          // sin cambio
+  "Ghana": 73,            // antes 74
+  "Panamá": 34            // antes 33
 };
 
   /* data1.forEach(d => {
@@ -398,7 +407,10 @@ function agregarSufijoDeGrupo(partidos, grupoDeEquipo) {
 data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
 
   let data_cruda = data1.map((d) => ({ ...d }));
+  let casos0 = [];
   let casos1 = [];
+  let casos2 = [];
+  let casos3 = [];
 
   data_cruda.forEach((d) => {
     d.jugado = d.goles_local !== '99' && d.goles_visitante !== '99';
@@ -1042,6 +1054,15 @@ function calcularProbabilidades(
   });
  
   for (let sim = 0; sim < simulaciones; sim++) {
+    casos2 = []
+    casos3 = []
+
+    const clasificacionesSim = {};
+
+    equipos.forEach(e => {
+    clasificacionesSim[e] = 0;
+  });
+
     // Ventanas frescas por simulación, arrancan con historial REAL
     const ventanas = inicializarVentanas(equipos, partidos);
  
@@ -1093,12 +1114,17 @@ function calcularProbabilidades(
       const orden = tabla.map((t) => t.equipo);
  
       orden.forEach((eq, i) => posiciones[eq].add(i + 1));
-      orden.slice(0, cantidadClassif).forEach((eq) => clasificaciones[eq]++);
+      orden.slice(0, cantidadClassif).forEach(eq => {
+        clasificaciones[eq]++;      // acumulado global
+        clasificacionesSim[eq]++;   // sólo esta simulación
+      });
  
       if (mejoresTerceros > 0 && tabla.length > cantidadClassif) {
         terceros.push(tabla[cantidadClassif]);
       }
- 
+      
+      casos3 = casos3.concat(tabla)
+      casos2 = casos2.concat(grupo)
       casos1.push([tabla, grupo]);
     });
  
@@ -1113,8 +1139,13 @@ function calcularProbabilidades(
         return rankA - rankB;
       });
  
-      terceros.slice(0, mejoresTerceros).forEach((t) => clasificaciones[t.equipo]++);
+      terceros.slice(0, mejoresTerceros).forEach(t => {
+        clasificaciones[t.equipo]++;
+        clasificacionesSim[t.equipo]++;
+      });
     }
+
+    casos0.push([casos3, casos2, clasificacionesSim]);
   }
  
   const resultado = {};
@@ -1347,6 +1378,13 @@ data1.forEach(d => {
   // Convertir conteos a porcentajes
 
   let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, numero_de_simulaciones);
+
+  console.log(structuredClone(casos1))
+  console.log(structuredClone(casos0))
+  console.log(structuredClone(casos2))
+
+  
+
   console.table(probabilidades)
 
   function eliminarDuplicados(simulaciones) {
@@ -1355,7 +1393,7 @@ data1.forEach(d => {
     return simulaciones.filter((sim) => {
       const tabla = sim[0]; // tabla de posiciones
 
-      const clave = tabla.map((t) => `${t.equipo}:${t.pts}`).join('|');
+      const clave = tabla.map((t) => `${t.equipo}`).join('|');
 
       if (vistas.has(clave)) return false;
       vistas.add(clave);
@@ -1363,31 +1401,69 @@ data1.forEach(d => {
     });
   }
 
-  const sinDuplicados1 = eliminarDuplicados(casos1);
+  function filtrarPorValor(simulaciones, equipo, valor) {
+  return simulaciones.filter(sim => sim[2][equipo] === valor);
+  }
+
+  function filtrarPorCampo(simulaciones, equipo, campo, valor) {
+  return simulaciones.filter(sim =>
+    sim[0].some(t => t.equipo === equipo && t[campo] === valor)
+    );
+  }
+
+  if (filtrar_simulador) { 
+    casos0 = filtrarPorCampo(casos0, verEquipo, filtrador, filtrador_valor);
+  }
+
+  if (clasifica_simulador) {
+    casos0 = filtrarPorValor(casos0, verEquipo, clasifica);
+  }
+
+  const sinDuplicados1 = eliminarDuplicados(casos0);
+
+  /* console.log(structuredClone(filtrarPorValor(casos0, 'Ecuador-E', 1))); // clasificó)) */
 
   const ordenados1 = [...sinDuplicados1].sort((a, b) => {
-    const getPts = (sim, equipo) => sim[0].find((t) => t.equipo === equipo)?.pts ?? 0;
+  const getEquipo = (sim, equipo) =>
+    sim[0].find((t) => t.equipo === equipo);
 
-    const posRiverA = a[0].find((t) => t.equipo === verEquipo)?.pos;
-    const posRiverB = b[0].find((t) => t.equipo === verEquipo)?.pos;
+  const equipoA = getEquipo(a, verEquipo);
+  const equipoB = getEquipo(b, verEquipo);
 
-    if (posRiverA !== posRiverB) return posRiverA - posRiverB;
+  const posA = equipoA?.pos ?? 999;
+  const posB = equipoB?.pos ?? 999;
 
-    const riverA = getPts(a, verEquipo);
-    const riverB = getPts(b, verEquipo);
+  if (posA !== posB) return posA - posB;
 
-    if (riverA !== riverB) return riverB - riverA;
+  const ptsA = equipoA?.pts ?? 0;
+  const ptsB = equipoB?.pts ?? 0;
 
-    const bajoA = a[0].find((t) => t.pos === posRiverA + 1)?.pts ?? 0;
-    const bajoB = b[0].find((t) => t.pos === posRiverB + 1)?.pts ?? 0;
+  if (ptsA !== ptsB) return ptsB - ptsA;
 
-    const difA = riverA - bajoA;
-    const difB = riverB - bajoB;
+  /* const bajoA = a[0].find((t) => t.pos === posA + 1)?.pts ?? 0;
+  const bajoB = b[0].find((t) => t.pos === posB + 1)?.pts ?? 0;
 
-    return difB - difA; // ← mayor diferencia primero
-  });
+  const difA = ptsA - bajoA;
+  const difB = ptsB - bajoB;
 
-  console.log(ordenados1)
+  if (difA !== difB) return difB - difA; */
+
+  const diffA = equipoA?.diff ?? 0;
+  const diffB = equipoB?.diff ?? 0;
+
+  if (diffA !== diffB) return diffB - diffA;
+
+  const gfA = equipoA?.gf ?? 0;
+  const gfB = equipoB?.gf ?? 0;
+
+  if (gfA !== gfB) return gfB - gfA;
+
+  return 0;
+});
+
+  /* let ordenados1 = casos0 */
+
+  console.log(structuredClone(ordenados1))
 
   let totalCasosSimulados = [];
 
@@ -1478,7 +1554,7 @@ data1.forEach(d => {
     let clubes = new Set([...new Set(torneo.map((d) => d.local)), ...new Set(torneo.map((d) => d.visitante))]);
 
     let fechas_torneo = new Set(torneo.filter((d) => d.fecha.split(' ')[1] != fecha_adicional && !d.fecha.includes('1/')).map((d) => d.fecha));
-    console.log(fechas_torneo);
+    /* console.log(fechas_torneo); */
 
     let fechas_torneo2 = new Set(torneo.filter((d) => d.fecha.split(' ')[1] != fecha_adicional && !d.fecha.includes('1/')).map((d) => d.fecha));
     let fechas_def = torneo.filter((d) => d.fecha.split(' ')[1] == fecha_adicional);
@@ -1605,15 +1681,15 @@ data1.forEach(d => {
       }
     });
 
-    console.log(data2);
+    /* console.log(data2); */
 
     let semanas = new Set(data2.map((d) => d.semana).sort((a, b) => a - b));
 
-    console.log(dias);
+    /* console.log(dias);
     console.log(semanas);
     console.log(clubes);
     console.log(fechas_torneo);
-    console.log(fechas_torneo2);
+    console.log(fechas_torneo2); */
 
     data1.forEach((d) => {
       d.dia = formatDate(d.dia);
@@ -2080,11 +2156,29 @@ data1.forEach(d => {
 
     final_list1 = final_list1.filter((d) => d.name != 'hola');
 
+    /* final_list1.forEach(d => {
+      console.log(ordenados1[indexFor][2])
+    }) */
+
+    /* Object.assign(final_list1, {
+        probs: ordenados1[indexFor][2],
+      }); */
+      
+      if (simular) {
+        
+        final_list1 = final_list1.map(item => ({
+          ...item,
+          probabilidad: (ordenados1[indexFor][2][item.name] ?? 0) * 100
+        }));
+      }
+        
     totalCasosSimulados.push(final_list1);
   };
 
   console.log(totalCasosSimulados);
   console.log(totalCasosSimulados[0]);
+  console.log(casos0)
+  console.log(casos0[0])
 
   window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia };
   return window.__appData;

@@ -20,26 +20,27 @@
   🔄 Reload app.js
 </button> -->
 
-<!-- <button onclick="reloadApp()" 
+
+<!-- <script>
+  function reloadApp() {
+    const old = document.getElementById('app-module');
+    if (old) old.remove();
+    
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.src = 'app.js?v=' + Date.now();
+    s.id = 'app-module';
+    document.head.appendChild(s);
+  }
+</script> -->
+
+<button onclick="reloadApp1()" 
   style="position:fixed;top:10px;right:10px;z-index:9999;padding:8px 12px;cursor:pointer">
   🔄 Reload app.js
 </button>
 
 <script>
-function reloadApp() {
-  const old = document.getElementById('app-module');
-  if (old) old.remove();
-
-  const s = document.createElement('script');
-  s.type = 'module';
-  s.src = 'app.js?v=' + Date.now();
-  s.id = 'app-module';
-  document.head.appendChild(s);
-}
-</script> -->
-
-<!-- <script>
-function reloadApp() {
+function reloadApp1() {
   // Suma 1 cada vez, empieza en 0
   window.__appIndex = (window.__appIndex ?? -1) + 1;
 
@@ -52,6 +53,39 @@ function reloadApp() {
   s.id = 'app-module';
   document.head.appendChild(s);
 }
-</script> -->
+</script>
+
+<input
+  id="appIndex"
+  type="number"
+  value="0"
+  style="position:fixed;top:50px;right:120px;z-index:9999;width:60px;padding:6px;"
+>
+
+<button
+  onclick="reloadApp()"
+  style="position:fixed;top:50px;right:10px;z-index:9999;padding:8px 12px;cursor:pointer"
+>
+  🔄 Reload
+</button>
+
+<script>
+function reloadApp() {
+  window.__appIndex = Number(
+    document.getElementById('appIndex').value
+  );
+
+  console.log("Índice:", window.__appIndex);
+
+  const old = document.getElementById('app-module');
+  if (old) old.remove();
+
+  const s = document.createElement('script');
+  s.type = 'module';
+  s.src = 'app.js?v=' + Date.now();
+  s.id = 'app-module';
+  document.head.appendChild(s);
+}
+</script>
   </body>
 </html>
