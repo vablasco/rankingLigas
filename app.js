@@ -1,5 +1,7 @@
 import { procesarDatos } from './data.js';
-import { colores } from './colores.js';
+import { rankingFIFA2026 } from './rankingFIFA2026.js';
+import { FLAG_COLORS } from './colores.js';
+import { TABLA } from './combinaciones_mundial.js';
 
 const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia } = window.__appData ?? (await procesarDatos());
 
@@ -61,22 +63,7 @@ if (nombre_torneo == 'Mundial 2026') {
   repechaje = 1;
 }
 
-/* const clasificados_por_competencia = {
-  Campeonato: 1,
-  Apertura: 8,
-  WorldCup: 2,
-  ClubWorldCup: 2,
-  ELIMINATORIAS: 7,
-  Libertadores: 2,
-  Sudamericana: 2,
-  argentina: 8,
-  ['Mundial 2026']: 2,
-  ['Mundial 2014']: 2,
-}; */
-
 let clasificacion_por_grupo = clasificados_por_competencia[competencia] + repechaje;
-
-console.log(clasificacion_por_grupo);
 
 d3.timeFormatDefaultLocale({
   decimal: ',',
@@ -101,17 +88,6 @@ function parseScore(str) {
     goles: parseInt(m[1]),
     penales: m[2] ? parseInt(m[2]) : null,
   };
-}
-
-function ordinal(n) {
-  const s = ["th","st","nd","rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-
-function getColorByProbability(percent) {
-  const hue = (percent / 100) * 120;
-  return `hsl(${hue}, 85%, 45%)`;
 }
 
 const parseDate = (str) => new Date(str);
@@ -150,23 +126,14 @@ const COUNTRY_TEAMS = {
 
 const TEAM_COUNTRY = Object.fromEntries(Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) => teams.map((team) => [team, code])));
 
-const getFlag = (raw) => {
-  const name = raw.replace(/-[A-Z]$/, '');
-  const code = TEAM_COUNTRY[name];
-  return code ? `${code}.svg` : null;
-};
-
 const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabilidades) => {
-  console.log(data, fechas_playoff);
-
-  /* ingles ? nombre_torneo = 'World Cup 2026' : nombre_torneo */
 
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
 
   let grupos = grupos_1.length;
   let top_n = names_1.length;
-  let heightBars = /* (height - (margin.bottom + margin.top)) / (top_n + 2); */ 50;
+  let heightBars = 50;
 
   margin = {
     top: heightBars * 2,
@@ -206,24 +173,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   };
 }
 
-  /* let playoffs_names = {
-    32: 'Round of 64',
-    16: 'Round of 32',
-    8: 'Round of 16',
-    4: 'Quarterfinals',
-    2: 'Semifinals',
-    1: 'Final',
-}; */
-
-  /* let playoffs_names = {
-    32: '32avos',
-    16: '16avos',
-    8: 'Octavos',
-    4: 'Cuartos',
-    2: 'Semifinales',
-    1: 'Final',
-  }; */
-
   if (grupos == 1) {
     grupos = 0;
   }
@@ -238,8 +187,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     }
   }
 
-  console.log(fechas_playoff);
-
   let equipos_por_grupos = top_n / grupos;
   let width_playoffs = heightBars * 8;
   if (simular_playoffs) {
@@ -253,7 +200,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   }
   let rondas_playoff = playoffs[primera_ronda_playoff];
   let distancia_entre_grupos = 0.5;
-  console.log(primera_ronda_playoff, fechas_playoff.filter((d) => d.fecha == 'Fecha 1/' + d3.max(fechas_playoff, (d) => +d.fecha.split('/')[1])).length);
+
   let names_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.local || d.visitante))];
 
   let dates = [...new Set(data.map((d) => d.semana).sort((a, b) => a - b))];
@@ -261,7 +208,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   let margin_right = margin.right;
 
   fechas_not_played = d3.max(data, (d) => d.partidos_jugados + d.partidos_jugados1);
-  console.log(structuredClone(fechas_not_played));
   let contFechas = 0
   for (let i = 1; i < dates.length; i++) {
     let filter = data.filter(d => d.semana == i)
@@ -269,16 +215,13 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     if (filter1 != undefined) {
       contFechas = contFechas + 1
     }
-    console.log(i, filter1)
     
   }
-  console.log(contFechas)
   fechas_not_played=contFechas
 
   let fechas_no_jugadas = dates.length - 1 - fechas_not_played - 1;
   let weeks = heightBars * 2;
-  let weeks_i = weeks * dates.length; /*  - ((heightBars) * (((dates.length-1)-fechas_not_played)-1)); */
-  /* let weeks_i = weeks * (dates.length) - ((weeks*not_played_yet_x) * fechas_no_jugadas); */
+  let weeks_i = weeks * dates.length; 
 
   width = weeks * dates.length - weeks * not_played_yet_x * fechas_no_jugadas + heightBars * 9;
   height = top_n * heightBars + margin.top;
@@ -292,8 +235,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   } else if (grupos > 1 && simular_playoffs) {
     width = width + (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff * 1.5);
   }
-
-  console.log(fechas_no_jugadas, heightBars, weeks, weeks_i, fechas_not_played, dates.length - 1 - fechas_not_played - 1, not_played_yet_x, dates.length, margin_right);
 
   console.log(`[${width}, ${height}]`);
 
@@ -497,147 +438,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     cacheStats.set(key, stats);
     return stats;
   }
-  /*
-
-  let sort_teams1 = (array, { usarDirecto = true } = {}) => {
-    array = removeDuplicates(array);
-
-    const grupoEmpatadosCache = new Map();
-
-    function getEmpatados(grupo, pts) {
-      const key = `${grupo}|${pts}`;
-      if (!grupoEmpatadosCache.has(key)) {
-        grupoEmpatadosCache.set(
-          key,
-          array.filter((e) => e.name.split('-')[1] === grupo && e.value === pts).map((e) => e.name)
-        );
-      }
-      return grupoEmpatadosCache.get(key);
-    }
-
-    array.sort((a, b) => {
-      const ga = a.name.split('-')[1];
-      const gb = b.name.split('-')[1];
-
-      if (gb < ga) return 1;
-      if (gb > ga) return -1;
-
-      if (b.value !== a.value) return b.value - a.value;
-
-      // Criterios directos (opcionales)
-      if (usarDirecto) {
-        const empatados = getEmpatados(ga, a.value);
-        const sd = statsDirectos(empatados, array[0].semana);
-        const sdA = sd[a.name];
-        const sdB = sd[b.name];
-
-        if (sdB.pts_directo !== sdA.pts_directo) return sdB.pts_directo - sdA.pts_directo;
-        if (sdB.diff_directo !== sdA.diff_directo) return sdB.diff_directo - sdA.diff_directo;
-        if (sdB.gf_directo !== sdA.gf_directo) return sdB.gf_directo - sdA.gf_directo;
-      }
-
-      if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
-      if (b.goles !== a.goles) return b.goles - a.goles;
-      if (b.value_away !== a.value_away) return b.value_away - a.value_away;
-
-      return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
-    });
-
-    array.forEach((d, i) => (d.rank = i));
-    array.forEach((d, i) => (d.rankInGroup = i % equipos_por_grupos));
-    array.forEach((d) => (d.position = d.rankInGroup + 1 + d.name.split('-')[1]));
-    array.forEach((d) => (d.fechas_en_top1 = d.rank === 0 ? 1 : 0));
-
-    return array;
-  }; */
-
-  /* let mejores_terceros_sort = (array) => {
-
-    array.sort((a, b) => {
-
-      if (b.value !== a.value) return b.value - a.value;
-      if (b.diferencia_de_goles !== a.diferencia_de_goles) return b.diferencia_de_goles - a.diferencia_de_goles;
-      if (b.goles !== a.goles) return b.goles - a.goles;
-
-      return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1;
-    });
-
-    return array;
-  }; */
-
-  const rankingFIFA2026 = {
-  // Grupo A
-  "México": 14,          // antes 15
-  "Sudáfrica": 60,        // sin cambio
-  "Corea del Sur": 25,    // antes 25 -> confirmado igual
-  "República Checa": 40,  // antes 41
- 
-  // Grupo B
-  "Canadá": 30,           // sin cambio
-  "Bosnia y Herzegovina": 64, // antes 65
-  "Qatar": 56,            // antes 55
-  "Suiza": 19,            // sin cambio
- 
-  // Grupo C
-  "Brasil": 6,            // sin cambio
-  "Marruecos": 7,         // antes 8
-  "Haití": 83,            // sin cambio
-  "Escocia": 42,          // antes 43
- 
-  // Grupo D
-  "Estados Unidos": 17,   // antes 16
-  "Paraguay": 41,         // antes 40
-  "Australia": 27,        // sin cambio
-  "Turquía": 22,          // sin cambio
- 
-  // Grupo E
-  "Alemania": 10,         // sin cambio
-  "Curazao": 82,          // sin cambio
-  "Costa de Marfil": 33,  // antes 34
-  "Ecuador": 23,          // sin cambio
- 
-  // Grupo F
-  "Países Bajos": 8,      // antes 7
-  "Japón": 18,            // sin cambio
-  "Suecia": 38,           // sin cambio
-  "Túnez": 45,            // antes 44
- 
-  // Grupo G
-  "Bélgica": 9,           // sin cambio
-  "Egipto": 29,           // sin cambio
-  "Irán": 20,             // antes 21
-  "Nueva Zelanda": 85,    // sin cambio
- 
-  // Grupo H
-  "España": 2,            // sin cambio
-  "Cabo Verde": 67,       // antes 68
-  "Arabia Saudita": 61,   // sin cambio
-  "Uruguay": 16,          // antes 17
- 
-  // Grupo I
-  "Francia": 3,           // antes 1
-  "Senegal": 15,          // antes 14
-  "Irak": 57,             // sin cambio
-  "Noruega": 31,          // sin cambio
- 
-  // Grupo J
-  "Argentina": 1,         // antes 3 (ahora 1° del ranking mundial)
-  "Argelia": 28,          // sin cambio
-  "Austria": 24,          // sin cambio
-  "Jordania": 63,         // antes 64
- 
-  // Grupo K
-  "Portugal": 5,          // sin cambio
-  "RD de Congo": 46,      // sin cambio
-  "Uzbekistán": 50,       // sin cambio
-  "Colombia": 13,         // sin cambio
- 
-  // Grupo L
-  "Inglaterra": 4,        // sin cambio
-  "Croacia": 11,          // sin cambio
-  "Ghana": 73,            // antes 74
-  "Panamá": 34            // antes 33
-};
 
   function countryToCode(name) {
     const map = {
@@ -753,21 +553,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     const nombre = name.replace(/-[A-L]$/, '');
     return rankingFIFA2026[nombre] || 999;
   }
-
-  /* const stripes = [
-  { color: "#002395", size: 1 }, // azul
-  { color: "#ffffff", size: 1 }, // blanco
-  { color: "#ED2939", size: 1 }  // rojo
-];
-
-stripes.forEach(s => {
-  const h = (s.size / totalParts) * innerH;
-  svg.append("rect")
-    .attr("x", 0).attr("y", 0)
-    .attr("width", 100).attr("height", h)
-    .attr("fill", s.color);
-  y += h;
-}); */
 
   let sort_teams1 = (array, { usarDirecto = true } = {}) => {
     array = removeDuplicates(array);
@@ -886,8 +671,6 @@ stripes.forEach(s => {
     );
   }
 
-  console.log(mejores_num)
-
   svg
     .append('clipPath')
     .attr('id', `ellipse-clip-margin-bottom`)
@@ -931,539 +714,6 @@ stripes.forEach(s => {
       });
   }
 
-  /* function mejor_tercero(grupos) {
-    if (mejores_terceros.includes('3L')) {
-      return '3L'
-    }
-  }
- */
-
-  /**
-   * mejor_tercero(grupos)
-   *
-   * Dado un array de 8 strings con las letras de los grupos cuyos terceros
-   * clasificaron (ej: ["B","C","D","E","F","G","H","L"]),
-   * devuelve un objeto indicando qué tercero va a cada partido.
-   *
-   * Fuente: Annex C del Reglamento oficial FIFA World Cup 2026 (495 combinaciones)
-   *
-   * Columnas de la tabla (orden):
-   *   [0] P79 → 1A vs 3?
-   *   [1] P85 → 1B vs 3?
-   *   [2] P81 → 1D vs 3?
-   *   [3] P74 → 1E vs 3?
-   *   [4] P82 → 1G vs 3?
-   *   [5] P77 → 1I vs 3?
-   *   [6] P87 → 1K vs 3?
-   *   [7] P80 → 1L vs 3?
-   */
-  const TABLA = {
-    EFGHIJKL: ['3E', '3J', '3I', '3F', '3H', '3G', '3L', '3K'],
-    DFGHIJKL: ['3H', '3G', '3I', '3D', '3J', '3F', '3L', '3K'],
-    DEGHIJKL: ['3E', '3J', '3I', '3D', '3H', '3G', '3L', '3K'],
-    DEFHIJKL: ['3E', '3J', '3I', '3D', '3H', '3F', '3L', '3K'],
-    DEFGIJKL: ['3E', '3G', '3I', '3D', '3J', '3F', '3L', '3K'],
-    DEFGHJKL: ['3E', '3G', '3J', '3D', '3H', '3F', '3L', '3K'],
-    DEFGHIKL: ['3E', '3G', '3I', '3D', '3H', '3F', '3L', '3K'],
-    DEFGHIJL: ['3E', '3G', '3J', '3D', '3H', '3F', '3L', '3I'],
-    DEFGHIJK: ['3E', '3G', '3J', '3D', '3H', '3F', '3I', '3K'],
-    CFGHIJKL: ['3H', '3G', '3I', '3C', '3J', '3F', '3L', '3K'],
-    CEGHIJKL: ['3E', '3J', '3I', '3C', '3H', '3G', '3L', '3K'],
-    CEFHIJKL: ['3E', '3J', '3I', '3C', '3H', '3F', '3L', '3K'],
-    CEFGIJKL: ['3E', '3G', '3I', '3C', '3J', '3F', '3L', '3K'],
-    CEFGHJKL: ['3E', '3G', '3J', '3C', '3H', '3F', '3L', '3K'],
-    CEFGHIKL: ['3E', '3G', '3I', '3C', '3H', '3F', '3L', '3K'],
-    CEFGHIJL: ['3E', '3G', '3J', '3C', '3H', '3F', '3L', '3I'],
-    CEFGHIJK: ['3E', '3G', '3J', '3C', '3H', '3F', '3I', '3K'],
-    CDGHIJKL: ['3H', '3G', '3I', '3C', '3J', '3D', '3L', '3K'],
-    CDFHIJKL: ['3C', '3J', '3I', '3D', '3H', '3F', '3L', '3K'],
-    CDFGIJKL: ['3C', '3G', '3I', '3D', '3J', '3F', '3L', '3K'],
-    CDFGHJKL: ['3C', '3G', '3J', '3D', '3H', '3F', '3L', '3K'],
-    CDFGHIKL: ['3C', '3G', '3I', '3D', '3H', '3F', '3L', '3K'],
-    CDFGHIJL: ['3C', '3G', '3J', '3D', '3H', '3F', '3L', '3I'],
-    CDFGHIJK: ['3C', '3G', '3J', '3D', '3H', '3F', '3I', '3K'],
-    CDEHIJKL: ['3E', '3J', '3I', '3C', '3H', '3D', '3L', '3K'],
-    CDEGIJKL: ['3E', '3G', '3I', '3C', '3J', '3D', '3L', '3K'],
-    CDEGHJKL: ['3E', '3G', '3J', '3C', '3H', '3D', '3L', '3K'],
-    CDEGHIKL: ['3E', '3G', '3I', '3C', '3H', '3D', '3L', '3K'],
-    CDEGHIJL: ['3E', '3G', '3J', '3C', '3H', '3D', '3L', '3I'],
-    CDEGHIJK: ['3E', '3G', '3J', '3C', '3H', '3D', '3I', '3K'],
-    CDEFIJKL: ['3C', '3J', '3E', '3D', '3I', '3F', '3L', '3K'],
-    CDEFHJKL: ['3C', '3J', '3E', '3D', '3H', '3F', '3L', '3K'],
-    CDEFHIKL: ['3C', '3E', '3I', '3D', '3H', '3F', '3L', '3K'],
-    CDEFHIJL: ['3C', '3J', '3E', '3D', '3H', '3F', '3L', '3I'],
-    CDEFHIJK: ['3C', '3J', '3E', '3D', '3H', '3F', '3I', '3K'],
-    CDEFGJKL: ['3C', '3G', '3E', '3D', '3J', '3F', '3L', '3K'],
-    CDEFGIKL: ['3C', '3G', '3E', '3D', '3I', '3F', '3L', '3K'],
-    CDEFGIJL: ['3C', '3G', '3E', '3D', '3J', '3F', '3L', '3I'],
-    CDEFGIJK: ['3C', '3G', '3E', '3D', '3J', '3F', '3I', '3K'],
-    CDEFGHKL: ['3C', '3G', '3E', '3D', '3H', '3F', '3L', '3K'],
-    CDEFGHJL: ['3C', '3G', '3J', '3D', '3H', '3F', '3L', '3E'],
-    CDEFGHJK: ['3C', '3G', '3J', '3D', '3H', '3F', '3E', '3K'],
-    CDEFGHIL: ['3C', '3G', '3E', '3D', '3H', '3F', '3L', '3I'],
-    CDEFGHIK: ['3C', '3G', '3E', '3D', '3H', '3F', '3I', '3K'],
-    CDEFGHIJ: ['3C', '3G', '3J', '3D', '3H', '3F', '3E', '3I'],
-    BFGHIJKL: ['3H', '3J', '3B', '3F', '3I', '3G', '3L', '3K'],
-    BEGHIJKL: ['3E', '3J', '3I', '3B', '3H', '3G', '3L', '3K'],
-    BEFHIJKL: ['3E', '3J', '3B', '3F', '3I', '3H', '3L', '3K'],
-    BEFGIJKL: ['3E', '3J', '3B', '3F', '3I', '3G', '3L', '3K'],
-    BEFGHJKL: ['3E', '3J', '3B', '3F', '3H', '3G', '3L', '3K'],
-    BEFGHIKL: ['3E', '3G', '3B', '3F', '3I', '3H', '3L', '3K'],
-    BEFGHIJL: ['3E', '3J', '3B', '3F', '3H', '3G', '3L', '3I'],
-    BEFGHIJK: ['3E', '3J', '3B', '3F', '3H', '3G', '3I', '3K'],
-    BDGHIJKL: ['3H', '3J', '3B', '3D', '3I', '3G', '3L', '3K'],
-    BDFHIJKL: ['3H', '3J', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BDFGIJKL: ['3I', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
-    BDFGHJKL: ['3H', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
-    BDFGHIKL: ['3H', '3G', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BDFGHIJL: ['3H', '3G', '3B', '3D', '3J', '3F', '3L', '3I'],
-    BDFGHIJK: ['3H', '3G', '3B', '3D', '3J', '3F', '3I', '3K'],
-    BDEHIJKL: ['3E', '3J', '3B', '3D', '3I', '3H', '3L', '3K'],
-    BDEGIJKL: ['3E', '3J', '3B', '3D', '3I', '3G', '3L', '3K'],
-    BDEGHJKL: ['3E', '3J', '3B', '3D', '3H', '3G', '3L', '3K'],
-    BDEGHIKL: ['3E', '3G', '3B', '3D', '3I', '3H', '3L', '3K'],
-    BDEGHIJL: ['3E', '3J', '3B', '3D', '3H', '3G', '3L', '3I'],
-    BDEGHIJK: ['3E', '3J', '3B', '3D', '3H', '3G', '3I', '3K'],
-    BDEFIJKL: ['3E', '3J', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BDEFHJKL: ['3E', '3J', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BDEFHIKL: ['3E', '3I', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BDEFHIJL: ['3E', '3J', '3B', '3D', '3H', '3F', '3L', '3I'],
-    BDEFHIJK: ['3E', '3J', '3B', '3D', '3H', '3F', '3I', '3K'],
-    BDEFGJKL: ['3E', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
-    BDEFGIKL: ['3E', '3G', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BDEFGIJL: ['3E', '3G', '3B', '3D', '3J', '3F', '3L', '3I'],
-    BDEFGIJK: ['3E', '3G', '3B', '3D', '3J', '3F', '3I', '3K'],
-    BDEFGHKL: ['3E', '3G', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BDEFGHJL: ['3H', '3G', '3B', '3D', '3J', '3F', '3L', '3E'],
-    BDEFGHJK: ['3H', '3G', '3B', '3D', '3J', '3F', '3E', '3K'],
-    BDEFGHIL: ['3E', '3G', '3B', '3D', '3H', '3F', '3L', '3I'],
-    BDEFGHIK: ['3E', '3G', '3B', '3D', '3H', '3F', '3I', '3K'],
-    BDEFGHIJ: ['3H', '3G', '3B', '3D', '3J', '3F', '3E', '3I'],
-    BCGHIJKL: ['3H', '3J', '3B', '3C', '3I', '3G', '3L', '3K'],
-    BCFHIJKL: ['3H', '3J', '3B', '3C', '3I', '3F', '3L', '3K'],
-    BCFGIJKL: ['3I', '3G', '3B', '3C', '3J', '3F', '3L', '3K'],
-    BCFGHJKL: ['3H', '3G', '3B', '3C', '3J', '3F', '3L', '3K'],
-    BCFGHIKL: ['3H', '3G', '3B', '3C', '3I', '3F', '3L', '3K'],
-    BCFGHIJL: ['3H', '3G', '3B', '3C', '3J', '3F', '3L', '3I'],
-    BCFGHIJK: ['3H', '3G', '3B', '3C', '3J', '3F', '3I', '3K'],
-    BCEHIJKL: ['3E', '3J', '3B', '3C', '3I', '3H', '3L', '3K'],
-    BCEGIJKL: ['3E', '3J', '3B', '3C', '3I', '3G', '3L', '3K'],
-    BCEGHJKL: ['3E', '3J', '3B', '3C', '3H', '3G', '3L', '3K'],
-    BCEGHIKL: ['3E', '3G', '3B', '3C', '3I', '3H', '3L', '3K'],
-    BCEGHIJL: ['3E', '3J', '3B', '3C', '3H', '3G', '3L', '3I'],
-    BCEGHIJK: ['3E', '3J', '3B', '3C', '3H', '3G', '3I', '3K'],
-    BCEFIJKL: ['3E', '3J', '3B', '3C', '3I', '3F', '3L', '3K'],
-    BCEFHJKL: ['3E', '3J', '3B', '3C', '3H', '3F', '3L', '3K'],
-    BCEFHIKL: ['3E', '3I', '3B', '3C', '3H', '3F', '3L', '3K'],
-    BCEFHIJL: ['3E', '3J', '3B', '3C', '3H', '3F', '3L', '3I'],
-    BCEFHIJK: ['3E', '3J', '3B', '3C', '3H', '3F', '3I', '3K'],
-    BCEFGJKL: ['3E', '3G', '3B', '3C', '3J', '3F', '3L', '3K'],
-    BCEFGIKL: ['3E', '3G', '3B', '3C', '3I', '3F', '3L', '3K'],
-    BCEFGIJL: ['3E', '3G', '3B', '3C', '3J', '3F', '3L', '3I'],
-    BCEFGIJK: ['3E', '3G', '3B', '3C', '3J', '3F', '3I', '3K'],
-    BCEFGHKL: ['3E', '3G', '3B', '3C', '3H', '3F', '3L', '3K'],
-    BCEFGHJL: ['3H', '3G', '3B', '3C', '3J', '3F', '3L', '3E'],
-    BCEFGHJK: ['3H', '3G', '3B', '3C', '3J', '3F', '3E', '3K'],
-    BCEFGHIL: ['3E', '3G', '3B', '3C', '3H', '3F', '3L', '3I'],
-    BCEFGHIK: ['3E', '3G', '3B', '3C', '3H', '3F', '3I', '3K'],
-    BCEFGHIJ: ['3H', '3G', '3B', '3C', '3J', '3F', '3E', '3I'],
-    BCDHIJKL: ['3H', '3J', '3B', '3C', '3I', '3D', '3L', '3K'],
-    BCDGIJKL: ['3I', '3G', '3B', '3C', '3J', '3D', '3L', '3K'],
-    BCDGHJKL: ['3H', '3G', '3B', '3C', '3J', '3D', '3L', '3K'],
-    BCDGHIKL: ['3H', '3G', '3B', '3C', '3I', '3D', '3L', '3K'],
-    BCDGHIJL: ['3H', '3G', '3B', '3C', '3J', '3D', '3L', '3I'],
-    BCDGHIJK: ['3H', '3G', '3B', '3C', '3J', '3D', '3I', '3K'],
-    BCDFIJKL: ['3C', '3J', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BCDFHJKL: ['3C', '3J', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BCDFHIKL: ['3C', '3I', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BCDFHIJL: ['3C', '3J', '3B', '3D', '3H', '3F', '3L', '3I'],
-    BCDFHIJK: ['3C', '3J', '3B', '3D', '3H', '3F', '3I', '3K'],
-    BCDFGJKL: ['3C', '3G', '3B', '3D', '3J', '3F', '3L', '3K'],
-    BCDFGIKL: ['3C', '3G', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BCDFGIJL: ['3C', '3G', '3B', '3D', '3J', '3F', '3L', '3I'],
-    BCDFGIJK: ['3C', '3G', '3B', '3D', '3J', '3F', '3I', '3K'],
-    BCDFGHKL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BCDFGHJL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3J'],
-    BCDFGHJK: ['3H', '3G', '3B', '3C', '3J', '3F', '3D', '3K'],
-    BCDFGHIL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3I'],
-    BCDFGHIK: ['3C', '3G', '3B', '3D', '3H', '3F', '3I', '3K'],
-    BCDFGHIJ: ['3H', '3G', '3B', '3C', '3J', '3F', '3D', '3I'],
-    BCDEIJKL: ['3E', '3J', '3B', '3C', '3I', '3D', '3L', '3K'],
-    BCDEHJKL: ['3E', '3J', '3B', '3C', '3H', '3D', '3L', '3K'],
-    BCDEHIKL: ['3E', '3I', '3B', '3C', '3H', '3D', '3L', '3K'],
-    BCDEHIJL: ['3E', '3J', '3B', '3C', '3H', '3D', '3L', '3I'],
-    BCDEHIJK: ['3E', '3J', '3B', '3C', '3H', '3D', '3I', '3K'],
-    BCDEGJKL: ['3E', '3G', '3B', '3C', '3J', '3D', '3L', '3K'],
-    BCDEGIKL: ['3E', '3G', '3B', '3C', '3I', '3D', '3L', '3K'],
-    BCDEGIJL: ['3E', '3G', '3B', '3C', '3J', '3D', '3L', '3I'],
-    BCDEGIJK: ['3E', '3G', '3B', '3C', '3J', '3D', '3I', '3K'],
-    BCDEGHKL: ['3E', '3G', '3B', '3C', '3H', '3D', '3L', '3K'],
-    BCDEGHJL: ['3H', '3G', '3B', '3C', '3J', '3D', '3L', '3E'],
-    BCDEGHJK: ['3H', '3G', '3B', '3C', '3J', '3D', '3E', '3K'],
-    BCDEGHIL: ['3E', '3G', '3B', '3C', '3H', '3D', '3L', '3I'],
-    BCDEGHIK: ['3E', '3G', '3B', '3C', '3H', '3D', '3I', '3K'],
-    BCDEGHIJ: ['3H', '3G', '3B', '3C', '3J', '3D', '3E', '3I'],
-    BCDEFJKL: ['3C', '3J', '3B', '3D', '3E', '3F', '3L', '3K'],
-    BCDEFIKL: ['3C', '3E', '3B', '3D', '3I', '3F', '3L', '3K'],
-    BCDEFIJL: ['3C', '3J', '3B', '3D', '3E', '3F', '3L', '3I'],
-    BCDEFIJK: ['3C', '3J', '3B', '3D', '3E', '3F', '3I', '3K'],
-    BCDEFHKL: ['3C', '3E', '3B', '3D', '3H', '3F', '3L', '3K'],
-    BCDEFHJL: ['3C', '3J', '3B', '3D', '3H', '3F', '3L', '3E'],
-    BCDEFHJK: ['3C', '3J', '3B', '3D', '3H', '3F', '3E', '3K'],
-    BCDEFHIL: ['3C', '3E', '3B', '3D', '3H', '3F', '3L', '3I'],
-    BCDEFHIK: ['3C', '3E', '3B', '3D', '3H', '3F', '3I', '3K'],
-    BCDEFHIJ: ['3C', '3J', '3B', '3D', '3H', '3F', '3E', '3I'],
-    BCDEFGKL: ['3C', '3G', '3B', '3D', '3E', '3F', '3L', '3K'],
-    BCDEFGJL: ['3C', '3G', '3B', '3D', '3J', '3F', '3L', '3E'],
-    BCDEFGJK: ['3C', '3G', '3B', '3D', '3J', '3F', '3E', '3K'],
-    BCDEFGIL: ['3C', '3G', '3B', '3D', '3E', '3F', '3L', '3I'],
-    BCDEFGIK: ['3C', '3G', '3B', '3D', '3E', '3F', '3I', '3K'],
-    BCDEFGIJ: ['3C', '3G', '3B', '3D', '3J', '3F', '3E', '3I'],
-    BCDEFGHL: ['3C', '3G', '3B', '3D', '3H', '3F', '3L', '3E'],
-    BCDEFGHK: ['3C', '3G', '3B', '3D', '3H', '3F', '3E', '3K'],
-    BCDEFGHJ: ['3H', '3G', '3B', '3C', '3J', '3F', '3D', '3E'],
-    BCDEFGHI: ['3C', '3G', '3B', '3D', '3H', '3F', '3E', '3I'],
-    AFGHIJKL: ['3H', '3J', '3I', '3F', '3A', '3G', '3L', '3K'],
-    AEGHIJKL: ['3E', '3J', '3I', '3A', '3H', '3G', '3L', '3K'],
-    AEFHIJKL: ['3E', '3J', '3I', '3F', '3A', '3H', '3L', '3K'],
-    AEFGIJKL: ['3E', '3J', '3I', '3F', '3A', '3G', '3L', '3K'],
-    AEFGHJKL: ['3E', '3G', '3J', '3F', '3A', '3H', '3L', '3K'],
-    AEFGHIKL: ['3E', '3G', '3I', '3F', '3A', '3H', '3L', '3K'],
-    AEFGHIJL: ['3E', '3G', '3J', '3F', '3A', '3H', '3L', '3I'],
-    AEFGHIJK: ['3E', '3G', '3J', '3F', '3A', '3H', '3I', '3K'],
-    ADGHIJKL: ['3H', '3J', '3I', '3D', '3A', '3G', '3L', '3K'],
-    ADFHIJKL: ['3H', '3J', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ADFGIJKL: ['3I', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
-    ADFGHJKL: ['3H', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
-    ADFGHIKL: ['3H', '3G', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ADFGHIJL: ['3H', '3G', '3J', '3D', '3A', '3F', '3L', '3I'],
-    ADFGHIJK: ['3H', '3G', '3J', '3D', '3A', '3F', '3I', '3K'],
-    ADEHIJKL: ['3E', '3J', '3I', '3D', '3A', '3H', '3L', '3K'],
-    ADEGIJKL: ['3E', '3J', '3I', '3D', '3A', '3G', '3L', '3K'],
-    ADEGHJKL: ['3E', '3G', '3J', '3D', '3A', '3H', '3L', '3K'],
-    ADEGHIKL: ['3E', '3G', '3I', '3D', '3A', '3H', '3L', '3K'],
-    ADEGHIJL: ['3E', '3G', '3J', '3D', '3A', '3H', '3L', '3I'],
-    ADEGHIJK: ['3E', '3G', '3J', '3D', '3A', '3H', '3I', '3K'],
-    ADEFIJKL: ['3E', '3J', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ADEFHJKL: ['3H', '3J', '3E', '3D', '3A', '3F', '3L', '3K'],
-    ADEFHIKL: ['3H', '3E', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ADEFHIJL: ['3H', '3J', '3E', '3D', '3A', '3F', '3L', '3I'],
-    ADEFHIJK: ['3H', '3J', '3E', '3D', '3A', '3F', '3I', '3K'],
-    ADEFGJKL: ['3E', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
-    ADEFGIKL: ['3E', '3G', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ADEFGIJL: ['3E', '3G', '3J', '3D', '3A', '3F', '3L', '3I'],
-    ADEFGIJK: ['3E', '3G', '3J', '3D', '3A', '3F', '3I', '3K'],
-    ADEFGHKL: ['3H', '3G', '3E', '3D', '3A', '3F', '3L', '3K'],
-    ADEFGHJL: ['3H', '3G', '3J', '3D', '3A', '3F', '3L', '3E'],
-    ADEFGHJK: ['3H', '3G', '3J', '3D', '3A', '3F', '3E', '3K'],
-    ADEFGHIL: ['3H', '3G', '3E', '3D', '3A', '3F', '3L', '3I'],
-    ADEFGHIK: ['3H', '3G', '3E', '3D', '3A', '3F', '3I', '3K'],
-    ADEFGHIJ: ['3H', '3G', '3J', '3D', '3A', '3F', '3E', '3I'],
-    ACGHIJKL: ['3H', '3J', '3I', '3C', '3A', '3G', '3L', '3K'],
-    ACFHIJKL: ['3H', '3J', '3I', '3C', '3A', '3F', '3L', '3K'],
-    ACFGIJKL: ['3I', '3G', '3J', '3C', '3A', '3F', '3L', '3K'],
-    ACFGHJKL: ['3H', '3G', '3J', '3C', '3A', '3F', '3L', '3K'],
-    ACFGHIKL: ['3H', '3G', '3I', '3C', '3A', '3F', '3L', '3K'],
-    ACFGHIJL: ['3H', '3G', '3J', '3C', '3A', '3F', '3L', '3I'],
-    ACFGHIJK: ['3H', '3G', '3J', '3C', '3A', '3F', '3I', '3K'],
-    ACEHIJKL: ['3E', '3J', '3I', '3C', '3A', '3H', '3L', '3K'],
-    ACEGIJKL: ['3E', '3J', '3I', '3C', '3A', '3G', '3L', '3K'],
-    ACEGHJKL: ['3E', '3G', '3J', '3C', '3A', '3H', '3L', '3K'],
-    ACEGHIKL: ['3E', '3G', '3I', '3C', '3A', '3H', '3L', '3K'],
-    ACEGHIJL: ['3E', '3G', '3J', '3C', '3A', '3H', '3L', '3I'],
-    ACEGHIJK: ['3E', '3G', '3J', '3C', '3A', '3H', '3I', '3K'],
-    ACEFIJKL: ['3E', '3J', '3I', '3C', '3A', '3F', '3L', '3K'],
-    ACEFHJKL: ['3H', '3J', '3E', '3C', '3A', '3F', '3L', '3K'],
-    ACEFHIKL: ['3H', '3E', '3I', '3C', '3A', '3F', '3L', '3K'],
-    ACEFHIJL: ['3H', '3J', '3E', '3C', '3A', '3F', '3L', '3I'],
-    ACEFHIJK: ['3H', '3J', '3E', '3C', '3A', '3F', '3I', '3K'],
-    ACEFGJKL: ['3E', '3G', '3J', '3C', '3A', '3F', '3L', '3K'],
-    ACEFGIKL: ['3E', '3G', '3I', '3C', '3A', '3F', '3L', '3K'],
-    ACEFGIJL: ['3E', '3G', '3J', '3C', '3A', '3F', '3L', '3I'],
-    ACEFGIJK: ['3E', '3G', '3J', '3C', '3A', '3F', '3I', '3K'],
-    ACEFGHKL: ['3H', '3G', '3E', '3C', '3A', '3F', '3L', '3K'],
-    ACEFGHJL: ['3H', '3G', '3J', '3C', '3A', '3F', '3L', '3E'],
-    ACEFGHJK: ['3H', '3G', '3J', '3C', '3A', '3F', '3E', '3K'],
-    ACEFGHIL: ['3H', '3G', '3E', '3C', '3A', '3F', '3L', '3I'],
-    ACEFGHIK: ['3H', '3G', '3E', '3C', '3A', '3F', '3I', '3K'],
-    ACEFGHIJ: ['3H', '3G', '3J', '3C', '3A', '3F', '3E', '3I'],
-    ACDHIJKL: ['3H', '3J', '3I', '3C', '3A', '3D', '3L', '3K'],
-    ACDGIJKL: ['3I', '3G', '3J', '3C', '3A', '3D', '3L', '3K'],
-    ACDGHJKL: ['3H', '3G', '3J', '3C', '3A', '3D', '3L', '3K'],
-    ACDGHIKL: ['3H', '3G', '3I', '3C', '3A', '3D', '3L', '3K'],
-    ACDGHIJL: ['3H', '3G', '3J', '3C', '3A', '3D', '3L', '3I'],
-    ACDGHIJK: ['3H', '3G', '3J', '3C', '3A', '3D', '3I', '3K'],
-    ACDFIJKL: ['3C', '3J', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ACDFHJKL: ['3H', '3J', '3F', '3C', '3A', '3D', '3L', '3K'],
-    ACDFHIKL: ['3H', '3F', '3I', '3C', '3A', '3D', '3L', '3K'],
-    ACDFHIJL: ['3H', '3J', '3F', '3C', '3A', '3D', '3L', '3I'],
-    ACDFHIJK: ['3H', '3J', '3F', '3C', '3A', '3D', '3I', '3K'],
-    ACDFGJKL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3K'],
-    ACDFGIKL: ['3C', '3G', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ACDFGIJL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3I'],
-    ACDFGIJK: ['3C', '3G', '3J', '3D', '3A', '3F', '3I', '3K'],
-    ACDFGHKL: ['3H', '3G', '3F', '3C', '3A', '3D', '3L', '3K'],
-    ACDFGHJL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3H'],
-    ACDFGHJK: ['3H', '3G', '3J', '3C', '3A', '3F', '3D', '3K'],
-    ACDFGHIL: ['3H', '3G', '3F', '3C', '3A', '3D', '3L', '3I'],
-    ACDFGHIK: ['3H', '3G', '3F', '3C', '3A', '3D', '3I', '3K'],
-    ACDFGHIJ: ['3H', '3G', '3J', '3C', '3A', '3F', '3D', '3I'],
-    ACDEIJKL: ['3E', '3J', '3I', '3C', '3A', '3D', '3L', '3K'],
-    ACDEHJKL: ['3H', '3J', '3E', '3C', '3A', '3D', '3L', '3K'],
-    ACDEHIKL: ['3H', '3E', '3I', '3C', '3A', '3D', '3L', '3K'],
-    ACDEHIJL: ['3H', '3J', '3E', '3C', '3A', '3D', '3L', '3I'],
-    ACDEHIJK: ['3H', '3J', '3E', '3C', '3A', '3D', '3I', '3K'],
-    ACDEGJKL: ['3E', '3G', '3J', '3C', '3A', '3D', '3L', '3K'],
-    ACDEGIKL: ['3E', '3G', '3I', '3C', '3A', '3D', '3L', '3K'],
-    ACDEGIJL: ['3E', '3G', '3J', '3C', '3A', '3D', '3L', '3I'],
-    ACDEGIJK: ['3E', '3G', '3J', '3C', '3A', '3D', '3I', '3K'],
-    ACDEGHKL: ['3H', '3G', '3E', '3C', '3A', '3D', '3L', '3K'],
-    ACDEGHJL: ['3H', '3G', '3J', '3C', '3A', '3D', '3L', '3E'],
-    ACDEGHJK: ['3H', '3G', '3J', '3C', '3A', '3D', '3E', '3K'],
-    ACDEGHIL: ['3H', '3G', '3E', '3C', '3A', '3D', '3L', '3I'],
-    ACDEGHIK: ['3H', '3G', '3E', '3C', '3A', '3D', '3I', '3K'],
-    ACDEGHIJ: ['3H', '3G', '3J', '3C', '3A', '3D', '3E', '3I'],
-    ACDEFJKL: ['3C', '3J', '3E', '3D', '3A', '3F', '3L', '3K'],
-    ACDEFIKL: ['3C', '3E', '3I', '3D', '3A', '3F', '3L', '3K'],
-    ACDEFIJL: ['3C', '3J', '3E', '3D', '3A', '3F', '3L', '3I'],
-    ACDEFIJK: ['3C', '3J', '3E', '3D', '3A', '3F', '3I', '3K'],
-    ACDEFHKL: ['3H', '3E', '3F', '3C', '3A', '3D', '3L', '3K'],
-    ACDEFHJL: ['3H', '3J', '3F', '3C', '3A', '3D', '3L', '3E'],
-    ACDEFHJK: ['3H', '3J', '3E', '3C', '3A', '3F', '3D', '3K'],
-    ACDEFHIL: ['3H', '3E', '3F', '3C', '3A', '3D', '3L', '3I'],
-    ACDEFHIK: ['3H', '3E', '3F', '3C', '3A', '3D', '3I', '3K'],
-    ACDEFHIJ: ['3H', '3J', '3E', '3C', '3A', '3F', '3D', '3I'],
-    ACDEFGKL: ['3C', '3G', '3E', '3D', '3A', '3F', '3L', '3K'],
-    ACDEFGJL: ['3C', '3G', '3J', '3D', '3A', '3F', '3L', '3E'],
-    ACDEFGJK: ['3C', '3G', '3J', '3D', '3A', '3F', '3E', '3K'],
-    ACDEFGIL: ['3C', '3G', '3E', '3D', '3A', '3F', '3L', '3I'],
-    ACDEFGIK: ['3C', '3G', '3E', '3D', '3A', '3F', '3I', '3K'],
-    ACDEFGIJ: ['3C', '3G', '3J', '3D', '3A', '3F', '3E', '3I'],
-    ACDEFGHL: ['3H', '3G', '3F', '3C', '3A', '3D', '3L', '3E'],
-    ACDEFGHK: ['3H', '3G', '3E', '3C', '3A', '3F', '3D', '3K'],
-    ACDEFGHJ: ['3H', '3G', '3J', '3C', '3A', '3F', '3D', '3E'],
-    ACDEFGHI: ['3H', '3G', '3E', '3C', '3A', '3F', '3D', '3I'],
-    ABGHIJKL: ['3H', '3J', '3B', '3A', '3I', '3G', '3L', '3K'],
-    ABFHIJKL: ['3H', '3J', '3B', '3A', '3I', '3F', '3L', '3K'],
-    ABFGIJKL: ['3I', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
-    ABFGHJKL: ['3H', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
-    ABFGHIKL: ['3H', '3G', '3B', '3A', '3I', '3F', '3L', '3K'],
-    ABFGHIJL: ['3H', '3J', '3B', '3F', '3A', '3G', '3L', '3I'],
-    ABFGHIJK: ['3H', '3J', '3B', '3F', '3A', '3G', '3I', '3K'],
-    ABEHIJKL: ['3E', '3J', '3B', '3A', '3I', '3H', '3L', '3K'],
-    ABEGIJKL: ['3E', '3J', '3B', '3A', '3I', '3G', '3L', '3K'],
-    ABEGHJKL: ['3E', '3J', '3B', '3A', '3H', '3G', '3L', '3K'],
-    ABEGHIKL: ['3E', '3G', '3B', '3A', '3I', '3H', '3L', '3K'],
-    ABEGHIJL: ['3E', '3J', '3B', '3A', '3H', '3G', '3L', '3I'],
-    ABEGHIJK: ['3E', '3J', '3B', '3A', '3H', '3G', '3I', '3K'],
-    ABEFIJKL: ['3E', '3J', '3B', '3A', '3I', '3F', '3L', '3K'],
-    ABEFHJKL: ['3E', '3J', '3B', '3F', '3A', '3H', '3L', '3K'],
-    ABEFHIKL: ['3E', '3I', '3B', '3F', '3A', '3H', '3L', '3K'],
-    ABEFHIJL: ['3E', '3J', '3B', '3F', '3A', '3H', '3L', '3I'],
-    ABEFHIJK: ['3E', '3J', '3B', '3F', '3A', '3H', '3I', '3K'],
-    ABEFGJKL: ['3E', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
-    ABEFGIKL: ['3E', '3G', '3B', '3A', '3I', '3F', '3L', '3K'],
-    ABEFGIJL: ['3E', '3J', '3B', '3F', '3A', '3G', '3L', '3I'],
-    ABEFGIJK: ['3E', '3J', '3B', '3F', '3A', '3G', '3I', '3K'],
-    ABEFGHKL: ['3E', '3G', '3B', '3F', '3A', '3H', '3L', '3K'],
-    ABEFGHJL: ['3H', '3J', '3B', '3F', '3A', '3G', '3L', '3E'],
-    ABEFGHJK: ['3H', '3J', '3B', '3F', '3A', '3G', '3E', '3K'],
-    ABEFGHIL: ['3E', '3G', '3B', '3F', '3A', '3H', '3L', '3I'],
-    ABEFGHIK: ['3E', '3G', '3B', '3F', '3A', '3H', '3I', '3K'],
-    ABEFGHIJ: ['3H', '3J', '3B', '3F', '3A', '3G', '3E', '3I'],
-    ABDHIJKL: ['3I', '3J', '3B', '3D', '3A', '3H', '3L', '3K'],
-    ABDGIJKL: ['3I', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
-    ABDGHJKL: ['3H', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
-    ABDGHIKL: ['3I', '3G', '3B', '3D', '3A', '3H', '3L', '3K'],
-    ABDGHIJL: ['3H', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
-    ABDGHIJK: ['3H', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
-    ABDFIJKL: ['3I', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDFHJKL: ['3H', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDFHIKL: ['3H', '3I', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDFHIJL: ['3H', '3J', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABDFHIJK: ['3H', '3J', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABDFGJKL: ['3F', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
-    ABDFGIKL: ['3I', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDFGIJL: ['3F', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
-    ABDFGIJK: ['3F', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
-    ABDFGHKL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDFGHJL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3J'],
-    ABDFGHJK: ['3H', '3G', '3B', '3D', '3A', '3F', '3J', '3K'],
-    ABDFGHIL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABDFGHIK: ['3H', '3G', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABDFGHIJ: ['3H', '3G', '3B', '3D', '3A', '3F', '3I', '3J'],
-    ABDEIJKL: ['3E', '3J', '3B', '3A', '3I', '3D', '3L', '3K'],
-    ABDEHJKL: ['3E', '3J', '3B', '3D', '3A', '3H', '3L', '3K'],
-    ABDEHIKL: ['3E', '3I', '3B', '3D', '3A', '3H', '3L', '3K'],
-    ABDEHIJL: ['3E', '3J', '3B', '3D', '3A', '3H', '3L', '3I'],
-    ABDEHIJK: ['3E', '3J', '3B', '3D', '3A', '3H', '3I', '3K'],
-    ABDEGJKL: ['3E', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
-    ABDEGIKL: ['3E', '3G', '3B', '3A', '3I', '3D', '3L', '3K'],
-    ABDEGIJL: ['3E', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
-    ABDEGIJK: ['3E', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
-    ABDEGHKL: ['3E', '3G', '3B', '3D', '3A', '3H', '3L', '3K'],
-    ABDEGHJL: ['3H', '3J', '3B', '3D', '3A', '3G', '3L', '3E'],
-    ABDEGHJK: ['3H', '3J', '3B', '3D', '3A', '3G', '3E', '3K'],
-    ABDEGHIL: ['3E', '3G', '3B', '3D', '3A', '3H', '3L', '3I'],
-    ABDEGHIK: ['3E', '3G', '3B', '3D', '3A', '3H', '3I', '3K'],
-    ABDEGHIJ: ['3H', '3J', '3B', '3D', '3A', '3G', '3E', '3I'],
-    ABDEFJKL: ['3E', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDEFIKL: ['3E', '3I', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDEFIJL: ['3E', '3J', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABDEFIJK: ['3E', '3J', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABDEFHKL: ['3H', '3E', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDEFHJL: ['3H', '3J', '3B', '3D', '3A', '3F', '3L', '3E'],
-    ABDEFHJK: ['3H', '3J', '3B', '3D', '3A', '3F', '3E', '3K'],
-    ABDEFHIL: ['3H', '3E', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABDEFHIK: ['3H', '3E', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABDEFHIJ: ['3H', '3J', '3B', '3D', '3A', '3F', '3E', '3I'],
-    ABDEFGKL: ['3E', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABDEFGJL: ['3E', '3G', '3B', '3D', '3A', '3F', '3L', '3J'],
-    ABDEFGJK: ['3E', '3G', '3B', '3D', '3A', '3F', '3J', '3K'],
-    ABDEFGIL: ['3E', '3G', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABDEFGIK: ['3E', '3G', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABDEFGIJ: ['3E', '3G', '3B', '3D', '3A', '3F', '3I', '3J'],
-    ABDEFGHL: ['3H', '3G', '3B', '3D', '3A', '3F', '3L', '3E'],
-    ABDEFGHK: ['3H', '3G', '3B', '3D', '3A', '3F', '3E', '3K'],
-    ABDEFGHJ: ['3H', '3G', '3B', '3D', '3A', '3F', '3E', '3J'],
-    ABDEFGHI: ['3H', '3G', '3B', '3D', '3A', '3F', '3E', '3I'],
-    ABCHIJKL: ['3I', '3J', '3B', '3C', '3A', '3H', '3L', '3K'],
-    ABCGIJKL: ['3I', '3J', '3B', '3C', '3A', '3G', '3L', '3K'],
-    ABCGHJKL: ['3H', '3J', '3B', '3C', '3A', '3G', '3L', '3K'],
-    ABCGHIKL: ['3I', '3G', '3B', '3C', '3A', '3H', '3L', '3K'],
-    ABCGHIJL: ['3H', '3J', '3B', '3C', '3A', '3G', '3L', '3I'],
-    ABCGHIJK: ['3H', '3J', '3B', '3C', '3A', '3G', '3I', '3K'],
-    ABCFIJKL: ['3I', '3J', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCFHJKL: ['3H', '3J', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCFHIKL: ['3H', '3I', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCFHIJL: ['3H', '3J', '3B', '3C', '3A', '3F', '3L', '3I'],
-    ABCFHIJK: ['3H', '3J', '3B', '3C', '3A', '3F', '3I', '3K'],
-    ABCFGJKL: ['3C', '3J', '3B', '3F', '3A', '3G', '3L', '3K'],
-    ABCFGIKL: ['3I', '3G', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCFGIJL: ['3C', '3J', '3B', '3F', '3A', '3G', '3L', '3I'],
-    ABCFGIJK: ['3C', '3J', '3B', '3F', '3A', '3G', '3I', '3K'],
-    ABCFGHKL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCFGHJL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3J'],
-    ABCFGHJK: ['3H', '3G', '3B', '3C', '3A', '3F', '3J', '3K'],
-    ABCFGHIL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3I'],
-    ABCFGHIK: ['3H', '3G', '3B', '3C', '3A', '3F', '3I', '3K'],
-    ABCFGHIJ: ['3H', '3G', '3B', '3C', '3A', '3F', '3I', '3J'],
-    ABCEIJKL: ['3E', '3J', '3B', '3A', '3I', '3C', '3L', '3K'],
-    ABCEHJKL: ['3E', '3J', '3B', '3C', '3A', '3H', '3L', '3K'],
-    ABCEHIKL: ['3E', '3I', '3B', '3C', '3A', '3H', '3L', '3K'],
-    ABCEHIJL: ['3E', '3J', '3B', '3C', '3A', '3H', '3L', '3I'],
-    ABCEHIJK: ['3E', '3J', '3B', '3C', '3A', '3H', '3I', '3K'],
-    ABCEGJKL: ['3E', '3J', '3B', '3C', '3A', '3G', '3L', '3K'],
-    ABCEGIKL: ['3E', '3G', '3B', '3A', '3I', '3C', '3L', '3K'],
-    ABCEGIJL: ['3E', '3J', '3B', '3C', '3A', '3G', '3L', '3I'],
-    ABCEGIJK: ['3E', '3J', '3B', '3C', '3A', '3G', '3I', '3K'],
-    ABCEGHKL: ['3E', '3G', '3B', '3C', '3A', '3H', '3L', '3K'],
-    ABCEGHJL: ['3H', '3J', '3B', '3C', '3A', '3G', '3L', '3E'],
-    ABCEGHJK: ['3H', '3J', '3B', '3C', '3A', '3G', '3E', '3K'],
-    ABCEGHIL: ['3E', '3G', '3B', '3C', '3A', '3H', '3L', '3I'],
-    ABCEGHIK: ['3E', '3G', '3B', '3C', '3A', '3H', '3I', '3K'],
-    ABCEGHIJ: ['3H', '3J', '3B', '3C', '3A', '3G', '3E', '3I'],
-    ABCEFJKL: ['3E', '3J', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCEFIKL: ['3E', '3I', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCEFIJL: ['3E', '3J', '3B', '3C', '3A', '3F', '3L', '3I'],
-    ABCEFIJK: ['3E', '3J', '3B', '3C', '3A', '3F', '3I', '3K'],
-    ABCEFHKL: ['3H', '3E', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCEFHJL: ['3H', '3J', '3B', '3C', '3A', '3F', '3L', '3E'],
-    ABCEFHJK: ['3H', '3J', '3B', '3C', '3A', '3F', '3E', '3K'],
-    ABCEFHIL: ['3H', '3E', '3B', '3C', '3A', '3F', '3L', '3I'],
-    ABCEFHIK: ['3H', '3E', '3B', '3C', '3A', '3F', '3I', '3K'],
-    ABCEFHIJ: ['3H', '3J', '3B', '3C', '3A', '3F', '3E', '3I'],
-    ABCEFGKL: ['3E', '3G', '3B', '3C', '3A', '3F', '3L', '3K'],
-    ABCEFGJL: ['3E', '3G', '3B', '3C', '3A', '3F', '3L', '3J'],
-    ABCEFGJK: ['3E', '3G', '3B', '3C', '3A', '3F', '3J', '3K'],
-    ABCEFGIL: ['3E', '3G', '3B', '3C', '3A', '3F', '3L', '3I'],
-    ABCEFGIK: ['3E', '3G', '3B', '3C', '3A', '3F', '3I', '3K'],
-    ABCEFGIJ: ['3E', '3G', '3B', '3C', '3A', '3F', '3I', '3J'],
-    ABCEFGHL: ['3H', '3G', '3B', '3C', '3A', '3F', '3L', '3E'],
-    ABCEFGHK: ['3H', '3G', '3B', '3C', '3A', '3F', '3E', '3K'],
-    ABCEFGHJ: ['3H', '3G', '3B', '3C', '3A', '3F', '3E', '3J'],
-    ABCEFGHI: ['3H', '3G', '3B', '3C', '3A', '3F', '3E', '3I'],
-    ABCDIJKL: ['3I', '3J', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDHJKL: ['3H', '3J', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDHIKL: ['3H', '3I', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDHIJL: ['3H', '3J', '3B', '3C', '3A', '3D', '3L', '3I'],
-    ABCDHIJK: ['3H', '3J', '3B', '3C', '3A', '3D', '3I', '3K'],
-    ABCDGJKL: ['3C', '3J', '3B', '3D', '3A', '3G', '3L', '3K'],
-    ABCDGIKL: ['3I', '3G', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDGIJL: ['3C', '3J', '3B', '3D', '3A', '3G', '3L', '3I'],
-    ABCDGIJK: ['3C', '3J', '3B', '3D', '3A', '3G', '3I', '3K'],
-    ABCDGHKL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDGHJL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3J'],
-    ABCDGHJK: ['3H', '3G', '3B', '3C', '3A', '3D', '3J', '3K'],
-    ABCDGHIL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3I'],
-    ABCDGHIK: ['3H', '3G', '3B', '3C', '3A', '3D', '3I', '3K'],
-    ABCDGHIJ: ['3H', '3G', '3B', '3C', '3A', '3D', '3I', '3J'],
-    ABCDFJKL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABCDFIKL: ['3C', '3I', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABCDFIJL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABCDFIJK: ['3C', '3J', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABCDFHKL: ['3H', '3F', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDFHJL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3H'],
-    ABCDFHJK: ['3H', '3J', '3B', '3C', '3A', '3F', '3D', '3K'],
-    ABCDFHIL: ['3H', '3F', '3B', '3C', '3A', '3D', '3L', '3I'],
-    ABCDFHIK: ['3H', '3F', '3B', '3C', '3A', '3D', '3I', '3K'],
-    ABCDFHIJ: ['3H', '3J', '3B', '3C', '3A', '3F', '3D', '3I'],
-    ABCDFGKL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABCDFGJL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3J'],
-    ABCDFGJK: ['3C', '3G', '3B', '3D', '3A', '3F', '3J', '3K'],
-    ABCDFGIL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABCDFGIK: ['3C', '3G', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABCDFGIJ: ['3C', '3G', '3B', '3D', '3A', '3F', '3I', '3J'],
-    ABCDFGHL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3H'],
-    ABCDFGHK: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3K'],
-    ABCDFGHJ: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3J'],
-    ABCDFGHI: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3I'],
-    ABCDEJKL: ['3E', '3J', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDEIKL: ['3E', '3I', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDEIJL: ['3E', '3J', '3B', '3C', '3A', '3D', '3L', '3I'],
-    ABCDEIJK: ['3E', '3J', '3B', '3C', '3A', '3D', '3I', '3K'],
-    ABCDEHKL: ['3H', '3E', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDEHJL: ['3H', '3J', '3B', '3C', '3A', '3D', '3L', '3E'],
-    ABCDEHJK: ['3H', '3J', '3B', '3C', '3A', '3D', '3E', '3K'],
-    ABCDEHIL: ['3H', '3E', '3B', '3C', '3A', '3D', '3L', '3I'],
-    ABCDEHIK: ['3H', '3E', '3B', '3C', '3A', '3D', '3I', '3K'],
-    ABCDEHIJ: ['3H', '3J', '3B', '3C', '3A', '3D', '3E', '3I'],
-    ABCDEGKL: ['3E', '3G', '3B', '3C', '3A', '3D', '3L', '3K'],
-    ABCDEGJL: ['3E', '3G', '3B', '3C', '3A', '3D', '3L', '3J'],
-    ABCDEGJK: ['3E', '3G', '3B', '3C', '3A', '3D', '3J', '3K'],
-    ABCDEGIL: ['3E', '3G', '3B', '3C', '3A', '3D', '3L', '3I'],
-    ABCDEGIK: ['3E', '3G', '3B', '3C', '3A', '3D', '3I', '3K'],
-    ABCDEGIJ: ['3E', '3G', '3B', '3C', '3A', '3D', '3I', '3J'],
-    ABCDEGHL: ['3H', '3G', '3B', '3C', '3A', '3D', '3L', '3E'],
-    ABCDEGHK: ['3H', '3G', '3B', '3C', '3A', '3D', '3E', '3K'],
-    ABCDEGHJ: ['3H', '3G', '3B', '3C', '3A', '3D', '3E', '3J'],
-    ABCDEGHI: ['3H', '3G', '3B', '3C', '3A', '3D', '3E', '3I'],
-    ABCDEFKL: ['3C', '3E', '3B', '3D', '3A', '3F', '3L', '3K'],
-    ABCDEFJL: ['3C', '3J', '3B', '3D', '3A', '3F', '3L', '3E'],
-    ABCDEFJK: ['3C', '3J', '3B', '3D', '3A', '3F', '3E', '3K'],
-    ABCDEFIL: ['3C', '3E', '3B', '3D', '3A', '3F', '3L', '3I'],
-    ABCDEFIK: ['3C', '3E', '3B', '3D', '3A', '3F', '3I', '3K'],
-    ABCDEFIJ: ['3C', '3J', '3B', '3D', '3A', '3F', '3E', '3I'],
-    ABCDEFHL: ['3H', '3F', '3B', '3C', '3A', '3D', '3L', '3E'],
-    ABCDEFHK: ['3H', '3E', '3B', '3C', '3A', '3F', '3D', '3K'],
-    ABCDEFHJ: ['3H', '3J', '3B', '3C', '3A', '3F', '3D', '3E'],
-    ABCDEFHI: ['3H', '3E', '3B', '3C', '3A', '3F', '3D', '3I'],
-    ABCDEFGL: ['3C', '3G', '3B', '3D', '3A', '3F', '3L', '3E'],
-    ABCDEFGK: ['3C', '3G', '3B', '3D', '3A', '3F', '3E', '3K'],
-    ABCDEFGJ: ['3C', '3G', '3B', '3D', '3A', '3F', '3E', '3J'],
-    ABCDEFGI: ['3C', '3G', '3B', '3D', '3A', '3F', '3E', '3I'],
-    ABCDEFGH: ['3H', '3G', '3B', '3C', '3A', '3F', '3D', '3E'],
-  };
-
-  /**
-   * @param {string[]} grupos - Array de 8 letras (A-L)
-   * @returns {Object} Asignaciones por partido
-   */
-
-  // ─── EJEMPLOS ────────────────────────────────────────────────────────────────
-
-  // Ejemplo: terceros de L, C, B, H, E, G, F, D
-
   function asignar_terceros(clasificados) {
     const key = clasificados
       .map((g) => g.toUpperCase())
@@ -1491,26 +741,7 @@ stripes.forEach(s => {
     return resultado[partido];
   }
 
-  /* console.log(mejor_tercero('ABCDF', mejores_terceros))
-  console.log(mejor_tercero('CDFGH', mejores_terceros))
-  console.log(mejor_tercero('BEFIJ', mejores_terceros))
-  console.log(mejor_tercero('AEHIJ', mejores_terceros))
-  console.log(mejor_tercero('CEFHI', mejores_terceros))
-  console.log(mejor_tercero('EHIJK', mejores_terceros))
-  console.log(mejor_tercero('EFGIJ', mejores_terceros))
-  console.log(mejor_tercero('DEIJL', mejores_terceros)) */
-
   const clasificados = ['L', 'C', 'B', 'H', 'E', 'G', 'F', 'D'];
-  console.log(clasificados);
-  console.log(mejores_terceros);
-
-  // Probamos asignar_terceros directamente
-  /* console.log(asignar_terceros(clasificados)); */
-  // Debería dar: { P74: '3D', P77: '3F', P79: '3C', P80: '3E', P81: '3B', P82: '3H', P85: '3G', P87: '3L' }
-
-  // Probamos mejor_tercero
-  /* console.log(mejor_tercero('ABCDF', clasificados)); */
-  // Debería dar: '3D'
 
   let playoffs_spots = {}
   if (grupos > 1) {
@@ -1646,134 +877,8 @@ stripes.forEach(s => {
     }
   };
 }
-  
-  /* let positions_playoffs = {
-    '1A': [0, 0],
-    '2B': [0, 1],
-    '1C': [1, 0],
-    '2D': [1, 1],
-    '1E': [2, 0],
-    '2F': [2, 1],
-    '1G': [3, 0],
-    '2H': [3, 1],
-    '1B': [4, 0],
-    '2A': [4, 1],
-    '1D': [5, 0],
-    '2C': [5, 1],
-    '1F': [6, 0],
-    '2E': [6, 1],
-    '1H': [7, 0],
-    '2G': [7, 1],
-  }; */
-
-  /* let positions_playoffs = {
-    '1E': [0, 0],
-    '3A': [0, 1], //
-
-    '1I': [1, 0],
-    '3B': [1, 1], //
-
-    '2A': [2, 0],
-    '2B': [2, 1],
-
-    '1F': [3, 0],
-    '2C': [3, 1],
-
-    '2K': [4, 0],
-    '2L': [4, 1],
-
-    '1H': [5, 0],
-    '2J': [5, 1],
-
-    '1D': [6, 0],
-    '3C': [6, 1],//
-
-    '1G': [7, 0],
-    '3D': [7, 1],//
-
-    '1C': [8, 0],
-    '2F': [8, 1],
-
-    '2E': [9, 0],
-    '2I': [9, 1],
-
-    '1A': [10, 0],
-    '3F': [10, 1],//
-
-    '1L': [11, 0],
-    '3G': [11, 1],//
-
-    '1J': [12, 0],
-    '2H': [12, 1],
-
-    '2D': [13, 0],
-    '2G': [13, 1],
-
-    '1B': [14, 0],
-    '3H': [14, 1],//
-    
-    '1K': [15, 0],
-    '3J': [15, 1],//
-  }; */
-
-  /* let positions_playoffs = {
-    "1A": [0, 0],
-    "2B": [0, 1],
-    "1C": [1, 0],
-    "2D": [1, 1],
-    "1E": [2, 0],
-    "2F": [2, 1],
-    "1G": [3, 0],
-    "2H": [3, 1],
-    "1B": [4, 0],
-    "2A": [4, 1],
-    "1D": [5, 0],
-    "2C": [5, 1],
-    "1F": [6, 0],
-    "2E": [6, 1],
-    "1H": [7, 0],
-    "2G": [7, 1],
-    }; */
 
   let positions_playoffs = playoffs_spots[competencia];
-  console.log(positions_playoffs);
-
-  /* let positions_playoffs = {
-    "1A": [0, 0],
-    "8B": [0, 1],
-
-    "2A": [1, 0],
-    "7B": [1, 1],
-
-    "3A": [2, 0],
-    "6B": [2, 1],
-
-    "4A": [3, 0],
-    "5B": [3, 1],
-
-    "5A": [4, 0],
-    "4B": [4, 1],
-
-    "6A": [5, 0],
-    "3B": [5, 1],
-
-    "7A": [6, 0],
-    "2B": [6, 1],
-
-    "8A": [7, 0],
-    "1B": [7, 1],
-  }; */
-
-  /* let positions_playoffs = {
-      '1A': [0, 0],
-      '1B': [0, 1],
-      '1C': [1, 0],
-      '1D': [1, 1],
-      '1E': [2, 0],
-      '1F': [2, 1],
-      '1G': [3, 0],
-      '1H': [3, 1],
-    } */
 
   let positions_playoffs4 = {
     0: [0, 0],
@@ -1817,27 +922,6 @@ stripes.forEach(s => {
     1: [0, 1],
   };
 
-  // Las rondas siguientes se generan automáticamente:
-  // ganador[i] vs ganador[i+1], con i par
-
-  console.log(fechas_playoff[0]);
-
-  console.log(names_playoffs_1[0] !== 'undefined');
-  /* let clasificados = yearSlice.filter(d => d.rankInGroup < clasificacion_por_grupo && d.final).slice(0, 32)
-  console.log(clasificados) */
-  /* fechas_playoff.filter(d => d.fecha == 'Fecha 1/8').forEach((d, i) => {
-    Object.assign(d, { position_local: clasificados[i].position });
-    Object.assign(d, { position_visitante: clasificados[i+i].position });
-  }) */
-
-  /* Object.keys(positions_playoffs).forEach((d, i) => {
-    if (i % 2 == 0){
-      console.log('par', d)
-    } else {
-      console.log('impar', d)
-    }
-  }) */
-
   fechas_playoff.forEach((d, i) => {
     let filter = yearSlice.filter((e) => e.name == d.local)[0];
     let filter1 = yearSlice.filter((e) => e.name == d.visitante)[0];
@@ -1873,80 +957,7 @@ stripes.forEach(s => {
         })
         .text(playoffs_names[primera_ronda_playoff / pp]);
 
-      /* svg
-        .append('rect')
-        .attrs({
-          class: 'years',
-          x: width - (width_playoffs * (rondas_playoff - ppi) + space_width_playoff * (rondas_playoff - ppi)) + width_playoffs / 2 - width_playoffs/2,
-          y: margin.top,
-          height: height,
-          width: width_playoffs,
-        })
-        .styles({
-          fill: 'grey',
-          opacity: 0.1
-        }) */
     });
-
-    /* let names_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.local || d.visitante))];
-    let dates_playoffs_1 = [...new Set(fechas_playoff.map((d) => d.fecha))];
-
-    console.log(names_playoffs_1, dates_playoffs_1);
-
-    let x_Playoffs = d3.scaleLinear().domain([0, 4]).range([width/2, width]);
-
-    let y_Playoffs = d3
-      .scaleLinear()
-      .domain([names_playoffs_1.length, 0])
-      .range([height, margin.top]);
-
-      const strokeWidthBase = (heightBars * 0.35) / 7 * 5;
-
-      const capas = [
-        { colorIdx: 0, width: strokeWidthBase * 5 },
-        { colorIdx: 1, width: strokeWidthBase * 3 },
-        { colorIdx: 2, width: strokeWidthBase * 1.75 },
-        { colorIdx: 3, width: strokeWidthBase },
-      ];
-
-      const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
-
-    names_playoffs_1
-    .forEach((nombre, i) => {
-      let wks = 0;
-      const points = [];
-      const club = nombre.split('-')[0];
-
-      dates_playoffs_1.forEach((o) => {
-        const yearSlice1 = fechas_playoff.filter((d) => d.fecha == o);
-        console.log(yearSlice1)
-        const rank1 = yearSlice1.find((d) => d.local == nombre || d.visitante == nombre)
-        console.log(rank1)
-        const diff = rank1?.goles_local - rank1?.goles_visitante;
-        const ganoLocal = diff > 0 || (diff === 0 && rank1.penales_local > rank1.penales_visitante);
-
-        ganoLocal ? wks++ : '';
-
-        points.push([x_Playoffs(wks), y_Playoffs(i)]);
-      });
-
-      const pathD = pathLine(points);
-
-      capas.forEach(({ colorIdx, width }) => {
-        svg.append('path')
-          .attrs({
-            transform: `translate(${margin_left * 2}, 0)`,
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: colores(club)[colorIdx],
-            'stroke-width': width,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', pathD);
-      });
-    }); */
 
     arr.forEach((dd) => {
       arr_w.forEach((ee, ii) => {
@@ -1969,7 +980,7 @@ stripes.forEach(s => {
               return ganoLocal === esLocal ? 1 : 0;
             },
             fill: 'none',
-            stroke: (d) => colores(d[dd].split('-')[0])[ii],
+            stroke: (d) => FLAG_COLORS(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
@@ -1999,7 +1010,7 @@ stripes.forEach(s => {
               return ganoLocal === esLocal ? 1 : 0;
             },
             fill: 'none',
-            stroke: (d) => colores(d[dd].split('-')[0])[ii],
+            stroke: (d) => FLAG_COLORS(d[dd].split('-')[0])[ii],
             'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
             'stroke-linejoin': 'round',
           })
@@ -2038,7 +1049,7 @@ stripes.forEach(s => {
                 return ganoLocal === esLocal ? 1 : 0;
               },
               fill: 'none',
-              stroke: (d) => colores(d[dd].split('-')[0])[ii],
+              stroke: (d) => FLAG_COLORS(d[dd].split('-')[0])[ii],
               'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
               'stroke-linejoin': 'round',
             })
@@ -2084,7 +1095,7 @@ stripes.forEach(s => {
                 return ganoLocal === esLocal ? 1 : 0;
               },
               fill: 'none',
-              stroke: (d) => colores(d[dd].split('-')[0])[ii],
+              stroke: (d) => FLAG_COLORS(d[dd].split('-')[0])[ii],
               'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
               'stroke-linejoin': 'round',
             })
@@ -2130,7 +1141,7 @@ stripes.forEach(s => {
                 return ganoLocal === esLocal ? 1 : 0;
               },
               fill: 'none',
-              stroke: (d) => colores(d[dd].split('-')[0])[ii],
+              stroke: (d) => FLAG_COLORS(d[dd].split('-')[0])[ii],
               'stroke-width': ((heightBars * 0.35) / 7) * ee * 2,
               'stroke-linejoin': 'round',
             })
@@ -2178,51 +1189,8 @@ stripes.forEach(s => {
       .attr('flood-opacity', 0.4);
 
     // 2. Aplicarlo al rectángulo
-    /* svg.append("rect")
-  .attr("filter", "url(#shadow-top)");
-
-  svg.append("rect")
-  .attr("x", 0).attr("y", 0)
-  .attr("width", width).attr("height", height)
-  .attr("fill", "black")
-  .attr("opacity", 0.15)
-  .attr("pointer-events", "none"); // para que no interfiera con eventos */
-
-    /* svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
-        .enter()
-        .append('rect')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
-          y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(1) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - 10/2,
-          width: width,
-          height: 10,
-        })
-        .styles({
-          fill: 'grey'
-        }) */
 
     arr.forEach((dd) => {
-      /* svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
-        .enter()
-        .append('rect')
-        .style('filter', 'url(#dropshadow)')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars/2 - 10/2,
-          width: width_playoffs,
-          height: 10,
-
-        })
-        .styles({
-          fill: 'red'
-        }) */
-
       svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
@@ -2236,7 +1204,6 @@ stripes.forEach(s => {
           width: width_playoffs,
           height: heightBars,
         })
-        /* .attr("style", d => `outline: 5px solid ${colores(d[dd].split('-')[0])[0]}`) */
         .styles({
           fill: function (d) {
             const local = parseScore(d.goles_local);
@@ -2274,32 +1241,6 @@ stripes.forEach(s => {
           },
         });
 
-      /* svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
-        .enter()
-        .append('rect')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 - 20 / 2,
-          width: space_width_playoff * 3 + width_playoffs * 0.5,
-          height: 20,
-        })
-        .styles({
-          fill: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
-
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
-
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-            },
-        }) */
-
       svg
         .selectAll('.rect')
         .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
@@ -2324,32 +1265,6 @@ stripes.forEach(s => {
             return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
           },
         });
-
-      /* svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`).slice(0, primera_ronda_playoff))
-        .enter()
-        .append('rect')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 1,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 - 20 / 2,
-          width: space_width_playoff * 4 + width_playoffs * 1.5,
-          height: 20,
-        })
-        .styles({
-          fill: function(d) {
-              const local = parseScore(d.goles_local);
-              const visitante = parseScore(d.goles_visitante);
-
-              const ganoLocal =
-                local.goles > visitante.goles ||
-                (local.goles === visitante.goles && local.penales > visitante.penales);
-
-              const esLocal = dd === 'local';
-              return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-            },
-        }) */
 
       svg
         .selectAll('.rect')
@@ -2602,119 +1517,10 @@ stripes.forEach(s => {
         })
         .text((d) => d['goles_' + dd] + (d['penales_' + dd] >= 0 ? ' [' + d['penales_' + dd] + ']' : ''));
 
-      /* svg.append("rect")
-          .attr("filter", "url(#shadow-top)"); */
-
-      /* svg.selectAll('.rect').data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
-        .enter().append("rect")
-          .attr("x", width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff).attr("y", (d) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d['position_' + dd]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d['position_' + dd]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars/2)
-          .attr("width", width_playoffs).attr("height", heightBars)
-          .attr("fill", "black")
-          .attr("opacity", function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
-
-            return ganoLocal === esLocal ? 0 : 0.5;
-          })
-          .attr("pointer-events", "none"); // para que no interfiera con eventos */
     });
-
-    /* yearSlice.forEach(d => {
-      d.rankInGroup <= 1 && d.fecha == '' ? d.fecha = 'Fecha 1/8' : ''
-    }) */
-
-    /* if (fechas_playoff.length == 0) {
-      svg
-        .selectAll(".image")
-        .data(
-          yearSlice.filter(
-            (d, i) =>
-              (d.rankInGroup >= 0 &&
-                d.rankInGroup <= clasificacion_por_grupo - 1) ||
-              (d.rankInGroup >= equipos_por_grupos &&
-                d.rankInGroup <=
-                  equipos_por_grupos + clasificacion_por_grupo - 1),
-          ),
-        )
-        .enter()
-        .append("image")
-        .attrs({
-          class: "playoffs_names",
-          x:
-            width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff +
-            heightBars * 0.5 -
-            defaults.logo.size / 2,
-          y: (d, i) =>
-            yPlayoffs.domain([primera_ronda_playoff, 0])(
-              positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0],
-            ) +
-            (top_n * heightBars) / primera_ronda_playoff / 2 -
-            heightBars / 2 +
-            (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] ==
-            0
-              ? -space_height_playoff
-              : space_height_playoff) -
-            defaults.logo.size / 2,
-          height: defaults.logo.size,
-          href: (d) => `./escudos/${d.name.split("-")[0]}.png`,
-        })
-        .styles({
-          opacity: 0.7,
-        })
-        .style("filter", "url(#dropshadow)");
-
-      svg
-        .selectAll(".text")
-        .data(
-          yearSlice.filter(
-            (d, i) =>
-              (d.rankInGroup >= 0 &&
-                d.rankInGroup <= clasificacion_por_grupo - 1) ||
-              (d.rankInGroup >= equipos_por_grupos &&
-                d.rankInGroup <=
-                  equipos_por_grupos + clasificacion_por_grupo - 1),
-          ),
-        )
-        .enter()
-        .append("text")
-        .attrs({
-          class: "playoffs_names",
-          x:
-            width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff +
-            heightBars * 1.2,
-          y: (d, i) =>
-            yPlayoffs.domain([primera_ronda_playoff, 0])(
-              positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][0],
-            ) +
-            (top_n * heightBars) / primera_ronda_playoff / 2 -
-            heightBars / 2 +
-            (positions_playoffs[d.rankInGroup + 1 + d.name.split("-")[1]][1] ==
-            0
-              ? -space_height_playoff
-              : space_height_playoff),
-        })
-        .styles({
-          fill: defaults.name.style.fill,
-          "font-size": defaults.name.style.font_size,
-          "font-weight": defaults.name.style.font_weight,
-          "text-anchor": defaults.name.style.text_anchor,
-          "alignment-baseline": defaults.name.style.alignment_baseline,
-          opacity: 0.7,
-        })
-        .text((d) => d.name.split("-")[0]);
-    } */
   }
 
-  if (grupos > 1 && /* names_playoffs_1[0] == 'undefined' */ simular_playoffs) {
+  if (grupos > 1 && simular_playoffs) {
     console.log(rondas_playoff);
     rondas.forEach((pp, ppi) => {
       svg
@@ -2733,41 +1539,6 @@ stripes.forEach(s => {
         })
         .text(playoffs_names[primera_ronda_playoff / pp]);
     });
-
-    /* svg
-          .selectAll('.path')
-          .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff}`))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 8,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) => d3.line().curve(d3.curveCardinal.tension(1))([
-            [width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff +
-            heightBars * 0.5 -
-            defaults.logo.size / 2,       yPlayoffs.domain([primera_ronda_playoff, 0])(i)+
-            (top_n * heightBars) / primera_ronda_playoff / 2 -
-            heightBars / 2],
-            [width -
-            (width_playoffs * rondas_playoff +
-              space_width_playoff * rondas_playoff +
-              space_width_playoff) +
-            space_width_playoff +
-            heightBars * 0.5 -
-            defaults.logo.size / 2 + width_playoffs, yPlayoffs.domain([primera_ronda_playoff, 0])(i)+
-            (top_n * heightBars) / primera_ronda_playoff / 2 -
-            heightBars / 2]
-          ])); */
 
     svg
       .selectAll('.path')
@@ -2955,60 +1726,7 @@ stripes.forEach(s => {
             [x4, yFinal], // horizontal → (llega a final)
           ]);
         });
-
-      /* svg
-          .selectAll('.path')
-          .data(d3.range(primera_ronda_playoff*2))
-          .enter()
-          .append('path')
-          .attrs({
-            class: 'line',
-          })
-          .styles({
-            fill: 'none',
-            stroke: 'grey',
-            'stroke-width': ((heightBars * 0.35) / 7) * 10,
-            'stroke-linejoin': 'round',
-          })
-          .attr('d', (d, i) =>
-            d3.line().curve(d3.curveCardinal.tension(1))([
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs,
-                yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1]][0] == 0 ? -0 : 0),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 3 + width_playoffs * 3 + space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][1]][0] == 0 ? -0 : 0),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 4 + width_playoffs * 3 - space_width_playoff / 3,
-                yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]][1] == 0 ? -0 : 0),
-              ],
-              [
-                width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff + width_playoffs + space_width_playoff * 4 + width_playoffs * 4,
-                yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs_final[positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]][1] == 0 ? -0 : 0),
-              ],
-            ])
-          ); */
     }
-
-    /* svg
-      .selectAll('.rect')
-      .data(d3.range(primera_ronda_playoff * 2))
-      .enter()
-      .append('rect')
-      .attrs({
-        class: 'playoffs_names',
-        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
-        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-        width: width_playoffs,
-        height: heightBars,
-      })
-      .attr('style', (d) => `outline: 1px solid grey`)
-      .styles({
-        fill: '#dddddd',
-      }); */
-
 
     svg
       .selectAll('.rect')
@@ -3081,96 +1799,6 @@ stripes.forEach(s => {
         fill: '#dddddd',
       });
 
-      /* svg
-      .selectAll('.rect')
-      .data(d3.range(primera_ronda_playoff * 2))
-      .enter()
-      .append('rect')
-      .attrs({
-        class: 'playoffs_names',
-        x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 5 + width_playoffs * 4,
-        y: (d, i) =>
-          yPlayoffs.domain([primera_ronda_playoff / 16, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / (primera_ronda_playoff / 8) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[Object.keys(positions_playoffs)[i]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2 + height/3,
-        width: width_playoffs,
-        height: heightBars,
-      })
-      .attr('style', (d) => `outline: 1px solid grey`)
-      .styles({
-        fill: '#dddddd',
-      }); */
-
-    arr.forEach((dd) => {
-      /* svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 2}`).slice(0, primera_ronda_playoff))
-        .enter()
-        .append('rect')
-        .style('filter', 'url(#dropshadow)')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 2 + width_playoffs,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 2, 0])(positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / primera_ronda_playoff - heightBars / 2 + (positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars/2,
-          width: width_playoffs,
-          height: heightBars,
-        })
-        .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
-
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
-        })
-
-        svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 4}`).slice(0, primera_ronda_playoff))
-        .enter()
-        .append('rect')
-        .style('filter', 'url(#dropshadow)')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 3 + width_playoffs * 2,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 4, 0])(positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 2) - heightBars / 2 + (positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-          width: width_playoffs,
-          height: heightBars,
-        })
-        .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
-
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
-        })
-
-         svg
-        .selectAll('.rect')
-        .data(fechas_playoff.filter((d) => d.fecha == `Fecha 1/${primera_ronda_playoff / 8}`).slice(0, primera_ronda_playoff))
-        .enter()
-        .append('rect')
-        .style('filter', 'url(#dropshadow)')
-        .attrs({
-          class: 'playoffs_names',
-          x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff * 4 + width_playoffs * 3,
-          y: (d) => yPlayoffs.domain([primera_ronda_playoff / 8, 0])(positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][0]) + (top_n * heightBars + grupos * heightBars/2) / (primera_ronda_playoff / 4) - heightBars / 2 + (positions_playoffs1[positions_playoffs2[positions_playoffs4[positions_playoffs[d['position_' + dd]][0]][0]][0]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-          width: width_playoffs,
-          height: heightBars,
-        })
-        .styles({
-          fill: function fill(d) {
-            const diff = d.goles_local - d.goles_visitante;
-            const ganoLocal = diff > 0 || (diff === 0 && d.penales_local > d.penales_visitante);
-            const esLocal = dd === 'local';
-
-            return ganoLocal === esLocal ? '#d4d4d4' : '#b6b6b6';
-          }
-        })
- */
-    });
-
     const keysSet = new Set(Object.keys(positions_playoffs));
 
     svg
@@ -3181,32 +1809,14 @@ stripes.forEach(s => {
       .attrs({
         x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
         y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[d.rankInGroup + 1 + d.name.split('-')[1]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2,
-       /*  x: width - (width_playoffs * rondas_playoff + space_width_playoff * rondas_playoff + space_width_playoff) + space_width_playoff,
-        y: (d, i) => yPlayoffs.domain([primera_ronda_playoff, 0])(positions_playoffs[Object.keys(positions_playoffs)[i]][0]) + (top_n * heightBars + (grupos * heightBars) / 2) / primera_ronda_playoff / 2 - heightBars / 2 + (positions_playoffs[Object.keys(positions_playoffs)[i]][1] == 0 ? -space_height_playoff : space_height_playoff) - heightBars / 2, */
         width: width_playoffs,
         height: heightBars,
       })
       .attr('style', (d) => `outline: 1px solid grey`)
       .styles({
         opacity: 1,
-        fill: (d, i) => {
-          if (i % 2 == 0) {
-            return '#dddddd'
-          } else {
-            return '#dddddd'
-          }
-        }
-        /* fill: (d, i) => {
-          if (d.position.split('')[0] == '1') {
-            return '#dddddd'
-          } else if (d.position.split('')[0] == '2') {
-            return '#dddddd'
-          } else if (d.position.split('')[0] == '3') {
-            return '#dddddd'
-          }
-        } */
+       fill: (d) => probabilidad(d.name).posicion == 1 || probabilidad(d.name).posicion == 2 ? '#c6c6c6' : '#dddddd',
       })
-      /* .style('filter', 'url(#dropshadow)'); */
 
     svg
       .selectAll('.image')
@@ -3443,91 +2053,6 @@ stripes.forEach(s => {
               .replace('Post.', d)
     );
 
-    /* svg
-    .append('text')
-    .attrs({
-      class: 'years',
-      x: margin.left * 0.05,
-      y: margin.top * 0.1,
-    })
-    .styles({
-      'font-size': heightBars * 0.25,
-      fill: 'grey',
-      'font-weight': 600,
-      'text-anchor': 'start',
-      'alignment-baseline': 'central',
-    })
-    .text('Probabilidad*: 100.000 Simulaciones. (100%) = Clasificado. (0%) = Afuera.')
-
-    svg
-    .append('text')
-    .attrs({
-      class: 'years',
-      x: margin.left * 0.05,
-      y: margin.top * 0.225,
-    })
-    .styles({
-      'font-size': heightBars * 0.25,
-      fill: 'grey',
-      'font-weight': 600,
-      'text-anchor': 'start',
-      'alignment-baseline': 'central',
-    })
-    .text('Fairplay*: Sistema de puntos en base a las tarjetas. Amarilla: -1, Roja indirecta: -3, Roja directa: -4, Amarilla + Roja directa: -5.')
-    
-
-  svg
-    .append('text')
-    .attrs({
-      class: 'years',
-      x: margin.left * 0.05,
-      y: margin.top * 0.35,
-    })
-    .styles({
-      'font-size': heightBars * 0.25,
-      fill: 'grey',
-      'font-weight': 600,
-      'text-anchor': 'start',
-      'alignment-baseline': 'central',
-    })
-    .text('Criterios de desempate: pts > [Enfrentamientos directos: pts > dif > gf] > dif > gf > FairPlay > RankingFIFA')
-
-  svg
-    .append('text')
-    .attrs({
-      class: 'years',
-      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
-      y: margin.top * 0.725,
-      transform: `translate(${margin_left * 2}, 0)`,
-      'clip-path': `url(#ellipse-clip-margin-left)`,
-    })
-    .styles({
-      'font-size': heightBars * 0.25,
-      fill: 'grey',
-      'font-weight': 600,
-      'text-anchor': 'start',
-      'alignment-baseline': 'central',
-    })
-    .text('Selección - RankingFIFA - Probabilidad* - Rango de posiciones posibles');
-
-    svg
-    .append('text')
-    .attrs({
-      class: 'years',
-      x: (d, i) => fechasNotPlayed(dates.length-1) + defaults.logo.size / 2,
-      y: margin.top * 0.85,
-      transform: `translate(${margin_left * 2}, 0)`,
-      'clip-path': `url(#ellipse-clip-margin-left)`,
-    })
-    .styles({
-      'font-size': heightBars * 0.25,
-      fill: 'grey',
-      'font-weight': 600,
-      'text-anchor': 'start',
-      'alignment-baseline': 'central',
-    })
-    .text('PTS - PJ - PG - PE - PP - GF - GC - DIF - FairPlay*'); */
-
     svg
   .append('text')
   .attrs({
@@ -3594,24 +2119,6 @@ svg
   })
   .text(ingles ? 'Team - FIFA Ranking - Probability* - Possible position range' : 'Selección - RankingFIFA - Probabilidad* - Posiciones posibles')
 
-  /* svg
-  .append('text')
-  .attrs({
-    class: 'years',
-    x: barWidth,
-    y: margin.top * 0.775,
-    transform: `translate(${margin_left * 2}, 0)`,
-    'clip-path': `url(#ellipse-clip-margin-left)`,
-  })
-  .styles({
-    'font-size': heightBars * 0.25,
-    fill: 'grey',
-    'font-weight': 600,
-    'text-anchor': 'start',
-    'alignment-baseline': 'central',
-  })
-  .text('Group · Inter-group · Overall') */
-
 svg
   .append('text')
   .attrs({
@@ -3628,42 +2135,7 @@ svg
     'text-anchor': 'start',
     'alignment-baseline': 'central',
   })
-  .text(ingles ? 'PTS - MP - W - D - L - GF - GA - GD - Fair Play*' : 'PTS - PJ - PG - PE - PP - GF - GC - DIF - FairPlay*')
-
-     /* const labelGroup = svg
-  .append('text')
-  .attrs({
-    class: 'years',
-    x: fechasNotPlayed(dates.length - 1) + defaults.logo.size / 2,
-    y: margin.top * 0.85,
-    transform: `translate(${margin_left * 2}, 0)`,
-    'clip-path': `url(#ellipse-clip-margin-left)`,
-  })
-  .styles({
-    'font-size': heightBars * 0.2,
-    'font-weight': 600,
-    'text-anchor': 'start',
-    'alignment-baseline': 'central',
-  });
-
-const segments = [
-  { text: 'Puntos - Partidos: Jugados / ', fill: 'grey' },
-  { text: 'Ganados',                       fill: '#22c55e' },  // verde
-  { text: ' / ',                           fill: 'grey' },
-  { text: 'Empatados',                     fill: '#eab308' },  // amarillo
-  { text: ' / ',                           fill: 'grey' },
-  { text: 'Perdidos',                      fill: '#ef4444' },  // rojo
-  { text: ' - Goles: ',                    fill: 'grey' },
-  { text: 'A Favor',                       fill: '#22c55e' },  // verde
-  { text: ' / ',                           fill: 'grey' },
-  { text: 'En Contra',                     fill: '#ef4444' },  // rojo
-  { text: ' / Diferencia - ',              fill: 'grey' },
-  { text: 'FairPlay',                      fill: '#a855f7' },  // violeta
-];
-
-segments.forEach(({ text, fill }) => {
-  labelGroup.append('tspan').style('fill', fill).text(text);
-}); */
+  .text(ingles ? 'PTS - MP - W - D - L - GF - GA - GD - Fair Play*' : 'PTS - PJ - PG - PE - PP - GF - GC - DIF - FairPlay*');
 
   var defs = svg.append('defs');
 
@@ -3679,110 +2151,6 @@ segments.forEach(({ text, fill }) => {
   feMerge.append('feMergeNode').attr('in', 'offsetBlur');
   feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-  const FLAG_COLORS = {
-    // ─── CONMEBOL ───────────────────────────────────────────────────
-    Argentina: ['#74ACDF', '#FFFFFF', '#74ACDF'],
-    Brasil: ['#009739', '#FEDD00', '#009739'],
-    Colombia: ['#FCD116', '#FCD116', '#003893', '#CE1126'],
-    Ecuador: ['#FFD100', '#FFD100', '#0033A0', '#CE1126'],
-    Paraguay: ['#D52B1E', '#FFFFFF', '#0038A8'],
-    Uruguay: ['#6da9f1', '#FFFFFF', '#6da9f1', '#FFFFFF', '#6da9f1'],
-    // ─── CONCACAF ──────────────────────────────────────────────────
-    /* 'Estados Unidos': ['#B31942', '#FFFFFF', '#0A3161'], */
-    'Estados Unidos': ['#FFFFFF', '#B31942', '#FFFFFF', '#B31942', '#FFFFFF'],
-    México: ['#006341', '#FFFFFF', '#CE1126'],
-    Canadá: ['#FF0000', '#FFFFFF', '#FF0000', '#FFFFFF', '#FF0000'],
-    Panamá: ['#FFFFFF', '#D21034', '#005DA6', '#FFFFFF'],
-    Haití: ['#00209F', '#D21034'],
-    Curazao: ['#002B7F', '#002B7F', '#F9E814'],
-    // ─── UEFA ─────────────────────────────────────────────────────
-    Francia: ['#002395', '#FFFFFF', '#ED2939'],
-    Inglaterra: ['#FFFFFF', '#CE1124', '#FFFFFF'],
-    Alemania: ['#000000', '#DD0000', '#FFCC00'],
-    España: ['#ff0028', '#F1BF00', '#ff0028'],
-    'Países Bajos': ['#AE1C28', '#FFFFFF', '#21468B'],
-    Portugal: ['#006600', '#006600', '#FF0000', '#FF0000', '#FF0000'],
-    Bélgica: ['#000000', '#FDDA24', '#EF3340'],
-    Croacia: ['#FF0000', '#FFFFFF', '#171796'],
-    Austria: ['#ED2939', '#FFFFFF', '#ED2939'],
-    Suiza: ['#FF0000', '#FFFFFF', '#FF0000'],
-    Suecia: ['#006AA7', '#FECC02', '#006AA7'],
-    /* Noruega: ['#EF2B2D', '#FFFFFF', '#002868'], */
-    Noruega: ['#EF2B2D', '#EF2B2D', '#FFFFFF', '#002868', '#002868', '#FFFFFF', '#EF2B2D', '#EF2B2D'],
-    Dinamarca: ['#C8102E', '#FFFFFF', '#C8102E'],
-    Escocia: ['#003399', '#FFFFFF', '#003399'],
-    Turquía: ['#E30A17', '#FFFFFF', '#E30A17'],
-    'Bosnia y Herzegovina': ['#002395', '#FECE00', '#002395'],
-    'República Checa': ['#FFFFFF', '#11457E', '#D7141A'],
-    // ─── AFC ──────────────────────────────────────────────────────
-    Japón: ['#FFFFFF', '#BC002D', '#FFFFFF'],
-    'Corea del Sur': ['#FFFFFF', '#FFFFFF', '#CD2E3A', '#0047A0', '#FFFFFF', '#FFFFFF'],
-    Australia: ['#FFCD00', '#006C35', '#FFCD00'],
-    'Arabia Saudita': ['#006C35', '#FFFFFF', '#006C35'],
-    Irán: ['#239F40', '#FFFFFF', '#DA0000'],
-    Irak: ['#CE1126', '#FFFFFF', '#000000'],
-    Qatar: ['#8A1538', '#FFFFFF', '#8A1538'],
-    Jordania: ['#000000', '#FFFFFF', '#007A3D'],
-    Uzbekistán: ['#0099B5', '#FFFFFF', '#1EB53A'],
-    // ─── CAF ──────────────────────────────────────────────────────
-    Marruecos: ['#C1272D', '#006233', '#C1272D'],
-    Senegal: ['#00853F', '#FDEF42', '#E31B23'],
-    Nigeria: ['#008751', '#FFFFFF', '#008751'],
-    Egipto: ['#CE1126', '#FFFFFF', '#000000'],
-    'Costa de Marfil': ['#FF8200', '#FFFFFF', '#009A44'],
-    /* Sudáfrica: ['#007749', '#FFB81C', '#000000', '#FFFFFF', '#002395', '#DE3831'], */
-    Sudáfrica: ['#DE3831', '#DE3831', '#FFFFFF', '#007749', '#007749', '#FFFFFF', '#002395', '#002395'],
-    /* 'RD de Congo': ['#007FFF', '#F7D618', '#CE1021'], */
-    'RD de Congo': ['#007FFF', '#007FFF', '#f7d617', '#CE1021', '#CE1021', '#f7d617', '#007FFF', '#007FFF'],
-    Ghana: ['#EF3340', '#FCD116', '#006B3F'],
-    /* Argelia: ['#006233', '#FFFFFF', '#D21034'], */
-    Argelia: ['#006233', '#FFFFFF'],
-    Túnez: ['#E70013', '#FFFFFF', '#E70013'],
-    'Cabo Verde': ['#003893', '#003893', '#FFFFFF', '#CE1126', '#FFFFFF'],
-    // ─── OFC ──────────────────────────────────────────────────────
-    'Nueva Zelanda': ['#00247D', '#CC142B', '#FFFFFF'],
-    // ─── Los 5 Grandes ─────────────────────────────────────────────
-    'River Plate': ['#FFFFFF', '#DC2626', '#FFFFFF'],
-    'Boca Juniors': ['#1D3B8A', '#FFD700', '#1D3B8A'],
-    Racing: ['#87CEEB', '#FFFFFF', '#87CEEB'],
-    Independiente: ['#DC2626', '#FFFFFF', '#DC2626'],
-    'San Lorenzo': ['#1A237E', '#DC2626', '#1A237E'],
-
-    // ─── Buenos Aires / GBA ────────────────────────────────────────
-    Huracán: ['#FFFFFF', '#E53935', '#FFFFFF', '#E53935', '#FFFFFF'],
-    'Vélez Sarsfield': ['#FFFFFF', '#1565C0', '#FFFFFF'],
-    'Argentinos Juniors': ['#D32F2F', '#FFFFFF', '#D32F2F'],
-    Lanús: ['#722F37', '#FFFFFF', '#722F37'],
-    Banfield: ['#2E7D32', '#FFFFFF', '#2E7D32'],
-    Tigre: ['#003DA5', '#D2232A', '#003DA5', '#D2232A'],
-    Platense: ['#8B6914', '#FFFFFF', '#8B6914'],
-    'Barracas Central': ['#CE1126', '#000000', '#CE1126'],
-    Riestra: ['#D2232A', '#1A1A1A', '#D2232A'],
-    'Defensa y Justicia': ['#FEDD00', '#2E7D32', '#FEDD00'],
-
-    // ─── La Plata ──────────────────────────────────────────────────
-    Gimnasia: ['#1A3C6E', '#FFFFFF', '#1A3C6E'],
-    Estudiantes: ['#CE1126', '#FFFFFF', '#CE1126'],
-
-    // ─── Rosario ───────────────────────────────────────────────────
-    "Newell's Old Boys": ['#D2232A', '#000000'],
-    'Rosario Central': ['#003DA5', '#FEDD00', '#003DA5'],
-
-    // ─── Córdoba ───────────────────────────────────────────────────
-    Talleres: ['#002F6C', '#FFFFFF', '#002F6C'],
-    Belgrano: ['#5DADE2', '#5DADE2', '#FFFFFF'],
-    Instituto: ['#E53935', '#FFFFFF', '#E53935'],
-
-    // ─── Interior ──────────────────────────────────────────────────
-    'Godoy Cruz': ['#FFFFFF', '#2C3E50', '#FFFFFF'],
-    'Atlético Tucumán': ['#4FC3F7', '#FFFFFF', '#4FC3F7'],
-    Unión: ['#D32F2F', '#FFFFFF', '#D32F2F'],
-    Sarmiento: ['#1B5E20', '#FFFFFF', '#1B5E20'],
-    'Central Córdoba': ['#000000', '#FFFFFF', '#000000'],
-    'Independiente Rivadavia': ['#003DA5', '#FFFFFF', '#003DA5'],
-    Aldosivi: ['green', 'yellow'],
-    'San Martín (SJ)': ['green', 'black'],
-  };
   const pathLine = d3.line().curve(d3.curveCardinal.tension(1));
 
   if (grupos > 1) {
@@ -4085,49 +2453,6 @@ segments.forEach(({ text, fill }) => {
         })
         .text((d) => d).call(halo1, heightBars * 0.225, 'white');
 
-      /* svg
-        .selectAll('.text')
-        .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
-        .enter()
-        .append('text')
-        .attrs({
-          x: barWidth - margin_left*1.4,
-          y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo),
-        })
-        .styles({
-          fill: grey_color,
-          'font-size': heightBars * 0.4,
-          'alignment-baseline': 'central',
-          'text-anchor': 'end',
-          'font-weight': 600,
-        })
-        .text((d, i) => {
-          let mt = (mejores_terceros.indexOf(d.position[1])+1)
-          let r;
-          r = mt == 0 ? '' : i == 2 ? '('+mt+ '/8)' : ''
-          return r;
-          }); */
-
-         /*  svg
-        .selectAll('.text')
-        .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
-        .enter()
-        .append('text')
-        .attrs({
-          x: barWidth - margin_left*1.4,
-          y: (d, i) => y(i + distancia_entre_grupos + offsetGrupo),
-        })
-        .styles({
-          fill: grey_color,
-          'font-size': heightBars * 0.4,
-          'alignment-baseline': 'central',
-          'text-anchor': 'end',
-          'font-weight': 600,
-        })
-        .text((d, i) => {
-          return mejores_num[i].indexOf(d.name)+1
-          }); */
-
           svg
         .selectAll('.text')
         .data(yearSlice.slice(indice_grupo * equipos_por_grupos, (indice_grupo + 1) * equipos_por_grupos))
@@ -4178,17 +2503,6 @@ segments.forEach(({ text, fill }) => {
           height: heightBars * equipos_por_grupos,
         })
         .style('fill', 'url(#areaGradient0)');
-
-       /*  svg
-        .append('rect')
-        .attrs({
-          class: 'bars_names',
-          x: barWidth - margin_left - margin_left / 4,
-          y: y(offsetGrupo),
-          width: margin_left / 4,
-          height: heightBars * equipos_por_grupos,
-        })
-        .style('fill', 'url(#areaGradient3)'); */
 
       svg
         .append('rect')
@@ -4291,34 +2605,6 @@ segments.forEach(({ text, fill }) => {
             });
           }
 
-          /* function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
-          const colors = FLAG_COLORS[club];
-          if (!colors) {
-            console.warn(`No se encontraron colores de bandera para: ${club}`);
-            return;
-          }
-          const stripeWidth = totalWidth / colors.length;
-
-          colors.forEach((color, i) => {
-            const middleIndex = (colors.length - 1) / 2;
-            const offset = (i - middleIndex) * stripeWidth;
-
-            // Generar puntos desplazados perpendicularmente
-            const offsetPts = offsetPoints(points, offset);
-            const pathD = pathLine(offsetPts);
-
-            svg.append('path')
-              .attr('d', pathD)
-              .attr('transform', transform)
-              .attr('class', className)
-              .style('fill', 'none')
-              .style('stroke', color)
-              .style('stroke-width', stripeWidth)
-              .style('stroke-linejoin', 'round')
-              .style('stroke-linecap', 'round');
-          });
-        } */
-
           function drawFlagPath(svg, points, club, totalWidth = 6, transform = '', className = 'line') {
             const colors = FLAG_COLORS[club];
             if (!colors) {
@@ -4337,8 +2623,6 @@ segments.forEach(({ text, fill }) => {
               .style('fill', 'none')
               .style('stroke', 'rgba(0, 0, 0, 1)')
               .style('stroke-width', totalWidth + 2) // un poco más ancho que la bandera
-              /* .style('stroke-linejoin', 'round')
-              .style('stroke-linecap', 'round') */
               .style('filter', 'blur(1px)');
 
             // ── FRANJAS ─────────────────────────────────────────
@@ -4349,7 +2633,7 @@ segments.forEach(({ text, fill }) => {
               const offsetPts = offsetPoints(points, offset);
               const pathD = pathLine(offsetPts);
 
-              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round')/* .style('stroke-linecap', 'round') */;
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round');
             });
           }
 
@@ -4458,25 +2742,6 @@ segments.forEach(({ text, fill }) => {
                   )
                   .call(halo1, defaults.value.style.font_size, '#f1f1f1');
 
-                  /* svg
-                  .append('image')
-                  .style('filter', 'url(#dropshadow)')
-                  .attrs({
-                    transform: `translate(${margin_left * 2 + xoffset}, ${yoffset})`,
-                    class: 'line',
-                    x: d => {
-                      const dir = team.l_or_v == 'V' && !neutral ? -1 : -1;
-                      let val = x(wks) + dir * heightBars * 0.3 - defaults.mini_logo.size1 / 2;
-                      if (team.goles_fecha != not_played_yet) {
-                        val += dir * team.goles_en_contra_fecha.toString().length * heightBars * 0.2;
-                      }
-                      return val;
-                    },
-                    y: y(rank1) - heightBars * 0.325 - defaults.mini_logo.size1 / 2 + (team.l_or_v == 'V' && !neutral ? heightBars * 0.65 : 0),
-                    height: defaults.mini_logo.size1,
-                    href: pts1.vs != 'none' ? `./escudos/${team.name.split('-')[0]}.png` : '',
-                  }); */
-
                   // En tu sección de defs, agregá esto:
               const borderFilter = defs.append('filter').attr('id', 'white-border').attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
               borderFilter.append('feMorphology').attrs({ operator: 'dilate', radius: 1.5, in: 'SourceAlpha', result: 'expanded' });
@@ -4522,52 +2787,6 @@ segments.forEach(({ text, fill }) => {
                 href: pts1.vs != 'none' ? (team.simulado ? `./icons/simulated.png` : '') : '',
               });
 
-                  // Calculá esto antes del bloque de svg.append('text')
-/* function getCriterioValor(team, names_filter, usarDirecto, ga, statsDirectos, getRankingFIFA) {
-  // Si está solo, mostrar puntos directamente
-  if (names_filter.length === 1) return team.value;
-
-  const semana = names_filter[0]?.semana; // ajustá según cómo lo tengas
-
-  // Calculá stats directos una sola vez para todos los del grupo
-  let sd = null;
-  if (usarDirecto) {
-    const empatados = names_filter.map(d => d.name);
-    sd = statsDirectos(empatados, semana); // ajustá firma según tu implementación
-  }
-
-  const teamSD = sd?.[team.name];
-
-  // Buscá el primer criterio donde team difiere de ALGUNO del grupo
-  for (const other of names_filter) {
-    if (other.name === team.name) continue;
-    const otherSD = sd?.[other.name];
-
-    if (usarDirecto && teamSD && otherSD) {
-      if (teamSD.pts_directo !== otherSD.pts_directo)
-        return teamSD.pts_directo;
-      if (teamSD.diff_directo !== otherSD.diff_directo)
-        return teamSD.diff_directo >= 0 ? `+${teamSD.diff_directo}` : teamSD.diff_directo;
-      if (teamSD.gf_directo !== otherSD.gf_directo)
-        return teamSD.gf_directo;
-    }
-
-    if (team.diferencia_de_goles !== other.diferencia_de_goles)
-      return team.diferencia_de_goles >= 0 ? `+${team.diferencia_de_goles}` : team.diferencia_de_goles;
-
-    if (team.goles !== other.goles)
-      return team.goles;
-
-    if ((team.fairPlay ?? 0) !== (other.fairPlay ?? 0))
-      return team.fairPlay ?? 0;
-  }
-
-  // Todos empatados en todo → mostrar ranking FIFA
-  return getRankingFIFA(team.name);
-}
-
-const criterioValor = getCriterioValor(team, names_filter); */
-
                 svg
                   .append('text')
                   .attrs({
@@ -4582,363 +2801,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
                     'text-anchor': 'middle',
                     'alignment-baseline': 'central',
                   })
-                  /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      const empatados_pts = fecha_filter.filter(d => d.value == names_filter[0].value && d.name != names_filter[0].name);
-
-                      if (empatados_pts.length > 0) {
-                        const nombres_empatados = fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name);
-                        const directos = statsDirectos(nombres_empatados, team.semana);
-                        const stats_team = directos[team.name];
-
-                        // Helper: ¿todos los equipos empatados tienen el mismo valor en este criterio?
-                        const todosIguales = (valor, getValor) =>
-                          nombres_empatados.every(n => getValor(n) === valor);
-
-                        // 1) Enfrentamientos directos: PTS
-                        if (stats_team.pj_directo > 0) {
-                          const ptsDirectoIguales = todosIguales(
-                            stats_team.pts_directo,
-                            (n) => directos[n].pts_directo
-                          );
-
-                          if (!ptsDirectoIguales) {
-                            return team.value + ' [' + stats_team.pts_directo + ']';
-                          }
-
-                          // 2) Enfrentamientos directos: DIF
-                          const difDirectoIguales = todosIguales(
-                            stats_team.dif_directo,
-                            (n) => directos[n].dif_directo
-                          );
-
-                          if (!difDirectoIguales) {
-                            return team.value + ' [' + stats_team.pts_directo + '/' + stats_team.dif_directo + ']';
-                          }
-
-                          // 3) Enfrentamientos directos: GF
-                          const gfDirectoIguales = todosIguales(
-                            stats_team.gf_directo,
-                            (n) => directos[n].gf_directo
-                          );
-
-                          if (!gfDirectoIguales) {
-                            return team.value + ' [' + stats_team.pts_directo + '/' + stats_team.dif_directo + '/' + stats_team.gf_directo + ']';
-                          }
-                          // si los 3 directos empatan también, seguimos a los criterios generales abajo
-                        }
-
-                        // 4) DIF general
-                        const difGeneralIguales = empatados_pts.every(d => d.diferencia_de_goles === team.diferencia_de_goles)
-                          && team.diferencia_de_goles === team.diferencia_de_goles; // chequeo trivial para mantener forma consistente
-
-                        const difSigno = (val) => (val > 0 ? ' +' + val : val < 0 ? ' ' + val : ' ' + val);
-
-                        if (!difGeneralIguales) {
-                          return team.value + difSigno(team.diferencia_de_goles);
-                        }
-
-                        // 5) GF general
-                        const gfGeneralIguales = empatados_pts.every(d => d.goles_favor === team.goles_favor);
-
-                        if (!gfGeneralIguales) {
-                          return team.value + difSigno(team.diferencia_de_goles) + ' / GF:' + team.goles_favor;
-                        }
-
-                        // 6) FairPlay
-                        const fairplayIguales = empatados_pts.every(d => d.fairplay === team.fairplay);
-
-                        if (!fairplayIguales) {
-                          return team.value + difSigno(team.diferencia_de_goles) + ' / GF:' + team.goles_favor + ' / FP:' + team.fairplay;
-                        }
-
-                        // 7) Ranking FIFA (último criterio, siempre se muestra acá si llegamos hasta este punto)
-                        return team.value + difSigno(team.diferencia_de_goles) + ' / GF:' + team.goles_favor + ' / FP:' + team.fairplay + ' / FIFA:' + team.ranking_fifa;
-
-                      } else {
-                        return team.value;
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      if (fecha_filter.filter(d => d.value == names_filter[0].value && d.name != names_filter[0].name).length > 0) {
-
-                        if (statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].pj_directo > 0)
-                          return team.value + ' [' + statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].pts_directo +']';
-                        else
-                          return team.value + (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : '') + team.diferencia_de_goles
-                      } else {
-                        return team.value
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      if (fecha_filter.filter(d => d.value == names_filter[0].value && d.name != names_filter[0].name).length > 0) {
-
-                        if (statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].pj_directo > 0)
-                          return team.value + ' [' + statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].pts_directo + ' ' + statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].diff_directo + ' ' + statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name].gf_directo + ']' + ' ' + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' ' + getRankingFIFA1(team.name);
-                        else
-                          return team.value + (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : '') + team.diferencia_de_goles
-                      } else {
-                        return team.value + ' ' + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' ' + getRankingFIFA1(team.name)
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      if (fecha_filter.filter(d => d.value == names_filter[0].value && d.name != names_filter[0].name).length > 0) {
-
-                        const directos = statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name];
-
-                        if (directos.pj_directo > 0) {
-                          return team.value
-                            + ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + ']'
-                            + ' ' + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' ' + getRankingFIFA1(team.name);
-                        } else {
-                          return team.value
-                            + ' ' + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' ' + getRankingFIFA1(team.name);
-                        }
-
-                      } else {
-                        return team.value
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      const empatados = fecha_filter.filter(d => d.value == names_filter[0].value);
-
-                      if (empatados.length > 1) {
-
-                        const todosIguales = (getValor) => {
-                          const primero = getValor(empatados[0]);
-                          return empatados.every(d => getValor(d) === primero);
-                        };
-
-                        // 1) Enfrentamientos directos
-                        const directos = statsDirectos(empatados.map(d => d.name), team.semana)[team.name];
-
-                        if (directos.pj_directo > 0) {
-                          const getPtsDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].pts_directo;
-                          const getDiffDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].diff_directo;
-                          const getGfDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].gf_directo;
-
-                          if (!todosIguales(getPtsDirecto)) {
-                            return team.value + ' [' + directos.pts_directo + ']';
-                          }
-                          if (!todosIguales(getDiffDirecto)) {
-                            return team.value + ' [' + directos.pts_directo + ' ' + directos.diff_directo + ']';
-                          }
-                          if (!todosIguales(getGfDirecto)) {
-                            return team.value + ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + ']';
-                          }
-                          // si los 3 directos empatan, sigue con los criterios generales abajo
-                        }
-
-                        // 2) Diferencia de gol general
-                        if (!todosIguales(d => d.diferencia_de_goles)) {
-                          return team.value + ' ' + team.diferencia_de_goles;
-                        }
-
-                        // 3) Goles a favor
-                        if (!todosIguales(d => d.goles)) {
-                          return team.value + ' ' + team.diferencia_de_goles + ' ' + team.goles;
-                        }
-
-                        // 4) FairPlay
-                        if (!todosIguales(d => d.fairPlay)) {
-                          return team.value + ' ' + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay;
-                        }
-
-                        // 5) Ranking FIFA (último criterio, siempre se muestra si se llegó hasta aquí)
-                        return team.value + ' ' + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' ' + getRankingFIFA1(team.name);
-
-                      } else {
-                        return team.value
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      const empatados = fecha_filter.filter(d => d.value == names_filter[0].value);
-
-                      if (empatados.length > 1) {
-
-                        const todosIguales = (getValor) => {
-                          const primero = getValor(empatados[0]);
-                          return empatados.every(d => getValor(d) === primero);
-                        };
-
-                        const verificarCriteriosGenerales = () => {
-                          // 2) Diferencia de gol general
-                          if (!todosIguales(d => d.diferencia_de_goles)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles;
-                          }
-
-                          // 3) Goles a favor
-                          if (!todosIguales(d => d.goles)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' #' + getRankingFIFA1(team.name);
-                          }
-
-                          // 4) FairPlay
-                          if (!todosIguales(d => d.fairPlay)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay;
-                          }
-
-                          // 5) Ranking FIFA (último criterio)
-                          return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' ' + getRankingFIFA1(team.name);
-                        };
-
-                        // 1) Enfrentamientos directos: siempre se muestran los 3 valores si hubo partidos
-                        const directos = statsDirectos(empatados.map(d => d.name), team.semana)[team.name];
-
-                        if (directos.pj_directo > 0) {
-                          const getPtsDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].pts_directo;
-                          const getDiffDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].diff_directo;
-                          const getGfDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].gf_directo;
-
-                          const directosTexto = ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + ']';
-
-                          // Si alguno de los 3 criterios directos desempata, corta acá
-                          if (!todosIguales(getPtsDirecto) || !todosIguales(getDiffDirecto) || !todosIguales(getGfDirecto)) {
-                            return team.value + directosTexto + verificarCriteriosGenerales();
-                          }
-
-                          // Si los 3 directos empatan, sigue con los criterios generales
-                          return team.value + directosTexto + verificarCriteriosGenerales();
-                        }
-
-                        return team.value + verificarCriteriosGenerales();
-
-                      } else {
-                        return team.value
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      const empatados = fecha_filter.filter(d => d.value == names_filter[0].value);
-
-                      if (empatados.length > 1) {
-
-                        const todosIguales = (getValor) => {
-                          const primero = Number(getValor(empatados[0]));
-                          return empatados.every(d => Number(getValor(d)) === primero);
-                        };
-
-                        const verificarCriteriosGenerales = () => {
-                          // 2) Diferencia de gol general
-                          if (!todosIguales(d => d.diferencia_de_goles)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles;
-                          }
-
-                          // 3) Goles a favor
-                          if (!todosIguales(d => d.goles)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles;
-                          }
-
-                          // 4) FairPlay
-                          if (!todosIguales(d => d.fairPlay)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay;
-                          }
-
-                          // 5) Ranking FIFA (último criterio)
-                          return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' #' + getRankingFIFA1(team.name);
-                        };
-
-                        // 1) Enfrentamientos directos: siempre se muestran los 3 valores si hubo partidos
-                        const directos = statsDirectos(empatados.map(d => d.name), team.semana)[team.name];
-
-                        if (directos.pj_directo > 0) {
-                          const getPtsDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].pts_directo;
-                          const getDiffDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].diff_directo;
-                          const getGfDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].gf_directo;
-
-                          const directosTexto = ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + ']';
-
-                          // Si alguno de los 3 criterios directos desempata, corta acá
-                          if (!todosIguales(getPtsDirecto) || !todosIguales(getDiffDirecto) || !todosIguales(getGfDirecto)) {
-                            return team.value + directosTexto;
-                          }
-
-                          // Si los 3 directos empatan, sigue con los criterios generales
-                          return team.value + directosTexto + verificarCriteriosGenerales();
-                        }
-
-                        return team.value + verificarCriteriosGenerales();
-
-                      } else {
-                        return team.value
-                      }
-                    }
-                  }) */
-                 /* .text(() => {
-                    if (team.goles_fecha != not_played_yet) {
-                      const empatados = fecha_filter.filter(d => d.value == names_filter[0].value);
-
-                      if (empatados.length > 1) {
-
-                        const todosIguales = (getValor) => {
-                          const primero = Number(getValor(empatados[0]));
-                          return empatados.every(d => Number(getValor(d)) === primero);
-                        };
-
-                        const verificarCriteriosGenerales = () => {
-                          // DEBUG
-                          console.log('--- DEBUG verificarCriteriosGenerales para', team.name, '---');
-                          console.log('empatados:', empatados.map(d => ({ name: d.name, dif: d.diferencia_de_goles, goles: d.goles, fp: d.fairPlay })));
-                          console.log('todosIguales dif:', todosIguales(d => d.diferencia_de_goles));
-                          console.log('todosIguales goles:', todosIguales(d => d.goles));
-                          console.log('todosIguales fairplay:', todosIguales(d => d.fairPlay));
-                          // FIN DEBUG
-
-                          // 2) Diferencia de gol general
-                          if (!todosIguales(d => d.diferencia_de_goles)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles;
-                          }
-
-                          // 3) Goles a favor
-                          if (!todosIguales(d => d.goles)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles;
-                          }
-
-                          // 4) FairPlay
-                          if (!todosIguales(d => d.fairPlay)) {
-                            return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay;
-                          }
-
-                          // 5) Ranking FIFA (último criterio)
-                          return (team.diferencia_de_goles > 0 ? ' +' : team.diferencia_de_goles < 0 ? ' ' : ' ') + team.diferencia_de_goles + ' ' + team.goles + ' ' + team.fairPlay + ' #' + getRankingFIFA1(team.name);
-                        };
-
-                        // 1) Enfrentamientos directos: siempre se muestran los 3 valores si hubo partidos
-                        const directos = statsDirectos(empatados.map(d => d.name), team.semana)[team.name];
-
-                        if (directos.pj_directo > 0) {
-                          const getPtsDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].pts_directo;
-                          const getDiffDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].diff_directo;
-                          const getGfDirecto = (d) => statsDirectos(empatados.map(e => e.name), team.semana)[d.name].gf_directo;
-
-                          const directosTexto = ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + ']';
-
-                          // Si alguno de los 3 criterios directos desempata, corta acá
-                          if (!todosIguales(getPtsDirecto) || !todosIguales(getDiffDirecto) || !todosIguales(getGfDirecto)) {
-                            return team.value + directosTexto;
-                          }
-
-                          // Si los 3 directos empatan, sigue con los criterios generales
-                          return team.value + directosTexto + verificarCriteriosGenerales();
-                        }
-
-                        return team.value + verificarCriteriosGenerales();
-
-                      } else {
-                        return team.value
-                      }
-                    }
-                  }) */
                  .text(() => {
                     if (team.goles_fecha != not_played_yet) {
                       const empatados = fecha_filter.filter(d => d.value == names_filter[0].value);
@@ -5004,28 +2866,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
                   })
                  
                   .call(halo1, heightBars * 0.15, '#f1f1f1')
-
-                  /* svg
-                  .append('text')
-                  .attrs({
-                    transform: `translate(${margin_left * 2 + xoffset}, ${yoffset})`,
-                    x: x(wks) - heightBars * 0.0 + i * heightBars * 0.8 - (names_filter.length - 1) * (heightBars * 0.4),
-                    y: y(rank1),
-                  })
-                  .styles({
-                    fill: black_color,
-                    'font-weight': 600,
-                    'font-size': heightBars * 0.25,
-                    'text-anchor': 'middle',
-                    'alignment-baseline': 'central',
-                  })
-                  .text(() => {
-                    let directos = statsDirectos(fecha_filter.filter(d => d.value == names_filter[0].value).map(d => d.name), team.semana)[team.name]
-                    if (team.goles_fecha != not_played_yet) {
-                      return team.value + ' [' + directos.pts_directo + ' ' + directos.diff_directo + ' ' + directos.gf_directo + '] ' + team.diferencia_de_goles + ' ' +  team.goles
-                    }
-                  })
-                  .call(halo1, heightBars * 0.25, '#f1f1f1') */
 
                   if (!nombre_torneo.includes('Mundial')) {
 
@@ -5232,37 +3072,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
         fill: black_color,
         opacity: 0.4,
       });
-    /* svg
-      .selectAll('.rect')
-      .data(dates)
-      .enter()
-      .append('rect')
-      .attrs({
-        class: 'lines_years',
-        x: (d, i) => fechasNotPlayed(i) - (heightBars * 0.05) / 2,
-        y: y(0) - heightBars / 2,
-        width: heightBars * 0.05,
-        height: heightBars * equipos_por_grupos,
-        transform: `translate(${margin_left * 2}, 0)`,
-      })
-      .styles({
-        fill: black_color,
-        opacity: 0.4,
-      }); */
 
-    /*  svg
-      .append('rect')
-      .attrs({
-        class: 'bars_names',
-        x: margin_left - 1,
-        y: y(0),
-        width: width,
-        height: heightBars * equipos_por_grupos,
-      })
-      .styles({
-        fill: 'url(#areaGradient0)',
-      }); */
-    /* if (nombre !== 'Defensa y Justicia') return; */
 
     names_1.forEach((nombre) => {
       let wks = 0;
@@ -5279,8 +3089,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
         points.push([x(wks), y(rank1)]);
         wks++;
       });
-
-      /* const pathD = pathLine(points); */
 
       function offsetPoints(points, offset) {
         return points.map((p, i) => {
@@ -5358,9 +3166,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
               .style('fill', 'none')
               .style('stroke', 'rgba(0, 0, 0, 1)')
               .style('stroke-width', totalWidth + 2) // un poco más ancho que la bandera
-              /* .style('stroke-linejoin', 'round')
-              .style('stroke-linecap', 'round') */
-              .style('filter', 'blur(1px)')/* .attr('opacity', d => { if (club != 'Vélez Sarsfield' && club != `Newell's Old Boys`) return 0 }) */;
+              .style('filter', 'blur(1px)');
 
             // ── FRANJAS ─────────────────────────────────────────
             colors.forEach((color, i) => {
@@ -5370,7 +3176,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
               const offsetPts = offsetPoints(points, offset);
               const pathD = pathLine(offsetPts);
 
-              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round')/* .style('stroke-linecap', 'round') *//* .attr('opacity', d => { if (club != 'Vélez Sarsfield' && club != `Newell's Old Boys`) return 0 }) */;
+              svg.append('path').attr('d', pathD).attr('transform', transform).attr('class', className).style('fill', 'none').style('stroke', color).style('stroke-width', stripeWidth*1.1).style('stroke-linejoin', 'round');
             });
           }
 
@@ -5714,27 +3520,7 @@ const criterioValor = getCriterioValor(team, names_filter); */
 
   areaGradient2.append('stop').attr('offset', '100%').attr('stop-color', '#000').attr('stop-opacity', 0);
 
-  if (grupos > 1) {
-    /* grupos_1.forEach((e, index) => {
-      svg
-        .selectAll('.text')
-        .data(d3.range(1, equipos_por_grupos + 1))
-        .enter()
-        .append('text')
-        .attrs({
-          x: margin_left / 2,
-          y: (d, i) => y(i + 0.5 + index * equipos_por_grupos) + (index * heightBars) / 2,
-        })
-        .styles({
-          fill: black_color,
-          'font-size': heightBars * 0.5,
-          'alignment-baseline': 'central',
-          'text-anchor': 'middle',
-          'font-weight': 600,
-        })
-        .text((d) => d);
-    }); */
-  } else {
+  if (grupos <= 1) {
     svg
       .append('rect')
       .attrs({
@@ -5767,20 +3553,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
       .text((d) => d);
   }
 
-  /* svg.append('image').attrs({
-    x: margin_left / 2 - (margin_left * 0.8) / 2,
-    y: margin.top * 0.8 - ((120 / 204) * margin_left * 0.8) / 2,
-    width: margin_left * 0.8,
-    href: `./country-flags/flag-of-${data1[0].pais}.png`,
-  }); */
-
-  /* svg.append('image').attrs({
-    x: margin_left * 0.5 - (heightBars * 0.75) / 2,
-    y: margin.top * 0.3 - (heightBars * 0.75) / 2,
-    height: heightBars * 0.75,
-    href: `./escudos/${nombre_torneo}.png`,
-  }); */
-
   let partidos_siumaldos = data.find(d => d.simulado)
 
   if (partidos_siumaldos) {
@@ -5805,20 +3577,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
       })
     .text(index+1 + '/' + totalCasosSimulados.length);
   }
-
-  /* svg.append('text').attrs({
-      x: margin_left * 1.55 + heightBars * 0.7 / 2,
-      y: margin.top * 0.3,
-    })
-    .styles({
-        fill: '#f1f1f1',
-        'font-size': margin.top * 0.2,
-        'font-weight': 600,
-        'text-anchor': 'start',
-        'alignment-baseline': 'central',
-      })
-    .text(index1+1 + '/' + totalCasosSimulados.length); */
-
 
   if (datos_totales) {
     // ── Variables comunes ─────────────────────────────────────────────────────────
@@ -7071,22 +4829,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
               .text((d) => ' #' + getRankingFIFA1(d.name))
           )
 
-          /* .call((text) =>
-            text
-              .append('tspan')
-              .attrs({
-                class: 'campeon',
-              })
-              .styles({
-                fill: black_color,
-                'font-size': heightBars * 0.275,
-                'font-weight': 600,
-                'text-anchor': defaults.value.style.text_anchor,
-                'alignment-baseline': defaults.value.style.alignment_baseline,
-              })
-              .text((d, i) => '' + (i == 2 ? ((mejores_terceros.indexOf(d.position[1])+1) !== 0 ? (' (' + (mejores_terceros.indexOf(d.position[1])+1)+'/8)'): '') : ''))
-          ) */
-
           .call((text) =>
             text
               .append('tspan')
@@ -7134,22 +4876,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
                       .replace(punctuation_translation[0], punctuation_translation[1])})`
               : '')
           )
-
-          /* .call((text) =>
-            text
-              .append('tspan')
-              .attrs({
-                class: 'campeon',
-              })
-              .styles({
-                fill: '#0a48ce',
-                'font-size': heightBars * 0.275,
-                'font-weight': 600,
-                'text-anchor': defaults.value.style.text_anchor,
-                'alignment-baseline': defaults.value.style.alignment_baseline,
-              })
-              .text((d) => ' #' + getRankingFIFA1(d.name) + '')
-          ) */
 
           .call((text) =>
             text
@@ -7259,22 +4985,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
             .text((d) => ' (' + probabilidad(d.name).probabilidad.toString().replace(punctuation_translation[0], punctuation_translation[1]) + '%) ' + probabilidad(d.name).posicion + '°')
         )
         .call(halo1, heightBars * 0.2, '#f1f1f1');
-
-      /* .call((text) =>
-          text
-            .append('tspan')
-            .attrs({
-              class: 'campeon',
-            })
-            .styles({
-              fill: black_color,
-              'font-size': heightBars * 0.275,
-              'font-weight': 600,
-              'text-anchor': defaults.value.style.text_anchor,
-              'alignment-baseline': defaults.value.style.alignment_baseline,
-            })
-            .text((d, i) => (d.partidos_jugados + d.partidos_jugados1 == 0 ? '' : `${i == 0 && d.partidos_jugados + d.partidos_jugados1 == dates.length - 1 ? ' (Campeón)' : ''}`))
-        ) */
     }
   }
 
@@ -9476,19 +7186,9 @@ const criterioValor = getCriterioValor(team, names_filter); */
           class: 'logo',
           x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 1.1) / 2 + xoffset,
           y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - (defaults.logo.size1 * 1.1) / 2 + yoffset, //ojo d.rank
-          href: (d) => /* getPng(d.name) */ `./escudos/${d.name.split('-')[0]}.png`,
+          href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
           height: defaults.logo.size1 * 1.1,
         });
-
-      /* rankingSVG
-        .filter((d) => d.name.split('-')[1] == grupo)
-        .append('circle')
-        .attrs({
-          cx: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 + (defaults.logo.size1 * 1.1) / 3,
-          cy: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) + (defaults.logo.size1 * 1.1) / 3, //ojo d.rank
-          r: defaults.logo.size1 * 0.235,
-          fill: '#f1f1f1'
-        }); */
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
@@ -9500,13 +7200,12 @@ const criterioValor = getCriterioValor(team, names_filter); */
           href: (d) => `./flags/${countryToCode(d.name.split('-')[0])}.svg`,
           height: defaults.logo.size1 * 0.4,
         });
-      /* .style('filter', 'url(#dropshadow)'); */
     });
   } else {
     rankingSVG.append('image').style('filter', 'url(#dropshadow)').attrs({
       class: 'logo',
       x: x(dates.length - 1 - (dates.length - 1 - fechas_not_played) * not_played_yet_x) + (fechas_not_played < dates.length - 1 ? x(1 * not_played_yet_x) : 0) + margin_left * 2 - (defaults.logo.size1 * 1.1) / 2,
-      y: (d, i) => y(i) - (defaults.logo.size1 * 1.1) / 2, // ojo y(d.rank)
+      y: (d, i) => y(i) - (defaults.logo.size1 * 1.1) / 2,
       href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
       height: defaults.logo.size1 * 1.1,
     });
@@ -9702,17 +7401,6 @@ const criterioValor = getCriterioValor(team, names_filter); */
       renderGroup(yearSlice, 0, p, index);
     }
   });
-
-  /* svg.append('rect').attrs({
-    x: 0,
-    y: 0,
-    width: width,
-    height: height,
-    fill: sort_teams1(data.filter(d => d.vs == 'none')).slice(0, 2).map(d => d.name).includes('Racing') ? 'green' : 'red',
-    opacity: 0.3
-  }); */
-
-  /* console.log(sort_teams1(data.filter(d => d.vs == 'none')).slice(0, 2).map(d => d.name).includes('Racing')) */
 };
 
 /* totalCasosSimulados.forEach(d => {

@@ -1,3 +1,5 @@
+import { rankingFIFA2026 } from './rankingFIFA2026.js';
+
 export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/mundial2026.csv');
   let numero_de_simulaciones = 1000;
@@ -21,11 +23,6 @@ export async function procesarDatos() {
 
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
   console.log(playoffs)
-
-  /* let findTorneo = data1.find(d => d.torneo.includes('1996')).torneo
-  console.log(findTorneo)
-  let torneos = [...new Set(data1.map((d) => d.torneo))]
-  data1 = data1.filter(d => d.torneo == findTorneo) */
 
   // ============================================
 // 1. CALCULAR TABLA DE POSICIONES POR GRUPO
@@ -211,27 +208,10 @@ console.log(bracket);
     verEquipo = simular_grupo_de
     grupoDeVerEquipo = data1.filter(d => d.local.split('-')[0] == verEquipo || d.visitante.split('-')[0] == verEquipo)[0].local.split('-')[1]
     verEquipo = simular_grupo_de+'-'+grupoDeVerEquipo
-
-    /* data1 = data1.filter((d) => d.local.split('-')[1] == grupoDeVerEquipo || d.visitante.split('-')[1] == grupoDeVerEquipo);
-    data1.forEach((d) => {
-      d.local = d.local.split('-')[0];
-      d.visitante = d.visitante.split('-')[0];
-    }); */
   }
 
 
   let competencia = nombre_torneo
-
-  /* console.log(nombre_torneo)
-
-  function clasificados_por_competencia1 () {
-    if (nombre_torneo.toLowerCase().includes('libertadores')) return 2 
-    return 1
-  }
-
-  console.log(clasificados_por_competencia1()) */
-
-  console.log(competencia)
 
   const clasificados_por_competencia = {
     ['Campeonato 2024']: 1,
@@ -251,160 +231,6 @@ console.log(bracket);
 
   let formatDateLarge = d3.utcFormat('%b %d');
   let formatDate = d3.utcFormat('%Y-%m-%d');
-
-  const rankingFIFA2026 = {
-  // Grupo A
-  "México": 14,          // antes 15
-  "Sudáfrica": 60,        // sin cambio
-  "Corea del Sur": 25,    // antes 25 -> confirmado igual
-  "República Checa": 40,  // antes 41
- 
-  // Grupo B
-  "Canadá": 30,           // sin cambio
-  "Bosnia y Herzegovina": 64, // antes 65
-  "Qatar": 56,            // antes 55
-  "Suiza": 19,            // sin cambio
- 
-  // Grupo C
-  "Brasil": 6,            // sin cambio
-  "Marruecos": 7,         // antes 8
-  "Haití": 83,            // sin cambio
-  "Escocia": 42,          // antes 43
- 
-  // Grupo D
-  "Estados Unidos": 17,   // antes 16
-  "Paraguay": 41,         // antes 40
-  "Australia": 27,        // sin cambio
-  "Turquía": 22,          // sin cambio
- 
-  // Grupo E
-  "Alemania": 10,         // sin cambio
-  "Curazao": 82,          // sin cambio
-  "Costa de Marfil": 33,  // antes 34
-  "Ecuador": 23,          // sin cambio
- 
-  // Grupo F
-  "Países Bajos": 8,      // antes 7
-  "Japón": 18,            // sin cambio
-  "Suecia": 38,           // sin cambio
-  "Túnez": 45,            // antes 44
- 
-  // Grupo G
-  "Bélgica": 9,           // sin cambio
-  "Egipto": 29,           // sin cambio
-  "Irán": 20,             // antes 21
-  "Nueva Zelanda": 85,    // sin cambio
- 
-  // Grupo H
-  "España": 2,            // sin cambio
-  "Cabo Verde": 67,       // antes 68
-  "Arabia Saudita": 61,   // sin cambio
-  "Uruguay": 16,          // antes 17
- 
-  // Grupo I
-  "Francia": 3,           // antes 1
-  "Senegal": 15,          // antes 14
-  "Irak": 57,             // sin cambio
-  "Noruega": 31,          // sin cambio
- 
-  // Grupo J
-  "Argentina": 1,         // antes 3 (ahora 1° del ranking mundial)
-  "Argelia": 28,          // sin cambio
-  "Austria": 24,          // sin cambio
-  "Jordania": 63,         // antes 64
- 
-  // Grupo K
-  "Portugal": 5,          // sin cambio
-  "RD de Congo": 46,      // sin cambio
-  "Uzbekistán": 50,       // sin cambio
-  "Colombia": 13,         // sin cambio
- 
-  // Grupo L
-  "Inglaterra": 4,        // sin cambio
-  "Croacia": 11,          // sin cambio
-  "Ghana": 73,            // antes 74
-  "Panamá": 34            // antes 33
-};
-
-  /* data1.forEach(d => {
-    if (d.fecha == 'Fecha 3') {
-      d.goles_local = '99';
-      d.goles_visitante = '99';
-    }
-  }) */
-
-
-  /*   function detectarGrupos(partidos) {
-
-  // --- Union-Find ---
-  // Cada equipo empieza siendo su propio representante
-  const padre = {};
-
-  function encontrar(equipo) {
-    if (padre[equipo] === undefined) padre[equipo] = equipo;
-    if (padre[equipo] !== equipo) {
-      // Compresión de camino: aplanar el árbol al buscar
-      padre[equipo] = encontrar(padre[equipo]);
-    }
-    return padre[equipo];
-  }
-
-  function unir(equipoA, equipoB) {
-    const raizA = encontrar(equipoA);
-    const raizB = encontrar(equipoB);
-    if (raizA !== raizB) {
-      // El primero en aparecer en el CSV manda como raíz
-      padre[raizB] = raizA;
-    }
-  }
-
-  // Unir todos los pares que se enfrentaron
-  partidos.forEach(p => unir(p.local, p.visitante));
-
-  // --- Agrupar equipos por su raíz ---
-  const equiposPorRaiz = {};
-  Object.keys(padre).forEach(equipo => {
-    const raiz = encontrar(equipo);
-    if (!equiposPorRaiz[raiz]) equiposPorRaiz[raiz] = [];
-    equiposPorRaiz[raiz].push(equipo);
-  });
-
-  // --- Asignar letra de grupo (A, B, C...) ---
-  // Ordenar las raíces según el orden de primera aparición en el CSV
-  const ordenDeAparicion = [];
-  partidos.forEach(p => {
-    const raizLocal     = encontrar(p.local);
-    const raizVisitante = encontrar(p.visitante);
-    if (!ordenDeAparicion.includes(raizLocal))     ordenDeAparicion.push(raizLocal);
-    if (!ordenDeAparicion.includes(raizVisitante)) ordenDeAparicion.push(raizVisitante);
-  });
-
-  const letraDeGrupo = {};
-  ordenDeAparicion.forEach((raiz, idx) => {
-    // A = 65 en ASCII, B = 66, etc.
-    letraDeGrupo[raiz] = String.fromCharCode(65 + idx);
-  });
-
-  // --- Construir el Map equipo → letra ---
-  const grupoDeEquipo = new Map();
-  Object.keys(padre).forEach(equipo => {
-    const raiz  = encontrar(equipo);
-    const letra = letraDeGrupo[raiz];
-    grupoDeEquipo.set(equipo, letra);
-  });
-
-  return grupoDeEquipo;
-}
-
-function agregarSufijoDeGrupo(partidos, grupoDeEquipo) {
-  return partidos.map(p => ({
-    ...p,
-    local:     `${p.local}-${grupoDeEquipo.get(p.local)}`,
-    visitante: `${p.visitante}-${grupoDeEquipo.get(p.visitante)}`,
-  }));
-} */
-  /* 
-data1 = agregarSufijoDeGrupo(data1, detectarGrupos(data1)) */
 
   let data_cruda = data1.map((d) => ({ ...d }));
   let casos0 = [];
@@ -830,36 +656,6 @@ function generarResultado(
   };
 }
 
-/* 
-    function generarResultado(liga = 'argentina', override = null, equipoLocal = null, equipoVisitante = null) {
-  const config = override ?? LAMBDAS[liga];
-  let lambdaL = config.local;
-  let lambdaV = config.visitante;
-
-  // Ajuste por ranking FIFA (solo cuando se pasan equipos)
-  if (equipoLocal && equipoVisitante) {
-    const rankL = rankingFIFA2026[equipoLocal.replace(/-[A-L]$/, "")] || 50;
-    const rankV = rankingFIFA2026[equipoVisitante.replace(/-[A-L]$/, "")] || 50;
-
-    // diff > 0 → local es mejor | diff < 0 → visitante es mejor
-    const diff = rankV - rankL;
-
-    // k controla cuánto pesa el ranking (ajustá a gusto)
-    // 0.008 = leve | 0.012 = moderado | 0.018 = agresivo
-    const k = 0.022;
-    const ajuste = k * diff;
-
-    // Se suma/resta simétrico → el total de goles esperados se mantiene igual
-    lambdaL = Math.max(0.4, Math.min(2.8, lambdaL + ajuste / 2));
-    lambdaV = Math.max(0.4, Math.min(2.8, lambdaV - ajuste / 2));
-  }
-
-  return {
-    goles_local: poisson(lambdaL),
-    goles_visitante: poisson(lambdaV),
-  };
-} */
-
 function generarTarjetas() {
   // Promedios históricos por equipo por partido (aprox. Mundial)
   // ~3.5 amarillas totales por partido, ~0.15 rojas totales
@@ -1163,228 +959,14 @@ function calcularProbabilidades(
  
   return resultado;
 }
-  
-  console.log(structuredClone(casos1))
-
-  /* console.log(clasificaciones['River Plate-H']); */
-
-  /* casos.forEach(d => {
-      console.log(calcularPosiciones(d), d)
-      console.log(ordenarTabla1(calcularPosiciones(d)))
-    })
-
-    console.log(structuredClone(casos));
-    const unique = [...new Map(casos.map(item => [JSON.stringify(item), item])).values()];
-    console.log(structuredClone(unique)); */
-
-  /* console.log(structuredClone(casos));
-
-    function returnCasoMasCercano(d) {
-      let masCercano = casos[0];
-      let indiceCaso = 0;
-      let i = 0;
-      let ptsD = 99;
-      let diffD = 99;
-      let gfD = 99;
-      let gf2D = 99;
-      d.forEach(p => {
-        let segundaPosicion = ordenarTabla(calcularPosiciones(p))[1];
-        let adentro = calcularPosiciones(p)[segundaPosicion];
-        let afuera = calcularPosiciones(p)['River-H'];
-        if ((adentro.pts - afuera.pts) <= ptsD && (adentro.diff - afuera.diff) <= diffD && (afuera.gf) <= gfD && (adentro.gf) <= gf2D) {
-          ptsD = adentro.pts - afuera.pts;
-          diffD = adentro.diff - afuera.diff;
-          gfD = afuera.gf;
-          gf2D = adentro.gf;
-          indiceCaso = i;
-          console.log('encontro:', indiceCaso, ptsD, diffD, gfD, gf2D)
-        }
-        i++
-      })
-      masCercano = casos[indiceCaso];
-      return masCercano
-    }
-
-    console.log(calcularYOrdenarTabla(casos[0]))
-    console.log(ordenarTabla(calcularPosiciones(casos[0])))
-
-    console.log(returnCasoMasCercano(casos))
-
-    data1 = data1.filter(d => (d.local.split('-')[1] !== 'H'));
-    console.log(structuredClone(data1));
-    data1 = data1.concat(returnCasoMasCercano(casos));
-    data1.forEach(d => {
-      d.goles_local = d.goles_local.toString()
-      d.goles_visitante = d.goles_visitante.toString()
-    })
-    console.log(structuredClone(data1)); */
-
-  // --- SIMULAR PEOR CASO ---
-
-  /* let grupo_filtrado = data1.filter(d => (d.local.split('-')[1] == 'H'));
-console.log(grupo_filtrado)
-data1 = data1.filter(d => (d.local.split('-')[1] !== 'H'));
-console.log(structuredClone(data1));
-let caso = returnCasoMasCercano(casos)
-console.log(caso)
-console.log(calcularYOrdenarTabla(caso))
-data1 = data1.concat(caso);
-data1.forEach(d => {
-    d.goles_local = d.goles_local.toString()
-    d.goles_visitante = d.goles_visitante.toString()
-})
-console.log(structuredClone(data1)); */
-
-  /* function returnCaso(d) {
-      let masCercano = sinDuplicados[0][1];
-      let indiceCaso = 0;
-      let i = 0;
-      let pts = 0;
-      d.forEach(p => {
-        console.log(p)
-        let rankGrupo = calcularYOrdenarTabla(p);
-        arrays1.push(rankGrupo.slice(0, 2))
-        let equipo = calcularPosiciones(p)['River Plate-H'];
-        if (equipo.pts >= pts) {
-          pts = equipo.pts;
-          indiceCaso = i;
-          console.log('encontro:', indiceCaso, pts)
-        }
-        i++
-      })
-      masCercano = casos[indiceCaso];
-      return masCercano
-    } */
-
-  /* let caso = returnCaso(sinDuplicados)
-console.log(caso) */
-
-  /* function encontrarEscenario(data, criterios) {
-  // criterios: { "River Plate-H": 16, "Carabobo-H": 9, ... }
-  return data.find(([tabla]) => {
-    // tabla es el array plano [nombre, pts, nombre, pts, ...]
-    for (let i = 0; i < tabla.length; i += 2) {
-      const equipo = tabla[i];
-      const pts = tabla[i + 1];
-      if (criterios[equipo] !== undefined && criterios[equipo] !== pts) {
-        return false;
-      }
-    }
-    return true;
-  });
-}
-
-// Uso:
-const resultado1 = encontrarEscenario(sinDuplicados, {
-  "Carabobo-H": 99,
-}); */
-
-  /* const MAX = 99;
-
-function encontrarEscenario(data, criterios) {
-  // Primero resolvemos los MAX
-  const criteriosResueltos = { ...criterios };
-
-  for (const [equipo, pts] of Object.entries(criterios)) {
-    if (pts === MAX) {
-      let maximo = -Infinity;
-      for (const escenario of data) {
-        const tabla = escenario[0][0];
-        for (let i = 0; i < tabla.length; i += 2) {
-          if (tabla[i] === equipo && tabla[i + 1] > maximo) {
-            maximo = tabla[i + 1];
-          }
-        }
-      }
-      criteriosResueltos[equipo] = maximo;
-    }
-  }
-
-  // Ahora buscamos normalmente
-  return data.find((escenario) => {
-    const tabla = escenario[0][0];
-    for (let i = 0; i < tabla.length; i += 2) {
-      const equipo = tabla[i];
-      const pts = tabla[i + 1];
-      if (criteriosResueltos[equipo] !== undefined && criteriosResueltos[equipo] !== pts) {
-        return false;
-      }
-    }
-    return true;
-  });
-}
-
-// Uso:
-const resultado1 = encontrarEscenario(sinDuplicados, {
-  "Carabobo-H": 99, // busca donde Carabobo tiene más puntos
-}); */
-
-  /* function mayorPuntaje(data, equipo) {
-  let max = -Infinity;
-  let resultado = null;
-
-  for (const escenario of data) {
-    const tabla = escenario[0]; // o escenario[0][0], depende de la estructura real
-    for (let i = 0; i < tabla.length; i += 2) {
-      if (tabla[i] === equipo && tabla[i + 1] > max) {
-        max = tabla[i + 1];
-        resultado = escenario;
-      }
-    }
-  }
-
-  return resultado;
-}
-
-// Uso:
-const resultado1 = mayorPuntaje(sinDuplicados, "Carabobo-H"); */
-
-  /* function encontrarEscenario(data, criterios) {
-  return data.find((escenario) => {
-    const tabla = escenario[0][0]; // el array plano de [nombre, pts, ...]
-    for (let i = 0; i < tabla.length; i += 2) {
-      const equipo = tabla[i];
-      const pts = tabla[i + 1];
-      if (criterios[equipo] !== undefined && criterios[equipo] !== pts) {
-        return false;
-      }
-    }
-    return true;
-  });
-}
-
-// Uso:
-const resultado1 = encontrarEscenario(sinDuplicados, {
-  "River Plate-H": 16,
-  "Carabobo-H": 9,
-  "Bragantino-H": 6,
-  "Blooming-H": 4
-});
-
-console.log(resultado1[1]) */
-
-  // resultado[0] → la tabla, resultado[1] → los partidos
-
-  /* data1 = data1.filter(d => (d.local.split('-')[1] !== 'H'));
-let caso = resultado1[1]
-console.log(caso)
-data1 = data1.concat(caso);
-data1.forEach(d => {
-    d.goles_local = d.goles_local.toString()
-    d.goles_visitante = d.goles_visitante.toString()
-}) */
-
 
   // Convertir conteos a porcentajes
 
-  let probabilidades = calcularProbabilidades(data_cruda /* .filter(d => d.local.split('-')[1]=='H') */, clasificacion_por_grupo, repechaje, numero_de_simulaciones);
+  let probabilidades = calcularProbabilidades(data_cruda, clasificacion_por_grupo, repechaje, numero_de_simulaciones);
 
   console.log(structuredClone(casos1))
   console.log(structuredClone(casos0))
   console.log(structuredClone(casos2))
-
-  
-
   console.table(probabilidades)
 
   function eliminarDuplicados(simulaciones) {
@@ -1420,8 +1002,6 @@ data1.forEach(d => {
   }
 
   const sinDuplicados1 = eliminarDuplicados(casos0);
-
-  /* console.log(structuredClone(filtrarPorValor(casos0, 'Ecuador-E', 1))); // clasificó)) */
 
   const ordenados1 = [...sinDuplicados1].sort((a, b) => {
   const getEquipo = (sim, equipo) =>
@@ -1554,14 +1134,9 @@ data1.forEach(d => {
     let clubes = new Set([...new Set(torneo.map((d) => d.local)), ...new Set(torneo.map((d) => d.visitante))]);
 
     let fechas_torneo = new Set(torneo.filter((d) => d.fecha.split(' ')[1] != fecha_adicional && !d.fecha.includes('1/')).map((d) => d.fecha));
-    /* console.log(fechas_torneo); */
 
     let fechas_torneo2 = new Set(torneo.filter((d) => d.fecha.split(' ')[1] != fecha_adicional && !d.fecha.includes('1/')).map((d) => d.fecha));
     let fechas_def = torneo.filter((d) => d.fecha.split(' ')[1] == fecha_adicional);
-    /* let fechas_playoff = data1.filter((d) => d.fecha.includes('1/'));
-
-    playoffs.push(fechas_playoff);
-    console.log(fechas_playoff) */
 
     let fechas_pospuestas = [];
 
@@ -1681,15 +1256,7 @@ data1.forEach(d => {
       }
     });
 
-    /* console.log(data2); */
-
     let semanas = new Set(data2.map((d) => d.semana).sort((a, b) => a - b));
-
-    /* console.log(dias);
-    console.log(semanas);
-    console.log(clubes);
-    console.log(fechas_torneo);
-    console.log(fechas_torneo2); */
 
     data1.forEach((d) => {
       d.dia = formatDate(d.dia);
@@ -2155,14 +1722,6 @@ data1.forEach(d => {
     });
 
     final_list1 = final_list1.filter((d) => d.name != 'hola');
-
-    /* final_list1.forEach(d => {
-      console.log(ordenados1[indexFor][2])
-    }) */
-
-    /* Object.assign(final_list1, {
-        probs: ordenados1[indexFor][2],
-      }); */
       
       if (simular) {
         
@@ -2174,11 +1733,6 @@ data1.forEach(d => {
         
     totalCasosSimulados.push(final_list1);
   };
-
-  console.log(totalCasosSimulados);
-  console.log(totalCasosSimulados[0]);
-  console.log(casos0)
-  console.log(casos0[0])
 
   window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia };
   return window.__appData;
