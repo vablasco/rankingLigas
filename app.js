@@ -7467,6 +7467,7 @@ if (datosBase && (!probabilidades || Object.keys(probabilidades).length === 0)) 
     mostrandoProbabilidades = true;
     const currentData = totalCasosSimulados[index];
     if (currentData) {
+      console.log(currentData, playoffs, nombre_torneo, puntos_por_partido, resultado);
       render(currentData, playoffs, nombre_torneo, puntos_por_partido, resultado);
     }
   });
