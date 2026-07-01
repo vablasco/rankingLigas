@@ -2,7 +2,7 @@ import { rankingFIFA2026 } from './rankingFIFA2026.js';
 
 export async function procesarDatos() {
   let data1 = await d3.csv('./torneos/mundial2026.csv');
-  let numero_de_simulaciones = 1000;
+  const numero_de_simulaciones = 10_000;
 
   let simular_grupo_de = '';
   let clasifica_simulador = false;
@@ -938,13 +938,8 @@ export async function procesarDatos() {
   }
 
   // Convertir conteos a porcentajes
-
-  let probabilidades = calcularProbabilidades(data_cruda, clasificacion_por_grupo, repechaje, numero_de_simulaciones);
-
-  console.log(structuredClone(casos1));
-  console.log(structuredClone(casos0));
-  console.log(structuredClone(casos2));
-  console.table(probabilidades);
+  // Se calcula en segundo plano para no bloquear la carga inicial de la visualización.
+  let probabilidades = null;
 
   function eliminarDuplicados(simulaciones) {
     const vistas = new Set();
@@ -1702,6 +1697,13 @@ export async function procesarDatos() {
     totalCasosSimulados.push(final_list1);
   }
 
-  window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia };
+  const datosBase = {
+    partidos: data_cruda,
+    competencia: nombre_torneo,
+    clasificacionPorGrupo: clasificacion_por_grupo,
+    repechaje,
+  };
+
+  window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia, simulacionesTotales: numero_de_simulaciones, datosBase };
   return window.__appData;
 }

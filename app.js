@@ -2,12 +2,15 @@ import { procesarDatos } from './data.js';
 import { rankingFIFA2026 } from './rankingFIFA2026.js';
 import { FLAG_COLORS } from './colores.js';
 import { TABLA } from './combinaciones_mundial.js';
+import { calcularProbabilidadesEnSegundoPlano } from './simulador.js';
 
-const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia } = window.__appData ?? (await procesarDatos());
+const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia, simulacionesTotales, datosBase } = window.__appData ?? (await procesarDatos());
 
 const index = (window.__appIndex ?? 0) % totalCasosSimulados.length;
 let index1 = 0;
 let final_list1 = totalCasosSimulados[index];
+let totalSimulacionesTexto = 10000;
+let mostrandoProbabilidades = false;
 
 let ress_ratio = '1:1';
 let resulution = 1;
@@ -176,11 +179,13 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
     grupos = 0;
   }
 
+  const probMap = probabilidades ?? {};
+
   function probabilidad(name) {
-    if (!Object.keys(probabilidades).includes(name)) {
+    if (!Object.keys(probMap).includes(name)) {
       return [''];
-    } else if (Object.keys(probabilidades).includes(name)) {
-      return probabilidades[name];
+    } else if (Object.keys(probMap).includes(name)) {
+      return probMap[name];
     } else {
       return [''];
     }
@@ -2063,7 +2068,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
       'text-anchor': 'start',
       'alignment-baseline': 'central',
     })
-    .text(ingles ? 'Probability*: 100,000 Simulations. (100%) = Qualified. (0%) = Eliminated.' : 'Probabilidad*: 100.000 Simulaciones. (100%) = Clasificado. (0%) = Afuera.');
+    .text(ingles ? `Probability*: ${totalSimulacionesTexto} Simulations. (100%) = Qualified. (0%) = Eliminated.` : `Probabilidad*: ${totalSimulacionesTexto} Simulaciones. (100%) = Clasificado. (0%) = Afuera.`);
 
   svg
     .append('text')
@@ -2080,6 +2085,24 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
       'alignment-baseline': 'central',
     })
     .text(ingles ? 'Fair Play*: Points system based on cards. Yellow: -1, Indirect red: -3, Direct red: -4, Yellow + Direct red: -5.' : 'Fairplay*: Sistema de puntos en base a las tarjetas. Amarilla: -1, Roja indirecta: -3, Roja directa: -4, Amarilla + Roja directa: -5.');
+
+  if (!mostrandoProbabilidades) {
+    svg
+      .append('text')
+      .attrs({
+        class: 'years',
+        x: margin.left * 0.05,
+        y: margin.top * 0.35,
+      })
+      .styles({
+        'font-size': heightBars * 0.25,
+        fill: '#f1f1f1',
+        'font-weight': 600,
+        'text-anchor': 'start',
+        'alignment-baseline': 'central',
+      })
+      .text(ingles ? 'Calculating probabilities...' : 'Calculando probabilidades...');
+  }
 
   svg
     .append('text')
@@ -4915,7 +4938,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
                 'text-anchor': defaults.value.style.text_anchor,
                 'alignment-baseline': defaults.value.style.alignment_baseline,
               })
-              .text((d, i) => (/* d.simulado ? ' (100%) ' + (i+1) + '°': */ d.simulado ? ' (' + d.probabilidad + '%) ' + (i + 1) + '°' : ' (' + probabilidad(d.name).probabilidad.toString().replace(punctuation_translation[0], punctuation_translation[1]) + '%) ' + probabilidad(d.name).posicion + '°'))
+              .text((d, i) => (/* d.simulado ? ' (100%) ' + (i+1) + '°': */ d.simulado ? ' (' + d.probabilidad + '%) ' + (i + 1) + '°' : ' (' + probabilidad(d.name).probabilidad + '%) ' + probabilidad(d.name).posicion + '°'))
           )
           .call(halo1, heightBars * 0.2, '#f1f1f1');
       });
@@ -7431,6 +7454,23 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 }) */
 
 render(totalCasosSimulados[index], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+
+if (datosBase && (!probabilidades || Object.keys(probabilidades).length === 0)) {
+  calcularProbabilidadesEnSegundoPlano({
+    partidos: datosBase.partidos,
+    puntosPorPartido: puntos_por_partido,
+    competencia: nombre_torneo,
+    clasificacionPorGrupo: clasificados_por_competencia[competencia] + repechaje,
+    repechaje,
+  }).then((resultado) => {
+    window.__appProbabilidades = resultado;
+    mostrandoProbabilidades = true;
+    const currentData = totalCasosSimulados[index];
+    if (currentData) {
+      render(currentData, playoffs, nombre_torneo, puntos_por_partido, resultado);
+    }
+  });
+}
 
 /* if (totalCasosSimulados.length > 1) {
 
