@@ -3,11 +3,40 @@ import { rankingFIFA2026 } from './rankingFIFA2026.js';
 import { FLAG_COLORS } from './colores.js';
 import { TABLA } from './combinaciones_mundial.js';
 
-const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia } = window.__appData ?? (await procesarDatos());
+const appData = window.__appData ?? (await procesarDatos());
+window.__appData = appData;
+window.dispatchEvent(new CustomEvent('appDataReady', { detail: appData }));
 
-const index = (window.__appIndex ?? 0) % totalCasosSimulados.length;
+const { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia } = appData;
+
+const normalizeText = (value = '') =>
+  String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+const teamFilter = (window.__teamFilter || '').trim();
+const casosFiltrados = teamFilter
+  ? totalCasosSimulados.filter((caso) => {
+      const clasificaciones = caso?.[2] ?? {};
+      const filtroNormalizado = normalizeText(teamFilter);
+
+      return Object.entries(clasificaciones).some(([equipo, valor]) => {
+        if (valor !== 1) return false;
+        const equipoNormalizado = normalizeText(equipo);
+        return (
+          equipoNormalizado === filtroNormalizado ||
+          equipoNormalizado.startsWith(filtroNormalizado) ||
+          equipoNormalizado.includes(filtroNormalizado)
+        );
+      });
+    })
+  : totalCasosSimulados;
+
+const index = (window.__appIndex ?? 0) % Math.max(casosFiltrados.length, 1);
 let index1 = 0;
-let final_list1 = totalCasosSimulados[index];
+let final_list1 = casosFiltrados[index];
 
 let ress_ratio = '1:1';
 let resulution = 1;
@@ -127,6 +156,7 @@ const COUNTRY_TEAMS = {
 const TEAM_COUNTRY = Object.fromEntries(Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) => teams.map((team) => [team, code])));
 
 const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabilidades) => {
+  data = data[0]
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
 
@@ -3593,7 +3623,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
         'text-anchor': 'start',
         'alignment-baseline': 'central',
       })
-      .text(index + 1 + '/' + totalCasosSimulados.length);
+      .text(index + 1 + '/' + casosFiltrados.length);
   }
 
   if (datos_totales) {
@@ -7429,8 +7459,9 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 /* totalCasosSimulados.forEach(d => {
   render(d, nombre_torneo, puntos_por_partido, probabilidades);
 }) */
+console.log(totalCasosSimulados);
 
-render(totalCasosSimulados[index], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+render(casosFiltrados[index], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
 
 /* if (totalCasosSimulados.length > 1) {
 

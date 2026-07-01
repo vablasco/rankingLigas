@@ -13,7 +13,7 @@
     <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
     <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
     <script src="data.js"></script>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js" id="app-module"></script>
     
     <!-- <button id="btn-reload-app" onclick="reloadApp()" 
   style="position:fixed;top:10px;right:10px;z-index:9999;padding:8px 12px;cursor:pointer">
@@ -41,26 +41,30 @@
 
 <script>
 function reloadApp1() {
-  // Suma 1 cada vez, empieza en 0
+  const select = document.getElementById('appIndex');
+  const input = document.getElementById('teamFilter');
+
   window.__appIndex = (window.__appIndex ?? -1) + 1;
+  if (select) select.value = String(window.__appIndex);
+  window.__teamFilter = (input?.value || '').trim();
 
-  const old = document.getElementById('app-module');
-  if (old) old.remove();
-
-  const s = document.createElement('script');
-  s.type = 'module';
-  s.src = 'app.js?v=' + Date.now();
-  s.id = 'app-module';
-  document.head.appendChild(s);
+  reloadApp();
 }
 </script>
 
-<input
+<select
   id="appIndex"
-  type="number"
-  value="0"
-  style="position:fixed;top:50px;right:120px;z-index:9999;width:60px;padding:6px;"
+  style="position:fixed;top:50px;right:120px;z-index:9999;width:140px;padding:6px;"
+></select>
+
+<input
+  id="teamFilter"
+  list="teamOptions"
+  placeholder="Equipo"
+  style="position:fixed;top:50px;right:280px;z-index:9999;width:160px;padding:6px;"
 >
+
+<datalist id="teamOptions"></datalist>
 
 <button
   onclick="reloadApp()"
@@ -70,12 +74,72 @@ function reloadApp1() {
 </button>
 
 <script>
-function reloadApp() {
-  window.__appIndex = Number(
-    document.getElementById('appIndex').value
-  );
+function populateSimulatorSelector() {
+  const select = document.getElementById('appIndex');
+  if (!select) return;
 
-  console.log("Índice:", window.__appIndex);
+  const total = window.__appData?.totalCasosSimulados?.length;
+  if (!Number.isInteger(total) || total <= 0) return;
+
+  const currentCount = select.options.length;
+  if (currentCount === total) return;
+
+  select.innerHTML = '';
+
+  for (let i = 0; i < total; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = `Caso ${i + 1}`;
+    select.appendChild(option);
+  }
+
+  const saved = window.__appIndex ?? 0;
+  select.value = saved < total ? saved : 0;
+}
+
+function populateTeamOptions() {
+  const datalist = document.getElementById('teamOptions');
+  const input = document.getElementById('teamFilter');
+  if (!datalist || !input) return;
+
+  const casos = window.__appData?.totalCasosSimulados ?? [];
+  const equipos = new Set();
+
+  casos.forEach((caso) => {
+    const rows = caso?.[0] ?? [];
+    rows.forEach((row) => {
+      if (row?.name) equipos.add(row.name);
+    });
+
+    const clasificaciones = caso?.[2] ?? {};
+    Object.keys(clasificaciones).forEach((equipo) => {
+      if (equipo) equipos.add(equipo);
+      const nombreBase = String(equipo || '').split(/[-–—]/)[0].trim();
+      if (nombreBase) equipos.add(nombreBase);
+    });
+  });
+
+  datalist.innerHTML = '';
+  [...equipos].sort().forEach((equipo) => {
+    const option = document.createElement('option');
+    option.value = equipo;
+    datalist.appendChild(option);
+  });
+
+  if (!input.value && equipos.size) {
+    input.value = [...equipos][0];
+  }
+}
+
+function reloadApp() {
+  const select = document.getElementById('appIndex');
+  const input = document.getElementById('teamFilter');
+
+  window.__appIndex = Number(select?.value ?? 0);
+  window.__teamFilter = (input?.value || '').trim();
+
+  console.log('Índice:', window.__appIndex);
+  console.log('Equipo:', window.__teamFilter);
 
   const old = document.getElementById('app-module');
   if (old) old.remove();
@@ -86,6 +150,37 @@ function reloadApp() {
   s.id = 'app-module';
   document.head.appendChild(s);
 }
+
+function bindControls() {
+  const select = document.getElementById('appIndex');
+  const input = document.getElementById('teamFilter');
+  if (!select || !input) return;
+
+  select.addEventListener('change', reloadApp);
+  input.addEventListener('change', reloadApp);
+
+  let debounceTimer;
+  input.addEventListener('input', () => {
+    window.__teamFilter = input.value.trim();
+    clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(reloadApp, 250);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  populateSimulatorSelector();
+  populateTeamOptions();
+  bindControls();
+});
+window.addEventListener('appDataReady', () => {
+  populateSimulatorSelector();
+  populateTeamOptions();
+  bindControls();
+});
+setInterval(() => {
+  populateSimulatorSelector();
+  populateTeamOptions();
+}, 500);
 </script>
   </body>
 </html>

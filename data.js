@@ -1021,10 +1021,10 @@ export async function procesarDatos() {
 
   let totalCasosSimulados = [];
 
-  for (let indexFor = 0; indexFor < (simular ? ordenados1.length : 1); indexFor++) {
+  for (let indexFor = 0; indexFor < ordenados1.length/* (simular ? ordenados1.length : 1) */; indexFor++) {
     /* console.log(ordenados1[indexFor][1]); */
 
-    if (simular) {
+    if (indexFor !== 0) {
       data1 = ordenados1[indexFor][1];
     }
     data1.forEach((d) => {
@@ -1699,7 +1699,7 @@ export async function procesarDatos() {
       }));
     }
 
-    totalCasosSimulados.push(final_list1);
+    totalCasosSimulados.push([final_list1, ordenados1[indexFor][0], ordenados1[indexFor][2]]);
   }
 
   window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia };
