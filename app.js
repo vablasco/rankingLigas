@@ -2416,7 +2416,6 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
               return primer_puesto;
             }
           } else if (i < clasificacion_por_grupo && mejores_terceros.includes(d.position[1])) {
-            console.log(mejores_terceros);
             if (i % 2 === 1) {
               return '#d8ffb8';
             } else {
@@ -7209,7 +7208,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
           y: (d, i) => y(i + distancia_entre_grupos + indice_grupo * (equipos_por_grupos + distancia_entre_grupos)) - (defaults.logo.size1 * 1.1) / 2 + yoffset, //ojo d.rank
           href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
           height: defaults.logo.size1 * 1.1,
-        });
+        }).on('click', handleButtonClick);
 
       rankingSVG
         .filter((d) => d.name.split('-')[1] == grupo)
@@ -7436,9 +7435,254 @@ render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido,
 const button = document.getElementById("myButton");
 
 // 2. Define the action to take when clicked
-function handleButtonClick() {
+/* function handleButtonClick() {
+  console.log(index1)
   index1++;
   render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+} */
+
+function filtrarPorValor(simulaciones, equipo, valor) {
+    return simulaciones.filter((sim) => sim[2][equipo] === valor);
+  }
+  console.log(totalCasosSimulados)
+
+  let sort_selecciones = (array, seleccion) => {
+
+    array.sort((a, b) => {
+    const getEquipo = (sim, equipo) =>
+      sim[1]?.find((t) => t.equipo === equipo) || sim[0]?.find((t) => t.equipo === equipo);
+
+    const equipoA = getEquipo(a, seleccion);
+    const equipoB = getEquipo(b, seleccion);
+
+    const clasA = a[2]?.[seleccion] === 1 ? 0 : 1;
+    const clasB = b[2]?.[seleccion] === 1 ? 0 : 1;
+    if (clasA !== clasB) return clasA - clasB;
+
+    const posA = equipoA?.pos ?? 999;
+    const posB = equipoB?.pos ?? 999;
+
+    if (posA !== posB) return posA - posB;
+
+    const ptsA = equipoA?.pts ?? 0;
+    const ptsB = equipoB?.pts ?? 0;
+
+    if (ptsA !== ptsB) return ptsB - ptsA;
+
+    const diffA = equipoA?.diff ?? 0;
+    const diffB = equipoB?.diff ?? 0;
+
+    if (diffA !== diffB) return diffB - diffA;
+
+    const gfA = equipoA?.gf ?? 0;
+    const gfB = equipoB?.gf ?? 0;
+
+    if (gfA !== gfB) return gfB - gfA;
+
+    return 0;
+  });
+return array;
+};
+  
+let casos = totalCasosSimulados;
+let seleccion = null;
+
+function construirListaPuntos(casos, nombreSeleccion) {
+  return casos
+    .map((caso, idx) => {
+      const equipo = caso[1].find((d) => d.equipo == nombreSeleccion);
+      const pos = equipo ? equipo.pos : 'N/A';
+      const pj = equipo ? equipo.pj : 'N/A';
+      const pg = equipo ? equipo.pg : 'N/A';
+      const pe = equipo ? equipo.pe : 'N/A';
+      const pp = equipo ? equipo.pp : 'N/A';
+      const pts = equipo ? equipo.pts : 'N/A';
+      const diff = equipo ? equipo.diff : 'N/A';
+      const gf = equipo ? equipo.gf : 'N/A';
+      const gc = equipo ? equipo.gc : 'N/A';
+      return `${idx + 1}: ${pos}° \xa0 ${pts} \xa0 ${pj} ${pg} ${pe} ${pp} \xa0 ${gf}-${gc} ${diff}`;
+    })
+    .join('\n');
+}
+
+function openSeleccionModal(casos, nombreSeleccion) {
+  const maxIndex = casos.length - 1;
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  `;
+
+  const dialog = document.createElement('div');
+  dialog.style.cssText = `
+    width: min(95vw, 700px);
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+  `;
+
+  const title = document.createElement('h2');
+  title.textContent = `Selecciona un caso para ${nombreSeleccion}`;
+  title.style.margin = '0 0 10px';
+  title.style.fontSize = '1.15rem';
+  title.style.background = 'transparent';
+  title.style.color = '#000';
+
+  const info = document.createElement('p');
+  info.textContent = `Total: ${casos.length} casos. Elige un índice entre 1 y ${maxIndex + 1}.`;
+  info.style.cssText = 'margin: 0 0 14px; color: #333; font-size: 0.95rem; background: transparent;';
+
+  let selectedIndex = index1;
+
+  const list = document.createElement('div');
+  list.style.cssText = `
+    flex: 1 1 auto;
+    margin: 0 0 14px;
+    padding: 8px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: auto;
+    max-height: 50vh;
+    display: grid;
+    gap: 4px;
+  `;
+
+  const items = casos.map((caso, idx) => {
+    const item = document.createElement('button');
+    const equipo = caso[1].find((d) => d.equipo == nombreSeleccion);
+    const pos = equipo ? equipo.pos : 'N/A';
+    const pj = equipo ? equipo.pj : 'N/A';
+    const pg = equipo ? equipo.pg : 'N/A';
+    const pe = equipo ? equipo.pe : 'N/A';
+    const pp = equipo ? equipo.pp : 'N/A';
+    const pts = equipo ? equipo.pts : 'N/A';
+    const diff = equipo ? equipo.diff : 'N/A';
+    const gf = equipo ? equipo.gf : 'N/A';
+    const gc = equipo ? equipo.gc : 'N/A';
+    const clasificado = caso[2]?.[nombreSeleccion] === 1;
+    const baseColor = clasificado ? '#d4f8d4' : '#f8d4d4';
+    item.type = 'button';
+    item.textContent = `${idx + 1}: ${pos}° \xa0 ${pts} \xa0 ${pj} ${pg} ${pe} ${pp} \xa0 ${gf}-${gc} ${diff}`;
+    item.style.cssText = `
+      text-align: left;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: ${baseColor};
+      cursor: pointer;
+      font-family: inherit;
+      white-space: pre-wrap;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    `;
+    item.addEventListener('click', () => {
+      selectedIndex = idx;
+      items.forEach((other, otherIdx) => {
+        const otherCasosIndex = other.dataset.index;
+        const otherClasificado = casos[otherIdx][2]?.[nombreSeleccion] === 1;
+        const otherBase = otherClasificado ? '#ecf9ed' : '#fdecea';
+        other.style.borderColor = otherIdx === selectedIndex ? '#007bff' : 'transparent';
+        other.style.background = otherIdx === selectedIndex ? (otherClasificado ? '#d4f1d7' : '#f8d2d2') : otherBase;
+      });
+      item.scrollIntoView({ block: 'nearest' });
+    });
+    item.dataset.index = idx;
+    list.appendChild(item);
+    return item;
+  });
+
+  if (items[selectedIndex]) {
+    const selectedClasificado = casos[selectedIndex][2]?.[nombreSeleccion] === 1;
+    items[selectedIndex].style.borderColor = '#007bff';
+    items[selectedIndex].style.background = selectedClasificado ? '#a5e6a5' : '#f5a5a5';
+  }
+
+  const buttons = document.createElement('div');
+  buttons.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; background: #ffffff; padding: 10px 0 0; margin-top: 0;';
+
+  const cancelButton = document.createElement('button');
+  cancelButton.textContent = 'Cancelar';
+  cancelButton.style.cssText = `
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #dcdcdc;
+    color: #111;
+    cursor: pointer;
+  `;
+
+  const okButton = document.createElement('button');
+  okButton.textContent = 'Aceptar';
+  okButton.style.cssText = `
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+  `;
+
+  buttons.appendChild(cancelButton);
+  buttons.appendChild(okButton);
+  dialog.appendChild(title);
+  dialog.appendChild(info);
+  dialog.appendChild(list);
+  dialog.appendChild(buttons);
+  modal.appendChild(dialog);
+  document.body.appendChild(modal);
+
+  function closeModal() {
+    if (modal.parentNode) modal.parentNode.removeChild(modal);
+  }
+
+  cancelButton.addEventListener('click', closeModal);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeModal();
+  });
+
+  okButton.addEventListener('click', () => {
+    if (selectedIndex < 0 || selectedIndex > maxIndex) {
+      alert(`Selecciona un caso válido entre 1 y ${maxIndex + 1}.`);
+      return;
+    }
+    closeModal();
+    index1 = selectedIndex;
+    render(casos[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+    console.log(index1, casos.length, casos[index1][1].filter((d) => d.equipo == nombreSeleccion)[0].pts, nombreSeleccion);
+    index1++;
+  });
+}
+
+function handleButtonClick(event, d) {
+  if (!d) {
+    console.log('Click en el botón normal');
+    return;
+  }
+
+  const nombreSeleccion = d.name;
+  if (nombreSeleccion !== seleccion) {
+    index1 = 0;
+    seleccion = nombreSeleccion;
+  }
+
+  /* casos = filtrarPorValor(totalCasosSimulados, nombreSeleccion, 1); */
+  casos = sort_selecciones(casos, nombreSeleccion);
+
+  if (casos.length === 0) {
+    alert(`No hay casos disponibles para ${nombreSeleccion}.`);
+    return;
+  }
+
+  openSeleccionModal(casos, nombreSeleccion);
 }
 
 // 3. Attach the event listener to the button
