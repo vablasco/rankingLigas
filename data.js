@@ -19,10 +19,7 @@ export async function procesarDatos() {
     repechaje = 8;
   }
 
-  console.log(repechaje);
-
   let playoffs = data1.filter((d) => d.fecha.includes('1/'));
-  console.log(playoffs);
 
   // ============================================
   // 1. CALCULAR TABLA DE POSICIONES POR GRUPO
@@ -189,7 +186,6 @@ export async function procesarDatos() {
   const bracket = buildBracket(clasificados);
   aplicarResultados(bracket, data1);
 
-  console.log(bracket);
   // bracket.final.winner → "Alemania-G" 🏆
 
   data1 = data1.filter((d) => !d.fecha.includes('1/'));
