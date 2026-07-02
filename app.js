@@ -7455,7 +7455,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
 
 render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
 
-const button = document.getElementById("myButton");
+/* const button = document.getElementById("myButton"); */
 
 // 2. Define the action to take when clicked
 /* function handleButtonClick() {
@@ -7466,7 +7466,7 @@ const button = document.getElementById("myButton");
 
 function filtrarPorValor(simulaciones, equipo, valor) {
     return simulaciones.filter((sim) => sim[2][equipo] === valor);
-  }
+  } 
   console.log(totalCasosSimulados)
 
   let sort_selecciones = (array, seleccion) => {
