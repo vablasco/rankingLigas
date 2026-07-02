@@ -7231,7 +7231,7 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
         y: (d, i) => y(i) - (defaults.logo.size1 * 1.1) / 2,
         href: (d) => `./escudos/${d.name.split('-')[0]}.png`,
         height: defaults.logo.size1 * 1.1,
-      });
+      }).on('click', handleButtonClick);
   }
 
   yearSlice.forEach((d) => {
