@@ -127,6 +127,7 @@ const COUNTRY_TEAMS = {
 const TEAM_COUNTRY = Object.fromEntries(Object.entries(COUNTRY_TEAMS).flatMap(([code, teams]) => teams.map((team) => [team, code])));
 
 const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabilidades) => {
+  data = data[0]
   let grupos_1 = [...new Set(data.map((d) => d.name.split('-')[1]))].sort();
   let names_1 = [...new Set(data.map((d) => d.name))];
 
@@ -7430,7 +7431,18 @@ const render = (data, fechas_playoff, nombre_torneo, puntos_por_partido, probabi
   render(d, nombre_torneo, puntos_por_partido, probabilidades);
 }) */
 
-render(totalCasosSimulados[index], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+
+const button = document.getElementById("myButton");
+
+// 2. Define the action to take when clicked
+function handleButtonClick() {
+  index1++;
+  render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
+}
+
+// 3. Attach the event listener to the button
+button.addEventListener("click", handleButtonClick);
 
 /* if (totalCasosSimulados.length > 1) {
 

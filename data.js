@@ -976,9 +976,9 @@ export async function procesarDatos() {
     casos0 = filtrarPorValor(casos0, verEquipo, clasifica);
   }
 
-  const sinDuplicados1 = eliminarDuplicados(casos0);
+  /* const sinDuplicados1 = eliminarDuplicados(casos0); */
 
-  const ordenados1 = [...sinDuplicados1].sort((a, b) => {
+ /*  const ordenados1 = [...sinDuplicados1].sort((a, b) => {
     const getEquipo = (sim, equipo) => sim[0].find((t) => t.equipo === equipo);
 
     const equipoA = getEquipo(a, verEquipo);
@@ -994,14 +994,6 @@ export async function procesarDatos() {
 
     if (ptsA !== ptsB) return ptsB - ptsA;
 
-    /* const bajoA = a[0].find((t) => t.pos === posA + 1)?.pts ?? 0;
-  const bajoB = b[0].find((t) => t.pos === posB + 1)?.pts ?? 0;
-
-  const difA = ptsA - bajoA;
-  const difB = ptsB - bajoB;
-
-  if (difA !== difB) return difB - difA; */
-
     const diffA = equipoA?.diff ?? 0;
     const diffB = equipoB?.diff ?? 0;
 
@@ -1013,20 +1005,20 @@ export async function procesarDatos() {
     if (gfA !== gfB) return gfB - gfA;
 
     return 0;
-  });
+  }); */
 
   /* let ordenados1 = casos0 */
 
-  console.log(structuredClone(ordenados1));
+  /* console.log(structuredClone(ordenados1)); */
 
   let totalCasosSimulados = [];
 
-  for (let indexFor = 0; indexFor < (simular ? ordenados1.length : 1); indexFor++) {
+  for (let indexFor = 0; indexFor < casos0.length/* (simular ? ordenados1.length : 1) */; indexFor++) {
     /* console.log(ordenados1[indexFor][1]); */
-
-    if (simular) {
+    data1 = casos0[indexFor][1];
+    /* if (simular) {
       data1 = ordenados1[indexFor][1];
-    }
+    } */
     data1.forEach((d) => {
       d.goles_local = d.goles_local.toString();
       d.goles_visitante = d.goles_visitante.toString();
@@ -1695,12 +1687,14 @@ export async function procesarDatos() {
     if (simular) {
       final_list1 = final_list1.map((item) => ({
         ...item,
-        probabilidad: (ordenados1[indexFor][2][item.name] ?? 0) * 100,
+        probabilidad: (casos0[indexFor][2][item.name] ?? 0) * 100,
       }));
     }
 
-    totalCasosSimulados.push(final_list1);
+    totalCasosSimulados.push([final_list1, casos0[indexFor][0], casos0[indexFor][2]]);
   }
+
+  console.log(totalCasosSimulados)
 
   window.__appData = { totalCasosSimulados, playoffs, nombre_torneo, puntos_por_partido, probabilidades, clasificados_por_competencia };
   return window.__appData;
