@@ -7708,7 +7708,7 @@ function handleButtonClick(event, d) {
   openSeleccionModal(casos, nombreSeleccion);
 }
 
-// 3. Attach the event listener to the button
+/* // 3. Attach the event listener to the button
 button.addEventListener("click", handleButtonClick);
 
 if (datosBase && (!probabilidades || Object.keys(probabilidades).length === 0)) {
@@ -7727,14 +7727,4 @@ if (datosBase && (!probabilidades || Object.keys(probabilidades).length === 0)) 
       render(currentData, playoffs, nombre_torneo, puntos_por_partido, resultado);
     }
   });
-}
-
-/* if (totalCasosSimulados.length > 1) {
-
-  const timer = d3.interval((e) => {
-    render(totalCasosSimulados[index1], playoffs, nombre_torneo, puntos_por_partido, probabilidades);
-    console.log(index1, totalCasosSimulados.length-1)
-    index1++
-    if (index1 >= totalCasosSimulados.length) timer.stop(); // Stop after 5 seconds
-  }, 2000);
 } */
